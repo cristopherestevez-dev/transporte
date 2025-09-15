@@ -8,7 +8,7 @@ import { apiFetch } from "@/app/utils/api";
 
 export default function CrudTable({
   title,
-  data,
+  data = [],
   setData,
   columns,
   formFields,
@@ -76,7 +76,7 @@ export default function CrudTable({
           </tr>
         </thead>
         <tbody>
-          {data.map((item) => (
+          {data?.map((item) => (
             <tr key={item.id} className="bg-white hover:bg-blue-50 transition-colors">
               {columns.map((col) => {
                 if (col.key === "proveedor") {
