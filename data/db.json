@@ -1,0 +1,277 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Alice",
+      "email": "sarasa@sarasa.com"
+    },
+    {
+      "id": 2,
+      "name": "Bob",
+      "email": "sarasa@sarasa.com"
+    }
+  ],
+  "proveedores": [
+    {
+      "id": 1,
+      "nombre": "Empresa Alfa",
+      "cuil_cuit": "30-12345678-9",
+      "tipo": "persona juridica",
+      "direccion": "Av. Libertador 1234, CABA",
+      "telefono": "+54 11 1234-5678",
+      "email": "contacto@empresaalfa.com"
+    },
+    {
+      "id": 2,
+      "nombre": "Juan Pérez",
+      "cuil_cuit": "20-98765432-1",
+      "tipo": "persona fisica",
+      "direccion": "Calle Falsa 742, CABA",
+      "telefono": "+54 11 8765-4321",
+      "email": "juan.perez@email.com"
+    },
+    {
+      "id": 3,
+      "nombre": "Beta Tech",
+      "cuil_cuit": "30-11223344-5",
+      "tipo": "persona juridica",
+      "direccion": "Av. Corrientes 567, CABA",
+      "telefono": "+54 11 2345-6789",
+      "email": "info@betatech.com"
+    },
+    {
+      "id": 4,
+      "nombre": "María López",
+      "cuil_cuit": "27-99887766-2",
+      "tipo": "persona fisica",
+      "direccion": "Calle Mendoza 321, CABA",
+      "telefono": "+54 11 3456-7890",
+      "email": "maria.lopez@email.com"
+    },
+    {
+      "id": 5,
+      "nombre": "Gamma Soluciones",
+      "cuil_cuit": "30-55667788-2",
+      "tipo": "persona juridica",
+      "direccion": "Av. Santa Fe 890, CABA",
+      "telefono": "+54 11 4567-8901",
+      "email": "ventas@gammasoluciones.com"
+    },
+    {
+      "id": 6,
+      "nombre": "Carlos García",
+      "cuil_cuit": "20-66778899-3",
+      "tipo": "persona fisica",
+      "direccion": "Calle Belgrano 234, CABA",
+      "telefono": "+54 11 5678-9012",
+      "email": "carlos.garcia@email.com"
+    },
+    {
+      "id": 7,
+      "nombre": "Delta Construcciones",
+      "cuil_cuit": "30-77889900-4",
+      "tipo": "persona juridica",
+      "direccion": "Av. Callao 456, CABA",
+      "telefono": "+54 11 6789-0123",
+      "email": "contacto@deltaconstrucciones.com"
+    },
+    {
+      "id": 8,
+      "nombre": "Laura Fernández",
+      "cuil_cuit": "27-88990011-5",
+      "tipo": "persona fisica",
+      "direccion": "Calle Córdoba 789, CABA",
+      "telefono": "+54 11 7890-1234",
+      "email": "laura.fernandez@email.com"
+    },
+    {
+      "id": 9,
+      "nombre": "Zeta Logística",
+      "cuil_cuit": "30-99001122-6",
+      "tipo": "persona juridica",
+      "direccion": "Av. Pueyrredón 101, CABA",
+      "telefono": "+54 11 8901-2345",
+      "email": "info@zetalogistica.com"
+    },
+    {
+      "id": 10,
+      "nombre": "Miguel Torres",
+      "cuil_cuit": "20-10111213-7",
+      "tipo": "persona fisica",
+      "direccion": "Calle Santa Fe 567, CABA",
+      "telefono": "+54 11 9012-3456",
+      "email": "miguel.torres@email.com"
+    }
+  ],
+  "fleteros": [
+    {
+      "id": 1,
+      "nombre": "Fletero Express",
+      "cuil_cuit": "30-11112222-3",
+      "tipo": "persona juridica",
+      "direccion": "Av. San Martín 123, CABA",
+      "telefono": "+54 11 1111-2222",
+      "email": "contacto@fleteroexpress.com"
+    },
+    {
+      "id": 2,
+      "nombre": "Luis Gómez",
+      "cuil_cuit": "20-22334455-6",
+      "tipo": "persona fisica",
+      "direccion": "Calle Rivadavia 456, CABA",
+      "telefono": "+54 11 2222-3333",
+      "email": "luis.gomez@email.com"
+    },
+    {
+      "id": 3,
+      "nombre": "Transporte Delta",
+      "cuil_cuit": "30-33445566-7",
+      "tipo": "persona juridica",
+      "direccion": "Av. Córdoba 789, CABA",
+      "telefono": "+54 11 3333-4444",
+      "email": "info@transportedelta.com"
+    },
+    {
+      "id": 4,
+      "nombre": "María Fernández",
+      "cuil_cuit": "27-44556677-8",
+      "tipo": "persona fisica",
+      "direccion": "Calle Santa Fe 321, CABA",
+      "telefono": "+54 11 4444-5555",
+      "email": "maria.fernandez@email.com"
+    },
+    {
+      "id": 5,
+      "nombre": "Logística Beta",
+      "cuil_cuit": "30-55667788-9",
+      "tipo": "persona juridica",
+      "direccion": "Av. Callao 654, CABA",
+      "telefono": "+54 11 5555-6666",
+      "email": "ventas@logisticabeta.com"
+    },
+    {
+      "id": 6,
+      "nombre": "Carlos Martínez",
+      "cuil_cuit": "20-66778899-0",
+      "tipo": "persona fisica",
+      "direccion": "Calle Belgrano 987, CABA",
+      "telefono": "+54 11 6666-7777",
+      "email": "carlos.martinez@email.com"
+    },
+    {
+      "id": 7,
+      "nombre": "Fleteros Gamma",
+      "cuil_cuit": "30-77889900-1",
+      "tipo": "persona juridica",
+      "direccion": "Av. Libertador 432, CABA",
+      "telefono": "+54 11 7777-8888",
+      "email": "contacto@fleterosgamma.com"
+    },
+    {
+      "id": 8,
+      "nombre": "Ana López",
+      "cuil_cuit": "27-88990011-2",
+      "tipo": "persona fisica",
+      "direccion": "Calle Mendoza 213, CABA",
+      "telefono": "+54 11 8888-9999",
+      "email": "ana.lopez@email.com"
+    },
+    {
+      "id": 9,
+      "nombre": "Transporte Zeta",
+      "cuil_cuit": "30-99001122-3",
+      "tipo": "persona juridica",
+      "direccion": "Av. Pueyrredón 101, CABA",
+      "telefono": "+54 11 9999-0000",
+      "email": "info@transportezeta.com"
+    },
+    {
+      "id": 10,
+      "nombre": "Miguel Torres",
+      "cuil_cuit": "20-10111213-4",
+      "tipo": "persona fisica",
+      "direccion": "Calle Santa Fe 567, CABA",
+      "telefono": "+54 11 1010-1111",
+      "email": "miguel.torres@email.com"
+    },
+    {
+      "id": "a840",
+      "nombre": "PRUEBA",
+      "cuil_cuit": "123322321",
+      "tipo": "PERSONA_FISICA",
+      "direccion": "SDASDD",
+      "telefono": "2313554",
+      "email": "lakjhsljdsa@aksjhdjkasd"
+    }
+  ],
+  "viajesNacionales": [
+    {
+      "id": 1,
+      "origen": "Buenos Aires",
+      "destino": "Córdoba",
+      "fecha_salida": "2023-10-01T08:00:00Z",
+      "fecha_llegada": "2023-10-01T18:00:00Z",
+      "proveedor": "Empresa Alfa",
+      "proveedorId": 1,
+      "carga": "Electrónicos",
+      "estado": "completado"
+    },
+    {
+      "id": 2,
+      "origen": "Rosario",
+      "destino": "Mendoza",
+      "fecha_salida": "2023-10-05T09:00:00Z",
+      "fecha_llegada": "2023-10-05T20:00:00Z",
+      "fleteroId": 2,
+      "proveedorId": 2,
+      "carga": "Alimentos",
+      "estado": "en progreso"
+    },
+    {
+      "id": 3,
+      "origen": "La Plata",
+      "destino": "Salta",
+      "fecha_salida": "2023-10-10T07:30:00Z",
+      "fecha_llegada": "2023-10-10T22:30:00Z",
+      "fleteroId": 3,
+      "proveedorId": 3,
+      "carga": "Ropa",
+      "estado": "pendiente"
+    }
+  ],
+  "viajesInternacionales": [
+    {
+      "id": 1,
+      "origen": "Buenos Aires, Argentina",
+      "destino": "Santiago, Chile",
+      "fecha_salida": "2023-11-01T10:00:00Z",
+      "fecha_llegada": "2023-11-01T20:00:00Z",
+      "fleteroId": 1,
+      "proveedorId": 1,
+      "carga": "Maquinaria",
+      "estado": "completado"
+    },
+    {
+      "id": 2,
+      "origen": "Córdoba, Argentina",
+      "destino": "Montevideo, Uruguay",
+      "fecha_salida": "2023-11-05T11:00:00Z",
+      "fecha_llegada": "2023-11-05T21:00:00Z",
+      "fleteroId": 2,
+      "proveedorId": 2,
+      "carga": "Productos Químicos",
+      "estado": "en progreso"
+    },
+    {
+      "id": 3,
+      "origen": "Mendoza, Argentina",
+      "destino": "Asunción, Paraguay",
+      "fecha_salida": "2023-11-10T09:30:00Z",
+      "fecha_llegada": "2023-11-10T19:30:00Z",
+      "fleteroId": 3,
+      "proveedorId": 3,
+      "carga": "Textiles",
+      "estado": "pendiente"
+    }
+  ]
+}
