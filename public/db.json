@@ -3,12 +3,14 @@
     {
       "id": 1,
       "name": "Alice",
-      "email": "sarasa@sarasa.com"
+      "email": "sarasa@sarasa.com",
+      "rol": "admin"
     },
     {
       "id": 2,
       "name": "Bob",
-      "email": "sarasa@sarasa.com"
+      "email": "sarasa@sarasa.com",
+      "rol": "user"
     }
   ],
   "proveedores": [
@@ -209,30 +211,30 @@
       "id": 1,
       "origen": "Buenos Aires",
       "destino": "Córdoba",
-      "fecha_salida": "2023-10-01T08:00:00Z",
-      "fecha_llegada": "2023-10-01T18:00:00Z",
+      "fecha_salida": "2023-10-01",
+      "fecha_llegada": "2023-10-01",
       "proveedor": "Empresa Alfa",
       "proveedorId": 1,
       "carga": "Electrónicos",
-      "estado": "completado"
+      "estado": "finalizado"
     },
     {
       "id": 2,
       "origen": "Rosario",
       "destino": "Mendoza",
-      "fecha_salida": "2023-10-05T09:00:00Z",
-      "fecha_llegada": "2023-10-05T20:00:00Z",
+      "fecha_salida": "2023-10-05",
+      "fecha_llegada": "2023-10-05",
       "fleteroId": 2,
       "proveedorId": 2,
       "carga": "Alimentos",
-      "estado": "en progreso"
+      "estado": "finalizado"
     },
     {
       "id": 3,
       "origen": "La Plata",
       "destino": "Salta",
-      "fecha_salida": "2023-10-10T07:30:00Z",
-      "fecha_llegada": "2023-10-10T22:30:00Z",
+      "fecha_salida": "2023-10-10",
+      "fecha_llegada": "2023-10-10",
       "fleteroId": 3,
       "proveedorId": 3,
       "carga": "Ropa",
@@ -244,34 +246,282 @@
       "id": 1,
       "origen": "Buenos Aires, Argentina",
       "destino": "Santiago, Chile",
-      "fecha_salida": "2023-11-01T10:00:00Z",
-      "fecha_llegada": "2023-11-01T20:00:00Z",
+      "fecha_salida": "2023-11-01",
+      "fecha_llegada": "2023-11-01",
       "fleteroId": 1,
       "proveedorId": 1,
       "carga": "Maquinaria",
-      "estado": "completado"
+      "estado": "en_transito"
     },
     {
       "id": 2,
       "origen": "Córdoba, Argentina",
       "destino": "Montevideo, Uruguay",
-      "fecha_salida": "2023-11-05T11:00:00Z",
-      "fecha_llegada": "2023-11-05T21:00:00Z",
+      "fecha_salida": "2023-11-05",
+      "fecha_llegada": "2023-11-05",
       "fleteroId": 2,
       "proveedorId": 2,
       "carga": "Productos Químicos",
-      "estado": "en progreso"
+      "estado": "en_transito"
     },
     {
       "id": 3,
       "origen": "Mendoza, Argentina",
       "destino": "Asunción, Paraguay",
-      "fecha_salida": "2023-11-10T09:30:00Z",
-      "fecha_llegada": "2023-11-10T19:30:00Z",
+      "fecha_salida": "2023-11-10",
+      "fecha_llegada": "2023-11-10",
       "fleteroId": 3,
       "proveedorId": 3,
       "carga": "Textiles",
       "estado": "pendiente"
     }
-  ]
+  ],
+  "camiones":[
+  {
+    "patente": "ABC123",
+    "marca": "Mercedes",
+    "modelo": "Actros",
+    "anio": 2020,
+    "seguro": "Si",
+    "vencimiento_seguro": "2025-06-30",
+    "numero_chasis": "CHS001",
+    "numero_motor": "MTR001"
+  },
+  {
+    "patente": "DEF456",
+    "marca": "Volvo",
+    "modelo": "FH16",
+    "anio": 2019,
+    "seguro": "Si",
+    "vencimiento_seguro": "2025-09-15",
+    "numero_chasis": "CHS002",
+    "numero_motor": "MTR002"
+  },
+  {
+    "patente": "GHI789",
+    "marca": "Scania",
+    "modelo": "R500",
+    "anio": 2021,
+    "seguro": "No",
+    "vencimiento_seguro": "2024-12-01",
+    "numero_chasis": "CHS003",
+    "numero_motor": "MTR003"
+  },
+  {
+    "patente": "JKL012",
+    "marca": "MAN",
+    "modelo": "TGX",
+    "anio": 2018,
+    "seguro": "Si",
+    "vencimiento_seguro": "2025-03-20",
+    "numero_chasis": "CHS004",
+    "numero_motor": "MTR004"
+  },
+  {
+    "patente": "MNO345",
+    "marca": "Iveco",
+    "modelo": "Stralis",
+    "anio": 2022,
+    "seguro": "Si",
+    "vencimiento_seguro": "2026-01-10",
+    "numero_chasis": "CHS005",
+    "numero_motor": "MTR005"
+  },
+  {
+    "patente": "PQR678",
+    "marca": "Mercedes",
+    "modelo": "Arocs",
+    "anio": 2020,
+    "seguro": "No",
+    "vencimiento_seguro": "2024-08-05",
+    "numero_chasis": "CHS006",
+    "numero_motor": "MTR006"
+  },
+  {
+    "patente": "STU901",
+    "marca": "Volvo",
+    "modelo": "FMX",
+    "anio": 2017,
+    "seguro": "Si",
+    "vencimiento_seguro": "2025-11-30",
+    "numero_chasis": "CHS007",
+    "numero_motor": "MTR007"
+  },
+  {
+    "patente": "VWX234",
+    "marca": "Scania",
+    "modelo": "S730",
+    "anio": 2021,
+    "seguro": "Si",
+    "vencimiento_seguro": "2025-07-15",
+    "numero_chasis": "CHS008",
+    "numero_motor": "MTR008"
+  },
+  {
+    "patente": "YZA567",
+    "marca": "MAN",
+    "modelo": "TGM",
+    "anio": 2019,
+    "seguro": "No",
+    "vencimiento_seguro": "2024-10-25",
+    "numero_chasis": "CHS009",
+    "numero_motor": "MTR009"
+  },
+  {
+    "patente": "BCD890",
+    "marca": "Iveco",
+    "modelo": "Eurocargo",
+    "anio": 2018,
+    "seguro": "Si",
+    "vencimiento_seguro": "2025-04-18",
+    "numero_chasis": "CHS010",
+    "numero_motor": "MTR010"
+  }
+],
+  "semirremolques":
+[
+  {
+    "patente": "SRM001",
+    "marca": "Schmitz",
+    "modelo": "S.KO",
+    "anio": 2019,
+    "seguro": "Si",
+    "vencimiento_seguro": "2025-05-20",
+    "numero_chasis": "CHS001",
+    "numero_ejes": 3
+  },
+  {
+    "patente": "SRM002",
+    "marca": "Krone",
+    "modelo": "Cool Liner",
+    "anio": 2020,
+    "seguro": "Si",
+    "vencimiento_seguro": "2025-08-15",
+    "numero_chasis": "CHS002",
+    "numero_ejes": 3
+  },
+  {
+    "patente": "SRM003",
+    "marca": "Schmitz",
+    "modelo": "Cargoliner",
+    "anio": 2018,
+    "seguro": "No",
+    "vencimiento_seguro": "2024-11-30",
+    "numero_chasis": "CHS003",
+    "numero_ejes": 2
+  },
+  {
+    "patente": "SRM004",
+    "marca": "Krone",
+    "modelo": "Mega Liner",
+    "anio": 2021,
+    "seguro": "Si",
+    "vencimiento_seguro": "2025-06-10",
+    "numero_chasis": "CHS004",
+    "numero_ejes": 3
+  },
+  {
+    "patente": "SRM005",
+    "marca": "Wielton",
+    "modelo": "NS3",
+    "anio": 2017,
+    "seguro": "Si",
+    "vencimiento_seguro": "2024-09-25",
+    "numero_chasis": "CHS005",
+    "numero_ejes": 2
+  },
+  {
+    "patente": "SRM006",
+    "marca": "Schmitz",
+    "modelo": "Cargoliner",
+    "anio": 2022,
+    "seguro": "Si",
+    "vencimiento_seguro": "2026-01-05",
+    "numero_chasis": "CHS006",
+    "numero_ejes": 3
+  },
+  {
+    "patente": "SRM007",
+    "marca": "Krone",
+    "modelo": "Cool Liner",
+    "anio": 2019,
+    "seguro": "No",
+    "vencimiento_seguro": "2024-12-18",
+    "numero_chasis": "CHS007",
+    "numero_ejes": 2
+  },
+  {
+    "patente": "SRM008",
+    "marca": "Wielton",
+    "modelo": "NS3",
+    "anio": 2020,
+    "seguro": "Si",
+    "vencimiento_seguro": "2025-07-12",
+    "numero_chasis": "CHS008",
+    "numero_ejes": 3
+  },
+  {
+    "patente": "SRM009",
+    "marca": "Schmitz",
+    "modelo": "S.KO",
+    "anio": 2018,
+    "seguro": "No",
+    "vencimiento_seguro": "2024-10-30",
+    "numero_chasis": "CHS009",
+    "numero_ejes": 2
+  },
+  {
+    "patente": "SRM010",
+    "marca": "Krone",
+    "modelo": "Mega Liner",
+    "anio": 2021,
+    "seguro": "Si",
+    "vencimiento_seguro": "2025-03-28",
+    "numero_chasis": "CHS010",
+    "numero_ejes": 3
+  }
+],
+"choferes": [
+  {
+    "id": 1,
+    "nombre": "Juan Martínez",
+    "dni": "12345678",
+    "telefono": "+54 11 1234-5678",
+    "licencia": "2025-12-31"
+  },
+  {
+    "id": 2,
+    "nombre": "María González",
+    "dni": "23456789",
+    "telefono": "+54 11 2345-6789",
+    "licencia": "2026-03-15"
+  },
+  {
+    "id": 3,
+    "nombre": "Carlos Fernández",
+    "dni": "34567890",
+    "telefono": "+54 11 3456-7890",
+    "licencia": "2025-08-20"
+  },
+  {
+    "id": 4,
+    "nombre": "Laura Ramírez",
+    "dni": "45678901",
+    "telefono": "+54 11 4567-8901",
+    "licencia": "2026-01-10"
+  },
+  {
+    "id": 5,
+    "nombre": "Miguel Torres",
+    "dni": "56789012",
+    "telefono": "+54 11 5678-9012",
+    "licencia": "2025-11-05"
+  }
+]
+
+    
+
+
+
+  
 }

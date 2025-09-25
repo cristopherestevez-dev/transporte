@@ -1,7 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { HiMenuAlt3, HiOutlineHome, HiOutlineTruck, HiOutlineUser, HiOutlineLogout,HiOutlineOfficeBuilding, HiOutlineMap, HiOutlineAdjustments } from "react-icons/hi";
+import {
+  HiMenuAlt3,
+  HiOutlineHome,
+  HiOutlineTruck,
+  HiOutlineUser,
+  HiOutlineLogout,
+  HiOutlineOfficeBuilding,
+  HiOutlineMap,
+  HiOutlineAdjustments,
+} from "react-icons/hi";
 import { Button } from "@heroui/react";
 import Link from "next/link";
 
@@ -15,9 +24,14 @@ export default function Sidebar() {
     { name: "Empresas", icon: <HiOutlineOfficeBuilding />, href: "/empresas" },
     { name: "Usuarios", icon: <HiOutlineUser />, href: "/usuarios" },
     { name: "Camiones", icon: <HiOutlineTruck />, href: "/camiones" },
+    { name: "Semis", icon: <HiOutlineTruck />, href: "/semis" },
     { name: "Viajes", icon: <HiOutlineMap />, href: "/viajes" },
-    { name: "Configuración", icon: <HiOutlineAdjustments />, href: "/configuracion" },
-    
+    { name: "Choferes", icon: <HiOutlineUser />, href: "/choferes" },
+    {
+      name: "Configuración",
+      icon: <HiOutlineAdjustments />,
+      href: "/configuracion",
+    },
   ];
 
   return (
@@ -28,7 +42,11 @@ export default function Sidebar() {
     >
       {/* Toggle button */}
       <div className="flex justify-end p-3 border-b border-gray-200">
-        <Button variant="ghost" onPress={toggleSidebar} aria-label="Toggle sidebar">
+        <Button
+          variant="ghost"
+          onPress={toggleSidebar}
+          aria-label="Toggle sidebar"
+        >
           <HiMenuAlt3 size={24} color="#374151" />
         </Button>
       </div>
@@ -44,11 +62,11 @@ export default function Sidebar() {
             }`}
           >
             <div className="text-xl text-gray-700">{icon}</div>
-            {!collapsed && <span className="text-gray-800 font-medium">{name}</span>}
+            {!collapsed && (
+              <span className="text-gray-800 font-medium">{name}</span>
+            )}
           </Link>
         ))}
-        
-        
       </nav>
 
       {/* Logout button at bottom */}
@@ -65,5 +83,3 @@ export default function Sidebar() {
     </div>
   );
 }
-
-

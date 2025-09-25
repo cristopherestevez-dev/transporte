@@ -1,45 +1,57 @@
 "use client";
 import { useEffect, useState } from "react";
+import CrudTable from "../components/ui/CrudTable/CrudTable";
 
 export default function UsuariosList() {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios`, {
-      headers: {
-        // Si usás autenticación con token, acá lo agregás:
-        // Authorization: "Bearer " + token,
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Error al cargar usuarios");
-        return res.json();
-      })
-      .then((data) => {
-        setUsuarios(data);
-        setLoading(false);
-      })
-      .catch((err) => {
+
+   useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const res = await fetch('/db.json');
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+        setUsuarios(data.users);
+        
+      } catch (err) {
         setError(err.message);
+      } finally {
         setLoading(false);
-      });
+      }
+    }
+    fetchData();
   }, []);
+
 
   if (loading) return <p>Cargando usuarios...</p>;
   if (error) return <p>Error: {error}</p>;
 
   return (
     <div>
-      <h2>Lista de Usuarios</h2>
-      <ul>
-        {usuarios.map((usuario) => (
-          <li key={usuario.id}>
-            {usuario.nombre} - {usuario.email} - Rol: {usuario.rol}
-          </li>
-        ))}
-      </ul>
+     <CrudTable
+        title="Usuarios"
+        key="usuarios"
+        data={usuarios}
+        setData={setUsuarios}
+        columns={[
+          { label: "ID", key: "id" },
+          { label: "Nombre", key: "name" },
+          { label: "Email", key: "email" },
+          { label: "Rol", key: "rol" },
+        ]}
+        formFields={[
+          { label: "Nombre", key: "name", required: true },
+          { label: "Email", key: "email", type: "email", required: true },
+          { label: "Rol", key: "rol", required: true },
+          
+        ]}
+      />
     </div>
   );
 }
