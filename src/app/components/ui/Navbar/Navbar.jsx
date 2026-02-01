@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Button, Dropdown } from "@heroui/react";
-import { HiOutlineUser, HiOutlineLogout, HiMenu } from "react-icons/hi";
+import { HiOutlineUser, HiOutlineLogout, HiMenu, HiBell } from "react-icons/hi";
 import WeatherWidget from "@/app/components/ui/WeatherWidget/WeatherWidget";
 
 export default function Navbar({ onToggleSidebar }) {
@@ -13,8 +13,63 @@ export default function Navbar({ onToggleSidebar }) {
 
   // Estado para abrir/cerrar dropdown de usuario
   const [openDropdown, setOpenDropdown] = useState(false);
+  
+  // Estado para notificaciones
+  const [alerts, setAlerts] = useState([]);
+  const [openNotifications, setOpenNotifications] = useState(false);
 
-  const toggleDropdown = () => setOpenDropdown(!openDropdown);
+  // Fetch logic para notificaciones
+  useEffect(() => {
+    const checkExpirations = async () => {
+       try {
+         const res = await fetch("/db.json");
+         const data = await res.json();
+         
+         const today = new Date();
+         const fourMonths = 120; // Dias aprox
+         let newAlerts = [];
+
+         // Helper para chequear fechas
+         const checkDate = (dateStr, name, type, id) => {
+             if(!dateStr) return;
+             const expDate = new Date(dateStr);
+             const diffTime = expDate - today;
+             const daysDiff = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+             
+             if (daysDiff <= fourMonths) {
+                 let severity = "text-yellow-600 bg-yellow-100";
+                 if (daysDiff <= 60) severity = "text-red-600 bg-red-100";
+                 else if (daysDiff <= 90) severity = "text-orange-600 bg-orange-100";
+                 
+                 newAlerts.push({
+                     id: `${type}-${id}`,
+                     type,
+                     name,
+                     date: dateStr,
+                     days: daysDiff,
+                     severity
+                 });
+             }
+         };
+
+         // Chequear Choferes
+         data.choferes?.forEach(c => checkDate(c.licencia, c.nombre, "Licencia", c.id));
+         // Chequear Camiones
+         data.camiones?.forEach(c => checkDate(c.vencimiento_seguro, `Camión ${c.patente}`, "Seguro", c.patente));
+         // Chequear Semis
+         data.semirremolques?.forEach(s => checkDate(s.vencimiento_seguro, `Semi ${s.patente}`, "Seguro", s.patente));
+
+         setAlerts(newAlerts.sort((a,b) => a.days - b.days));
+
+       } catch (error) {
+           console.error("Error checking alerts", error);
+       }
+    };
+    checkExpirations();
+  }, []);
+
+  const toggleDropdown = () => { setOpenDropdown(!openDropdown); setOpenNotifications(false); };
+  const toggleNotifications = () => { setOpenNotifications(!openNotifications); setOpenDropdown(false); };
 
   const handleLogout = () => {
     // Aquí tu lógica para logout (limpiar token, redirigir, etc)
@@ -38,6 +93,47 @@ export default function Navbar({ onToggleSidebar }) {
       <div className="flex items-center gap-4">
         {/* Weather Widget (Navbar mode) - oculto en dashboard */}
         {pathname !== "/dashboard" && <WeatherWidget mode="navbar" />}
+
+        {/* Notificaciones */}
+        <div className="relative">
+            <button onClick={toggleNotifications} className="relative p-2 text-gray-600 hover:text-gray-800 focus:outline-none">
+                <HiBell size={24} />
+                {alerts.length > 0 && (
+                    <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full">
+                        {alerts.length}
+                    </span>
+                )}
+            </button>
+
+            {openNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-white border rounded shadow-md z-50 max-h-96 overflow-y-auto">
+                    <div className="px-4 py-2 border-b bg-gray-50 flex justify-between items-center">
+                        <span className="font-semibold text-sm text-gray-700">Notificaciones</span>
+                        <span className="text-xs text-gray-500">{alerts.length} alertas</span>
+                    </div>
+                    <div>
+                        {alerts.length === 0 ? (
+                            <div className="p-4 text-center text-gray-500 text-sm">Sin alertas pendientes</div>
+                        ) : (
+                            alerts.map((alert) => (
+                                <div key={alert.id} className="px-4 py-3 border-b hover:bg-gray-50 last:border-b-0">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-800">{alert.name}</p>
+                                            <p className="text-xs text-gray-500">{alert.type}</p>
+                                        </div>
+                                        <span className={`px-2 py-1 text-[10px] font-bold rounded-full ${alert.severity}`}>
+                                            {alert.days > 0 ? `${alert.days} días` : "Vencido"}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-gray-400 mt-1">Vence: {alert.date}</p>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
 
         {/* Usuario y acciones */}
         <div className="relative">
