@@ -31,8 +31,20 @@ const EstadoSelect = ({ value, onChange }) => {
   );
 };
 
+const validateDates = (form) => {
+  const { fecha_salida, fecha_llegada } = form;
+  if (!fecha_salida || !fecha_llegada) return null; // No validar si faltan fechas (o si ya son requeridas, la validación de required saltará antes)
+  
+  if (new Date(fecha_salida) > new Date(fecha_llegada)) {
+    return "La fecha de salida no puede ser mayor que la fecha de llegada.";
+  }
+  return null;
+};
+
 const ViajesList = () => {
   const [proveedoresOptions, setProveedoresOptions] = useState([]);
+  const [choferesOptions, setChoferesOptions] = useState([]);
+  const [fleterosOptions, setFleterosOptions] = useState([]);
   const [loadingProveedores, setLoadingProveedores] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -50,6 +62,8 @@ const ViajesList = () => {
         if (!res.ok) throw new Error("Error al cargar proveedores");
         const data = await res.json();
         setProveedoresOptions(data.proveedores || []);
+        setChoferesOptions(data.choferes || []);
+        setFleterosOptions(data.fleteros || []);
       } catch (err) {
         console.error(err);
       } finally {
@@ -60,11 +74,26 @@ const ViajesList = () => {
     async function fetchViajes() {
       try {
         setLoading(true);
-        const res = await fetch("/db.json");
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        const data = await res.json();
-        setNacionales(data.viajesNacionales || []);
-        setInternacionales(data.viajesInternacionales || []);
+        // Intentar cargar desde localStorage primero
+        const storedNacionales = localStorage.getItem("viajesNacionales");
+        const storedInternacionales = localStorage.getItem("viajesInternacionales");
+
+        if (storedNacionales && storedInternacionales) {
+            setNacionales(JSON.parse(storedNacionales));
+            setInternacionales(JSON.parse(storedInternacionales));
+        } else {
+            // Si no hay datos locales, cargar de db.json
+            const res = await fetch("/db.json");
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            const data = await res.json();
+            
+            setNacionales(data.viajesNacionales || []);
+            setInternacionales(data.viajesInternacionales || []);
+            
+            // Inicializar localStorage
+            localStorage.setItem("viajesNacionales", JSON.stringify(data.viajesNacionales || []));
+            localStorage.setItem("viajesInternacionales", JSON.stringify(data.viajesInternacionales || []));
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -75,6 +104,19 @@ const ViajesList = () => {
     fetchProveedores();
     fetchViajes();
   }, []);
+
+  // Persistir cambios en localStorage
+  useEffect(() => {
+    if (!loading) {
+        localStorage.setItem("viajesNacionales", JSON.stringify(nacionales));
+    }
+  }, [nacionales, loading]);
+
+  useEffect(() => {
+    if (!loading) {
+        localStorage.setItem("viajesInternacionales", JSON.stringify(internacionales));
+    }
+  }, [internacionales, loading]);
 
   const openProveedorModal = (row) => {
     setCurrentRowEditing(row);
@@ -137,7 +179,12 @@ const ViajesList = () => {
     { label: "Origen", key: "origen", required: true },
     { label: "Destino", key: "destino", required: true },
     { label: "Fecha Salida", key: "fecha_salida", type: "date" },
-    { label: "Fecha Llegada", key: "fecha_llegada", type: "date" },
+    { 
+      label: "Fecha Llegada", 
+      key: "fecha_llegada", 
+      type: "date",
+      minDateFrom: "fecha_salida" 
+    },
     {
       label: "Estado",
       key: "estado",
@@ -145,7 +192,106 @@ const ViajesList = () => {
       required: true,
       options: estados.map((e) => ({ value: e.value, label: e.label })),
     },
-    { label: "Proveedor", key: "proveedor", type: "button" },
+    {
+      label: "Proveedor",
+      key: "proveedor",
+      render: ({ form, setForm }) => (
+        <div>
+           <label className="block text-sm font-medium text-gray-700">Proveedor</label>
+           <select
+              className="w-full mt-1 p-2 border rounded-md"
+              value={form.proveedorId || ""}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                const selectedOption = proveedoresOptions.find(opt => opt.id.toString() === selectedId.toString());
+                setForm({ 
+                  ...form, 
+                  proveedorId: selectedId,
+                  proveedor: selectedOption ? selectedOption.nombre : "" 
+                });
+              }}
+           >
+              <option value="">-- Seleccionar Proveedor --</option>
+              {proveedoresOptions.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.nombre}
+                </option>
+              ))}
+           </select>
+        </div>
+      )
+    },
+    {
+      label: "Asignación",
+      key: "asignacion",
+      render: ({ form, setForm }) => {
+        const tipoAsignacion = form.tipoAsignacion || "ninguno"; // chofer | fletero | ninguno
+        
+        return (
+          <div className="space-y-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Tipo de Asignación</label>
+              <div className="flex gap-4 mt-1">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="tipoAsignacion"
+                    value="chofer"
+                    checked={tipoAsignacion === "chofer"}
+                    onChange={(e) => {
+                      setForm({ ...form, tipoAsignacion: "chofer", asignadoId: "" });
+                    }}
+                  />
+                  Chofer
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="tipoAsignacion"
+                    value="fletero"
+                    checked={tipoAsignacion === "fletero"}
+                    onChange={(e) => {
+                      setForm({ ...form, tipoAsignacion: "fletero", asignadoId: "" });
+                    }}
+                  />
+                  Fletero
+                </label>
+              </div>
+            </div>
+
+            {tipoAsignacion !== "ninguno" && (
+              <div>
+                 <label className="block text-sm font-medium text-gray-700">
+                    Seleccionar {tipoAsignacion === "chofer" ? "Chofer" : "Fletero"}
+                 </label>
+                 <select
+                    className="w-full mt-1 p-2 border rounded-md"
+                    value={form.asignadoId || ""}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      const options = tipoAsignacion === "chofer" ? choferesOptions : fleterosOptions;
+                      const selectedOption = options.find(opt => opt.id.toString() === selectedId.toString());
+                      
+                      setForm({ 
+                        ...form, 
+                        asignadoId: selectedId,
+                        proveedorNombre: selectedOption ? selectedOption.nombre : "" 
+                      });
+                    }}
+                 >
+                    <option value="">-- Seleccionar --</option>
+                    {(tipoAsignacion === "chofer" ? choferesOptions : fleterosOptions).map((opt) => (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.nombre}
+                      </option>
+                    ))}
+                 </select>
+              </div>
+            )}
+          </div>
+        );
+      }
+    },
   ];
 
   return (
@@ -164,6 +310,7 @@ const ViajesList = () => {
                 openProveedorModal={(row) =>
                   openProveedorModal({ ...row, type: "nacional" })
                 }
+                validate={validateDates}
               />
             ),
           },
@@ -179,6 +326,7 @@ const ViajesList = () => {
                 openProveedorModal={(row) =>
                   openProveedorModal({ ...row, type: "internacional" })
                 }
+                validate={validateDates}
               />
             ),
           },

@@ -4,6 +4,32 @@ import TabsWrapper from '../components/ui/TabsWrapper/TabsWrapper'
 import CrudTable from '../components/ui/CrudTable/CrudTable'
 import { useState, useEffect } from 'react'
 
+// Helper para calcular dias restantes y color (Reutilizado logicamente)
+const ExpirationBadge = ({ date }) => {
+  if (!date) return <span className="text-gray-400">Sin fecha</span>;
+
+  const today = new Date();
+  const expirationDate = new Date(date);
+  const diffTime = expirationDate - today;
+  const daysDiff = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  let colorClass = "bg-green-100 text-green-800";
+  
+  if (daysDiff <= 60) {
+    colorClass = "bg-red-100 text-red-800";
+  } else if (daysDiff <= 90) {
+    colorClass = "bg-orange-100 text-orange-800";
+  } else if (daysDiff <= 120) {
+    colorClass = "bg-yellow-100 text-yellow-800";
+  }
+
+  return (
+    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${colorClass}`}>
+      {date} ({daysDiff > 0 ? `${daysDiff} días` : "Vencido"})
+    </span>
+  );
+};
+
 const CamionesList = () => {
     const [camiones, setCamiones] = useState([]);
     const [semirremolques, setSemirremolques] = useState([]);
@@ -48,7 +74,12 @@ const CamionesList = () => {
             { label: "Modelo", key: "modelo" },
             { label: "Año", key: "anio" },
             { label:"Seguro", key: "seguro" },
-            { label: "Vencimiento Seguro", key: "vencimiento_seguro" },
+            { label: "Seguro", key: "seguro" },
+            { 
+              label: "Vencimiento Seguro", 
+              key: "vencimiento_seguro",
+              render: (value) => <ExpirationBadge date={value} />
+            },
             {label: "N° de Chasis", key: "numero_chasis"},
             { label: "N° de Motor", key: "numero_motor" },
             
@@ -79,7 +110,12 @@ const CamionesList = () => {
               { label: "Modelo", key: "modelo" },
               { label: "Año", key: "anio" },
               { label:"Seguro", key: "seguro" },
-              { label: "Vencimiento Seguro", key: "vencimiento_seguro" },
+              { label: "Seguro", key: "seguro" },
+              { 
+                label: "Vencimiento Seguro", 
+                key: "vencimiento_seguro",
+                render: (value) => <ExpirationBadge date={value} />
+              },
               {label: "N° de Chasis", key: "numero_chasis"},
               { label: "N° de Ejes", key: "numero_ejes" },
               

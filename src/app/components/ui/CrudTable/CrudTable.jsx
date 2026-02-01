@@ -12,6 +12,7 @@ export default function CrudTable({
   columns,
   formFields,
   openProveedorModal, // Función para abrir modal de proveedor
+  validate, // NEW: Función de validación opcional (formData) => errorString | null
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -36,9 +37,17 @@ export default function CrudTable({
       if (f.type === "date" && item && item[f.key]) {
         initialForm[f.key] = new Date(item[f.key]).toISOString().split("T")[0];
       } else {
-        initialForm[f.key] = item && item[f.key] !== null ? item[f.key] : "";
+        // Asegurar que si el item existe, se copien todas las props, no solo las de formFields
+        // Esto es util para IDs ocultos o campos extras como proveedorId
+        initialForm[f.key] = item && item[f.key] !== undefined && item[f.key] !== null ? item[f.key] : "";
       }
     });
+    // Si editamos, preservamos todo el objeto original en el form para no perder datos extras
+    if (item) {
+        Object.keys(item).forEach(k => {
+            if (initialForm[k] === undefined) initialForm[k] = item[k];
+        });
+    }
     setForm(initialForm);
     setModalOpen(true);
   }
@@ -54,6 +63,45 @@ export default function CrudTable({
   const requiredFilled = formFields.every(
     (f) => !f.required || (form[f.key] && form[f.key].toString().trim() !== "")
   );
+
+  const handleSave = () => {
+    // 1. Validar si existe la prop validate
+    if (validate) {
+      const errorMsg = validate(form);
+      if (errorMsg) {
+        alert(errorMsg); // O usar un toast/modal de error si se prefiere
+        return;
+      }
+    }
+
+    let newData;
+    if (editingItem) {
+      // Editar
+      newData = data.map((item) =>
+        item.id === editingItem.id ? { ...form, id: editingItem.id } : item
+      );
+    } else {
+      // Agregar
+      const newId =
+        data.length > 0 ? Math.max(...data.map((d) => d.id || 0)) + 1 : 1;
+      newData = [...(data || []), { ...form, id: newId }];
+    }
+    setData(newData);
+    setConfirmAddOpen(false);
+    setModalOpen(false);
+    setSuccessAddOpen(true);
+    setEditingItem(null);
+  };
+
+  const handleDelete = () => {
+    if (itemToDelete) {
+      const newData = data.filter((item) => item.id !== itemToDelete.id);
+      setData(newData);
+      setConfirmOpen(false);
+      setSuccessOpen(true);
+      setItemToDelete(null);
+    }
+  };
 
   return (
     <div>
@@ -127,7 +175,11 @@ export default function CrudTable({
                         }}
                       >
                         {estadoOptions.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
+                          <option
+                            key={opt.value}
+                            value={opt.value}
+                            style={{ color: opt.color }}
+                          >
                             {opt.label}
                           </option>
                         ))}
@@ -136,7 +188,15 @@ export default function CrudTable({
                   );
                 }
 
-                // Columnas normales
+                // Columnas normales o personalizadas
+                if (col.render) {
+                   return (
+                     <td key={`${item.id}-${col.key}`} className="px-6 py-4">
+                       {col.render(item[col.key], item)}
+                     </td>
+                   );
+                }
+
                 return (
                   <td key={`${item.id}-${col.key}`} className="px-6 py-4">
                     {item[col.key] || "-"}
@@ -183,16 +243,47 @@ export default function CrudTable({
           >
             {formFields.map((f) => (
               <div key={f.key}>
-                <label className="block mb-1 font-medium">
-                  {f.label} {f.required ? "*" : ""}
-                </label>
-                <input
-                  type={f.type || "text"}
-                  value={form[f.key] || ""}
-                  onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                  className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  required={f.required}
-                />
+                {f.render ? (
+                  f.render({ form, setForm, field: f })
+                ) : (
+                  <>
+                    <label className="block mb-1 font-medium">
+                      {f.label} {f.required ? "*" : ""}
+                    </label>
+                    {f.type === "select" ? (
+                      <select
+                        value={form[f.key] || ""}
+                        onChange={(e) =>
+                          setForm({ ...form, [f.key]: e.target.value })
+                        }
+                        className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        required={f.required}
+                      >
+                         <option value="">Seleccionar</option>
+                         {f.options?.map((opt) => (
+                           <option key={opt.value} value={opt.value}>
+                             {opt.label}
+                           </option>
+                         ))}
+                      </select>
+                    ) : (
+                      <input
+                        type={f.type || "text"}
+                        value={form[f.key] || ""}
+                        min={
+                          f.type === "date" && f.minDateFrom
+                            ? form[f.minDateFrom]
+                            : undefined
+                        }
+                        onChange={(e) =>
+                          setForm({ ...form, [f.key]: e.target.value })
+                        }
+                        className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        required={f.required}
+                      />
+                    )}
+                  </>
+                )}
               </div>
             ))}
             <div className="flex justify-end gap-3">
@@ -219,7 +310,7 @@ export default function CrudTable({
       <ConfirmModal
         isOpen={confirmOpen}
         onClose={() => setConfirmOpen(false)}
-        onConfirm={() => {}}
+        onConfirm={handleDelete}
         title="Confirmar eliminación"
         message="¿Seguro que querés eliminar este registro?"
         label="Eliminar"
@@ -234,10 +325,14 @@ export default function CrudTable({
       <ConfirmModal
         isOpen={confirmAddOpen}
         onClose={() => setConfirmAddOpen(false)}
-        onConfirm={() => {}}
-        title="Confirmar registro"
-        message="¿Seguro que querés agregar este registro?"
-        label="Agregar"
+        onConfirm={handleSave}
+        title={editingItem ? "Confirmar edición" : "Confirmar registro"}
+        message={
+          editingItem
+            ? "¿Seguro que querés guardar los cambios?"
+            : "¿Seguro que querés agregar este registro?"
+        }
+        label={editingItem ? "Guardar" : "Agregar"}
         bgcolor="bg-green-600"
         bghover="green"
       />

@@ -7,6 +7,7 @@ import {
   HiOutlineLogout,
   HiOutlineAdjustments,
 } from "react-icons/hi";
+import { usePathname } from "next/navigation";
 import {
   IconBuilding,
   IconUsers,
@@ -21,6 +22,7 @@ import { Button } from "@heroui/react";
 import Link from "next/link";
 
 export default function Sidebar() {
+  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
   const toggleSidebar = () => setCollapsed(!collapsed);
@@ -30,7 +32,7 @@ export default function Sidebar() {
     { name: "Empresas", icon: <IconBuilding />, href: "/empresas" },
     { name: "Usuarios", icon: <IconUsers />, href: "/usuarios" },
     { name: "Camiones", icon: <IconTruck />, href: "/camiones" },
-    { name: "Semis", icon: <IconTrailer />, href: "/semis" },
+    // { name: "Semis", icon: <IconTrailer />, href: "/semis" },
     { name: "Viajes", icon: <IconRoutes />, href: "/viajes" },
     { name: "Choferes", icon: <IconDriver />, href: "/choferes" },
     { name: "Cotizador", icon: <IconCalculator />, href: "/cotizador" },
@@ -60,20 +62,39 @@ export default function Sidebar() {
 
       {/* Menu items */}
       <nav className="flex flex-col mt-4 space-y-2 px-2">
-        {menuItems.map(({ name, icon, href }) => (
-          <Link
-            key={name}
-            href={href}
-            className={`flex items-center space-x-3 p-2 rounded hover:bg-gray-100 transition-colors ${
-              collapsed ? "justify-center" : ""
-            }`}
-          >
-            <div className="text-xl text-gray-700">{icon}</div>
-            {!collapsed && (
-              <span className="text-gray-800 font-medium">{name}</span>
-            )}
-          </Link>
-        ))}
+        {menuItems.map(({ name, icon, href }) => {
+          const isActive = pathname === href;
+          return (
+            <Link
+              key={name}
+              href={href}
+              className={`flex items-center space-x-3 p-2 rounded transition-colors ${
+                collapsed ? "justify-center" : ""
+              } ${
+                isActive
+                  ? "bg-blue-50 text-blue-600"
+                  : "hover:bg-gray-100 text-gray-700"
+              }`}
+            >
+              <div
+                className={`text-xl ${
+                  isActive ? "text-blue-600" : "text-gray-700"
+                }`}
+              >
+                {icon}
+              </div>
+              {!collapsed && (
+                <span
+                  className={`font-medium ${
+                    isActive ? "text-blue-600" : "text-gray-800"
+                  }`}
+                >
+                  {name}
+                </span>
+              )}
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Logout button at bottom */}
