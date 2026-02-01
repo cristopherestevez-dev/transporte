@@ -4,13 +4,19 @@ import { useState } from "react";
 import {
   HiMenuAlt3,
   HiOutlineHome,
-  HiOutlineTruck,
-  HiOutlineUser,
   HiOutlineLogout,
-  HiOutlineOfficeBuilding,
-  HiOutlineMap,
   HiOutlineAdjustments,
 } from "react-icons/hi";
+import {
+  IconBuilding,
+  IconUsers,
+  IconTruck,
+  IconTrailer,
+  IconRoutes,
+  IconDriver,
+  IconWeather,
+  IconCalculator,
+} from "../Icons/Icons";
 import { Button } from "@heroui/react";
 import Link from "next/link";
 
@@ -21,12 +27,13 @@ export default function Sidebar() {
 
   const menuItems = [
     { name: "Dashboard", icon: <HiOutlineHome />, href: "/dashboard" },
-    { name: "Empresas", icon: <HiOutlineOfficeBuilding />, href: "/empresas" },
-    { name: "Usuarios", icon: <HiOutlineUser />, href: "/usuarios" },
-    { name: "Camiones", icon: <HiOutlineTruck />, href: "/camiones" },
-    { name: "Semis", icon: <HiOutlineTruck />, href: "/semis" },
-    { name: "Viajes", icon: <HiOutlineMap />, href: "/viajes" },
-    { name: "Choferes", icon: <HiOutlineUser />, href: "/choferes" },
+    { name: "Empresas", icon: <IconBuilding />, href: "/empresas" },
+    { name: "Usuarios", icon: <IconUsers />, href: "/usuarios" },
+    { name: "Camiones", icon: <IconTruck />, href: "/camiones" },
+    { name: "Semis", icon: <IconTrailer />, href: "/semis" },
+    { name: "Viajes", icon: <IconRoutes />, href: "/viajes" },
+    { name: "Choferes", icon: <IconDriver />, href: "/choferes" },
+    { name: "Cotizador", icon: <IconCalculator />, href: "/cotizador" },
     {
       name: "Configuración",
       icon: <HiOutlineAdjustments />,

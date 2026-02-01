@@ -3,9 +3,18 @@
 import StatCard from "@/app/components/ui/CardWrapper/StatCard";
 import DataTable from "@/app/components/ui/TabWrapper/DataTable";
 import { useEffect, useState } from "react";
-import { FaTruck, FaBuilding, FaUserTie, FaMapMarkedAlt } from "react-icons/fa";
+import {
+  IconBuilding,
+  IconTruck,
+  IconTrailer,
+  IconDriver,
+  IconRoutes,
+  IconUsers,
+} from "@/app/components/ui/Icons/Icons";
+import WeatherWidget from "@/app/components/ui/WeatherWidget/WeatherWidget";
 import { HiOutlineChevronLeft, HiOutlineChevronRight } from "react-icons/hi";
 import { useRouter } from "next/navigation";
+
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [viajes, setViajes] = useState([]);
@@ -55,49 +64,49 @@ export default function Dashboard() {
     {
       title: "Proveedores",
       value: stats.proveedores,
-      icon: <FaBuilding size={28} />,
+      icon: <IconBuilding />,
       color: "bg-blue-500 text-blue-600",
       onClick: () => router.push("/empresas"),
     },
     {
       title: "Fleteros",
       value: stats.fleteros,
-      icon: <FaUserTie size={28} />,
+      icon: <IconDriver />,
       color: "bg-teal-500 text-teal-600",
       onClick: () => router.push("/empresas"),
     },
     {
       title: "Camiones",
       value: stats.camiones,
-      icon: <FaTruck size={28} />,
+      icon: <IconTruck />,
       color: "bg-green-500 text-green-600",
       onClick: () => router.push("/camiones"),
     },
     {
       title: "Semis",
       value: stats.semirremolques,
-      icon: <FaTruck size={28} />,
+      icon: <IconTrailer />,
       color: "bg-red-500 text-red-600",
       onClick: () => router.push("/camiones"),
     },
     {
       title: "Choferes",
       value: stats.choferes,
-      icon: <FaUserTie size={28} />,
+      icon: <IconDriver />,
       color: "bg-yellow-500 text-yellow-600",
       onClick: () => router.push("/choferes"),
     },
     {
       title: "Viajes",
       value: stats.viajes,
-      icon: <FaMapMarkedAlt size={28} />,
+      icon: <IconRoutes />,
       color: "bg-purple-500 text-purple-600",
       onClick: () => router.push("/viajes"),
     },
     {
       title: "Usuarios",
       value: stats.users,
-      icon: <FaUserTie size={28} />,
+      icon: <IconUsers />,
       color: "bg-indigo-500 text-indigo-600",
       onClick: () => router.push("/usuarios"),
     },
@@ -123,59 +132,69 @@ export default function Dashboard() {
         Dashboard
       </h1>
 
-      {/* Carrusel de cards */}
-      <div className="flex items-center mb-8 gap-4">
+      {/* 1. Clima Hero */}
+      <div className="mb-8 w-full">
+        <WeatherWidget mode="card" className="w-full" />
+      </div>
+
+      {/* 2. Tabla de últimos viajes (Ahora arriba del carrusel) */}
+      <div className="mb-8">
+        <DataTable
+            title="Últimos Viajes"
+            columns={columns}
+            data={viajes.map((v) => [
+            v.origen,
+            v.destino,
+            <span
+                className={
+                v.estado === "completado" ? "text-green-500" : 
+                v.estado === "en progreso" ? "text-blue-500" :
+                v.estado=== "cancelado" ? "text-red-500" :
+                "text-yellow-500"
+                }
+            >
+                {v.estado}
+            </span>,
+            v.fecha,
+            ])}
+        />
+      </div>
+
+      {/* 3. Carrusel de cards (Ahora abajo) */}
+      <h2 className="text-2xl font-bold text-gray-800 mb-4 px-2">Métricas Rápidas</h2>
+      <div className="flex items-center mb-12 gap-4 w-full">
         <button
           onClick={scrollLeft}
-          className="bg-white p-2 rounded-full shadow hover:bg-gray-100 transition"
+          className="bg-white p-2 rounded-full shadow hover:bg-gray-100 transition shrink-0"
         >
           <HiOutlineChevronLeft size={24} />
         </button>
 
-        {visibleCards.map((c, index) => (
-          <div
-            key={index}
-            onClick={c.onClick}
-            className="cursor-pointer"
-          >
-            <StatCard
-              title={c.title}
-              value={c.value}
-              icon={c.icon}
-              color={c.color}
-              className="shadow-md rounded-xl"
-            />
-          </div>
-        ))}
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {visibleCards.map((c, index) => (
+            <div
+              key={index}
+              onClick={c.onClick}
+              className="cursor-pointer w-full"
+            >
+              <StatCard
+                title={c.title}
+                value={c.value}
+                icon={c.icon}
+                color={c.color}
+                className="shadow-md rounded-xl h-full"
+              />
+            </div>
+          ))}
+        </div>
 
         <button
           onClick={scrollRight}
-          className="bg-white p-2 rounded-full shadow hover:bg-gray-100 transition"
+          className="bg-white p-2 rounded-full shadow hover:bg-gray-100 transition shrink-0"
         >
           <HiOutlineChevronRight size={24} />
         </button>
       </div>
-
-      {/* Tabla de últimos viajes */}
-      <DataTable
-        title="Últimos Viajes"
-        columns={columns}
-        data={viajes.map((v) => [
-          v.origen,
-          v.destino,
-          <span
-            className={
-              v.estado === "completado" ? "text-green-500" : 
-              v.estado === "en progreso" ? "text-blue-500" :
-              v.estado=== "cancelado" ? "text-red-500" :
-              "text-yellow-500"
-            }
-          >
-            {v.estado}
-          </span>,
-          v.fecha,
-        ])}
-      />
     </div>
   );
 }

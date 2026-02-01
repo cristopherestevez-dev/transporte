@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Button, Dropdown } from "@heroui/react";
 import { HiOutlineUser, HiOutlineLogout, HiMenu } from "react-icons/hi";
+import WeatherWidget from "@/app/components/ui/WeatherWidget/WeatherWidget";
 
 export default function Navbar({ onToggleSidebar }) {
   // Simulamos usuario logueado (más adelante podrás usar contexto o estado global)
   const usuario = { email: "admin@empresa.com", nombre: "Administrador" };
+  const pathname = usePathname();
 
   // Estado para abrir/cerrar dropdown de usuario
   const [openDropdown, setOpenDropdown] = useState(false);
@@ -32,27 +35,32 @@ export default function Navbar({ onToggleSidebar }) {
         Transporte Cargas SaaS
       </div>
 
-      {/* Usuario y acciones */}
-      <div className="relative">
-        <button
-          onClick={toggleDropdown}
-          className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none"
-        >
-          <HiOutlineUser size={24} />
-          <span className="hidden sm:inline">{usuario.email}</span>
-        </button>
+      <div className="flex items-center gap-4">
+        {/* Weather Widget (Navbar mode) - oculto en dashboard */}
+        {pathname !== "/dashboard" && <WeatherWidget mode="navbar" />}
 
-        {/* Dropdown */}
-        {openDropdown && (
-          <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-md z-50">
+        {/* Usuario y acciones */}
+        <div className="relative">
             <button
-              onClick={handleLogout}
-              className="w-full text-left px-4 py-2 hover:bg-red-100 text-red-600 font-semibold"
+            onClick={toggleDropdown}
+            className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none"
             >
-              Cerrar sesión
+            <HiOutlineUser size={24} />
+            <span className="hidden sm:inline">{usuario.email}</span>
             </button>
-          </div>
-        )}
+
+            {/* Dropdown */}
+            {openDropdown && (
+            <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-md z-50">
+                <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-2 hover:bg-red-100 text-red-600 font-semibold"
+                >
+                Cerrar sesión
+                </button>
+            </div>
+            )}
+        </div>
       </div>
     </header>
   );
