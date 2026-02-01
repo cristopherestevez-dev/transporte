@@ -14,14 +14,11 @@ module.exports = {
         sans: ['Poppins', 'ui-sans-serif', 'system-ui'],
       },
       colors: {
-        // Extension for custom consistency if needed outside HeroUI components
-        surface: {
-          light: "#FFFFFF",
-          dark: "#0B1220",
-        },
-        surface2: {
-          light: "#F1F6FF",
-          dark: "#0F1B2D",
+        brand: {
+            navy: "#0B1F3B",
+            cyan: "#06B6D4",
+            cyanSoft: "#22D3EE",
+            blue: "#2563EB"
         }
       }
     },
@@ -32,45 +29,69 @@ module.exports = {
       themes: {
         light: {
           colors: {
-            background: "#F7FAFF", // bg
-            foreground: "#0B1220", // text
+            background: "#F7FAFF", // light.bg
+            foreground: "#0B1220", // light.text
             primary: {
-              DEFAULT: "#0B1F3B", // primary
+              DEFAULT: "#0B1F3B", // light.primary
               foreground: "#FFFFFF",
             },
             secondary: {
-              DEFAULT: "#06B6D4", // accent
+              DEFAULT: "#06B6D4", // light.accent
               foreground: "#FFFFFF",
             },
-            focus: "#38BDF8", // focus
-            content1: "#FFFFFF", // surface
-            content2: "#F1F6FF", // surface2
-            divider: "#E2E8F0", // border
+            success: {
+                DEFAULT: "#16A34A", // light.success
+                foreground: "#FFFFFF"
+            },
+            warning: {
+                DEFAULT: "#F59E0B", // light.warning
+                foreground: "#FFFFFF"
+            },
+            danger: {
+                DEFAULT: "#EF4444", // light.error
+                foreground: "#FFFFFF"
+            },
+            focus: "#38BDF8", // light.focus
+            content1: "#FFFFFF", // light.surface
+            content2: "#F1F6FF", // light.surface2
+            divider: "#E2E8F0", // light.border
             default: {
-              DEFAULT: "#F1F6FF", // surface2 as default
-              500: "#64748B", // textMuted
+              DEFAULT: "#F1F6FF", // light.surface2
+              500: "#64748B", // light.textMuted
             },
           },
         },
         dark: {
           colors: {
-            background: "#070B14", // bg
-            foreground: "#E5E7EB", // text
+            background: "#070B14", // dark.bg
+            foreground: "#E5E7EB", // dark.text
             primary: {
-              DEFAULT: "#3B82F6", // primary
+              DEFAULT: "#3B82F6", // dark.primary
               foreground: "#FFFFFF",
             },
             secondary: {
-              DEFAULT: "#22D3EE", // accent
+              DEFAULT: "#22D3EE", // dark.accent
               foreground: "#0B1220",
             },
-            focus: "#22D3EE", // focus
-            content1: "#0B1220", // surface
-            content2: "#0F1B2D", // surface2
-            divider: "#1F2A3A", // border
+            success: {
+                DEFAULT: "#22C55E", // dark.success
+                foreground: "#0B1220"
+            },
+            warning: {
+                DEFAULT: "#FBBF24", // dark.warning
+                foreground: "#0B1220"
+            },
+            danger: {
+                DEFAULT: "#F87171", // dark.error
+                foreground: "#0B1220"
+            },
+            focus: "#22D3EE", // dark.focus
+            content1: "#0B1220", // dark.surface
+            content2: "#0F1B2D", // dark.surface2 (Sidebar/Topbar)
+            divider: "#1F2A3A", // dark.border
             default: {
-              DEFAULT: "#0F1B2D", // surface2 as default
-              500: "#94A3B8", // textMuted
+              DEFAULT: "#0F1B2D", // dark.surface2
+              500: "#94A3B8", // dark.textMuted
             },
           },
         },
@@ -78,5 +99,3 @@ module.exports = {
     }),
   ],
 };
-
-

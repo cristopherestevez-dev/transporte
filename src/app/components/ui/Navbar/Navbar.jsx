@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
 import Link from 'next/link';
+
 import { Button, Dropdown } from "@heroui/react";
 import { HiOutlineUser, HiOutlineLogout, HiMenu, HiBell } from "react-icons/hi";
 import WeatherWidget from "@/app/components/ui/WeatherWidget/WeatherWidget";
 import { Logo } from "@/app/components/ui/Logo";
+import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 
 export default function Navbar({ onToggleSidebar }) {
   // Simulamos usuario logueado (más adelante podrás usar contexto o estado global)
@@ -79,7 +80,7 @@ export default function Navbar({ onToggleSidebar }) {
   };
 
   return (
-    <header className="w-full bg-white shadow-md px-6 py-4 flex justify-between items-center">
+    <header className="w-full bg-content1 shadow-md px-6 py-4 flex justify-between items-center border-b border-divider transition-colors duration-300">
       {/* Botón para toggle sidebar (opcional) */}
       {/* {onToggleSidebar && (
         <Button variant="ghost" onPress={onToggleSidebar} className=" mr-4 text-gray-700">
@@ -95,6 +96,7 @@ export default function Navbar({ onToggleSidebar }) {
       </div>
 
       <div className="flex items-center gap-4">
+        
         {/* Weather Widget (Navbar mode) - oculto en dashboard */}
         {pathname !== "/dashboard" && <WeatherWidget mode="navbar" />}
 

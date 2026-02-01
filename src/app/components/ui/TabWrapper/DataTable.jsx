@@ -71,8 +71,8 @@ export default function DataTable({ title, columns, data }) {
 
   return (
     <Card shadow="md" className="rounded-xl">
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-200">
-        <h3 className="text-xl font-bold text-gray-800">{title}</h3>
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-divider">
+        <h3 className="text-xl font-bold text-foreground">{title}</h3>
         <input
           type="text"
           placeholder="Buscar..."
@@ -81,19 +81,19 @@ export default function DataTable({ title, columns, data }) {
             setSearchTerm(e.target.value);
             setCurrentPage(1);
           }}
-          className="w-full sm:w-64 px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full sm:w-64 px-3 py-2 border rounded-md border-divider bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-default-400"
         />
       </CardHeader>
 
       <CardBody className="p-0 overflow-x-auto">
-        <table className="min-w-full border-collapse table-auto text-gray-700">
-          <thead className="bg-gray-100">
+        <table className="min-w-full border-collapse table-auto text-foreground">
+          <thead className="bg-brand-navy border-b border-brand-navy">
             <tr>
               {columns.map((col, i) => (
                 <th
                   key={i}
                   onClick={() => requestSort(i)}
-                  className="py-3 px-6 text-left font-semibold text-gray-600 border-b border-gray-300 cursor-pointer select-none"
+                  className="py-3 px-6 text-left font-semibold text-white border-b border-brand-navy cursor-pointer select-none"
                   style={{ userSelect: "none" }}
                 >
                   {col}
@@ -105,7 +105,7 @@ export default function DataTable({ title, columns, data }) {
           <tbody>
             {currentData.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="py-6 text-center text-gray-500">
+                <td colSpan={columns.length} className="py-6 text-center text-default-500">
                   No se encontraron datos
                 </td>
               </tr>
@@ -113,12 +113,10 @@ export default function DataTable({ title, columns, data }) {
               currentData.map((row, i) => (
                 <tr
                   key={i}
-                  className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
-                    i % 2 === 0 ? "bg-white" : "bg-gray-50"
-                  } cursor-default`}
+                  className="border-b border-divider hover:bg-content2 transition-colors bg-content1 cursor-default"
                 >
                   {row.map((cell, j) => (
-                    <td key={j} className="py-4 px-6 whitespace-nowrap">
+                    <td key={j} className="py-4 px-6 whitespace-nowrap text-foreground">
                       {cell}
                     </td>
                   ))}
@@ -129,7 +127,7 @@ export default function DataTable({ title, columns, data }) {
         </table>
       </CardBody>
 
-      <div className="flex justify-end items-center gap-2 p-4 border-t border-gray-200">
+      <div className="flex justify-end items-center gap-2 p-4 border-t border-divider">
         <button
           onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
           disabled={currentPage === 1}
@@ -138,7 +136,7 @@ export default function DataTable({ title, columns, data }) {
          <HiChevronLeft size={20} className="text-white" />
         </button>
 
-        <span className="text-gray-700 font-medium">
+        <span className="text-foreground font-medium">
           Página {currentPage} de {pageCount}
         </span>
 

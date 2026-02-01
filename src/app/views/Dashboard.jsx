@@ -124,8 +124,8 @@ export default function Dashboard() {
   const columns = ["Origen", "Destino", "Estado", "Fecha", "Acciones"];
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <h1 className="text-4xl font-extrabold text-gray-800 mb-8 border-b pb-4">
+    <div className="p-8 bg-background min-h-screen transition-colors duration-300">
+      <h1 className="text-4xl font-extrabold text-foreground mb-8 border-b border-divider pb-4">
         Dashboard
       </h1>
 
@@ -144,9 +144,9 @@ export default function Dashboard() {
             v.destino,
             <span
                 className={`font-bold ${
-                v.estado === "finalizado" ? "text-green-600" : 
-                v.estado === "en_transito" ? "text-blue-600" :
-                "text-yellow-600" // pendiente
+                v.estado === "finalizado" ? "text-success" : 
+                v.estado === "en_transito" ? "text-primary" :
+                "text-warning" // pendiente
                 }`}
             >
                 {v.estado === "finalizado" ? "Finalizado" : 
@@ -155,7 +155,7 @@ export default function Dashboard() {
             </span>,
             v.fecha_salida, 
             <Link href={`/viajes/${v.type}/${v.id}`}>
-               <div className="flex justify-center text-gray-500 hover:text-blue-600 transition cursor-pointer">
+               <div className="flex justify-center text-default-500 hover:text-primary transition cursor-pointer">
                    <HiEye size={20} />
                </div>
             </Link>
@@ -164,11 +164,11 @@ export default function Dashboard() {
       </div>
 
       {/* 3. Carrusel de cards (Ahora abajo) */}
-      <h2 className="text-2xl font-bold text-gray-800 mb-4 px-2">Métricas Rápidas</h2>
+      <h2 className="text-2xl font-bold text-foreground mb-4 px-2">Métricas Rápidas</h2>
       <div className="flex items-center mb-12 gap-4 w-full">
         <button
           onClick={scrollLeft}
-          className="bg-white p-2 rounded-full shadow hover:bg-gray-100 transition shrink-0"
+          className="bg-content1 p-2 rounded-full shadow hover:bg-content2 text-foreground transition shrink-0"
         >
           <HiOutlineChevronLeft size={24} />
         </button>
@@ -204,7 +204,7 @@ export default function Dashboard() {
 
         <button
           onClick={scrollRight}
-          className="bg-white p-2 rounded-full shadow hover:bg-gray-100 transition shrink-0"
+          className="bg-content1 p-2 rounded-full shadow hover:bg-content2 text-foreground transition shrink-0"
         >
           <HiOutlineChevronRight size={24} />
         </button>

@@ -27,10 +27,10 @@ const renderStandardGroup = (row, index, prefix, handleChange) => (
         onChange={(e) => handleChange(index, prefix + "_codigo", e.target.value)}
       />
     </td>
-    <td className="border px-2 py-1">
+    <td className="border border-divider px-2 py-1">
       <input
         type="number"
-        className="w-full text-xs bg-transparent focus:bg-white focus:outline-none p-1"
+        className="w-full text-xs bg-transparent focus:bg-content2 text-foreground focus:outline-none p-1"
         value={row[prefix + "_precio"] || ""}
         onChange={(e) => handleChange(index, prefix + "_precio", e.target.value)}
       />
@@ -133,37 +133,37 @@ export default function CamionProfile({ id }) {
   if (!truck) return <div className="p-8">Camión no encontrado</div>;
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-background min-h-screen transition-colors duration-300">
       <div className="flex items-center gap-4 mb-6">
-        <Link href="/camiones" className="p-2 bg-white rounded shadow hover:bg-gray-50">
+        <Link href="/camiones" className="p-2 bg-content1 rounded shadow hover:bg-content2 text-foreground">
           <FaArrowLeft />
         </Link>
-        <h1 className="text-2xl font-bold">
+        <h1 className="text-2xl font-bold text-foreground">
           Planilla de Mantenimiento: {truck.marca} {truck.modelo} ({truck.patente})
         </h1>
       </div>
 
-      <div className="bg-white shadow rounded-lg overflow-hidden flex flex-col">
+      <div className="bg-content1 shadow rounded-lg overflow-hidden flex flex-col border border-divider">
         <div className="overflow-x-auto pb-4">
-          <table className="min-w-[3000px] border-collapse bg-white text-sm">
-            <thead className="bg-gray-100 text-gray-700 uppercase">
+          <table className="min-w-[3000px] border-collapse bg-content1 text-sm text-foreground">
+            <thead className="bg-brand-navy text-white uppercase font-semibold">
               <tr>
-                <th rowSpan={2} className="border px-2 py-1 sticky left-0 bg-gray-100 z-10 w-24">Fecha</th>
-                <th rowSpan={2} className="border px-2 py-1 w-24">Patente</th>
-                <th rowSpan={2} className="border px-2 py-1 w-20">Km</th>
+                <th rowSpan={2} className="border border-divider px-2 py-1 sticky left-0 bg-brand-navy z-10 w-24">Fecha</th>
+                <th rowSpan={2} className="border border-divider px-2 py-1 w-24">Patente</th>
+                <th rowSpan={2} className="border border-divider px-2 py-1 w-20">Km</th>
 
-                <th colSpan={6} className="border px-2 py-1 text-center bg-yellow-100">Aceite</th>
-                <th colSpan={4} className="border px-2 py-1 text-center bg-blue-100">Filtro Aceite</th>
-                <th colSpan={5} className="border px-2 py-1 text-center bg-green-100">Cubiertas</th>
-                <th colSpan={4} className="border px-2 py-1 text-center bg-blue-100">Filtro Gasoil</th>
-                <th colSpan={4} className="border px-2 py-1 text-center bg-blue-100">Trampa de Agua</th>
-                <th colSpan={4} className="border px-2 py-1 text-center bg-blue-100">Secado de Aire</th>
-                <th colSpan={4} className="border px-2 py-1 text-center bg-blue-100">Filtro de Aire</th>
-                <th colSpan={4} className="border px-2 py-1 text-center bg-blue-100">Filtro Habitaculo</th>
-                <th colSpan={4} className="border px-2 py-1 text-center bg-red-100">Bomba de Agua</th>
-                <th colSpan={4} className="border px-2 py-1 text-center bg-red-100">Valvulas</th>
-                <th colSpan={4} className="border px-2 py-1 text-center bg-red-100">Toberas</th>
-                <th colSpan={2} className="border px-2 py-1 text-center bg-gray-200">Extras</th>
+                <th colSpan={6} className="border border-divider px-2 py-1 text-center bg-brand-navy/90 text-white">Aceite</th>
+                <th colSpan={4} className="border border-divider px-2 py-1 text-center bg-brand-navy/80 text-white">Filtro Aceite</th>
+                <th colSpan={5} className="border border-divider px-2 py-1 text-center bg-brand-navy/90 text-white">Cubiertas</th>
+                <th colSpan={4} className="border border-divider px-2 py-1 text-center bg-brand-navy/80 text-white">Filtro Gasoil</th>
+                <th colSpan={4} className="border border-divider px-2 py-1 text-center bg-brand-navy/90 text-white">Trampa de Agua</th>
+                <th colSpan={4} className="border border-divider px-2 py-1 text-center bg-brand-navy/80 text-white">Secado de Aire</th>
+                <th colSpan={4} className="border border-divider px-2 py-1 text-center bg-brand-navy/90 text-white">Filtro de Aire</th>
+                <th colSpan={4} className="border border-divider px-2 py-1 text-center bg-brand-navy/80 text-white">Filtro Habitaculo</th>
+                <th colSpan={4} className="border border-divider px-2 py-1 text-center bg-brand-navy/90 text-white">Bomba de Agua</th>
+                <th colSpan={4} className="border border-divider px-2 py-1 text-center bg-brand-navy/80 text-white">Valvulas</th>
+                <th colSpan={4} className="border border-divider px-2 py-1 text-center bg-brand-navy/90 text-white">Toberas</th>
+                <th colSpan={2} className="border border-divider px-2 py-1 text-center bg-brand-navy/80 text-white">Extras</th>
                 <th rowSpan={2} className="border px-2 py-1 w-10"></th>
               </tr>
               <tr>
@@ -200,14 +200,14 @@ export default function CamionProfile({ id }) {
 
                 {/* Extras Headers */}
                 <th className="border px-2 py-1 text-[10px]">Descripcion</th>
-                <th className="border px-2 py-1 text-[10px]">Precio</th>
+                <th className="border border-divider px-2 py-1 text-[10px]">Precio</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-divider">
               {maintenanceLog.map((row, index) => (
                 <tr key={row.id}>
                   {/* General */}
-                  <td className="border px-2 py-1 sticky left-0 bg-white z-10">
+                  <td className="border border-divider px-2 py-1 sticky left-0 bg-content1 z-10">
                     <input 
                       type="date" 
                       className="w-full text-xs bg-transparent outline-none"
@@ -297,14 +297,14 @@ export default function CamionProfile({ id }) {
         </div>
         
         {/* Footer Totals */}
-        <div className="bg-gray-100 p-4 border-t flex justify-end gap-8 text-sm">
+        <div className="bg-content2 p-4 border-t border-divider flex justify-end gap-8 text-sm">
             <div className="flex gap-2">
-                <span className="font-bold text-gray-600">TOTAL:</span>
-                <span className="font-bold text-gray-900">${grandTotal.toLocaleString()}</span>
+                <span className="font-bold text-default-500">TOTAL:</span>
+                <span className="font-bold text-foreground">${grandTotal.toLocaleString()}</span>
             </div>
             <div className="flex gap-2">
-                <span className="font-bold text-gray-600">TOTAL c/IVA (21%):</span>
-                <span className="font-bold text-gray-900">${grandTotalIVA.toLocaleString()}</span>
+                <span className="font-bold text-default-500">TOTAL c/IVA (21%):</span>
+                <span className="font-bold text-foreground">${grandTotalIVA.toLocaleString()}</span>
             </div>
         </div>
       </div>

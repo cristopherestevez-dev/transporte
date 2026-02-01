@@ -118,17 +118,17 @@ export default function CrudTable({
 
       {/* Tabla */}
       <table className="w-full border-collapse rounded-lg overflow-hidden shadow-sm">
-        <thead className="bg-gray-100 border-b border-gray-300">
+        <thead className="bg-brand-navy border-b border-brand-navy">
           <tr>
             {columns.map((col) => (
               <th
                 key={col.key}
-                className="px-6 py-3 text-left text-sm font-semibold text-gray-700"
+                className="px-6 py-3 text-left text-sm font-semibold text-white uppercase tracking-wide"
               >
                 {col.label}
               </th>
             ))}
-            <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">
+            <th className="px-6 py-3 text-center text-sm font-semibold text-white uppercase tracking-wide">
               Acciones
             </th>
           </tr>
@@ -137,7 +137,7 @@ export default function CrudTable({
           {data?.map((item) => (
             <tr
               key={item.id}
-              className="bg-white hover:bg-blue-50 transition-colors"
+              className="bg-content1 hover:bg-content2 transition-colors border-b border-divider"
             >
               {columns.map((col) => {
 
@@ -158,7 +158,7 @@ export default function CrudTable({
                         style={{
                           color:
                             estadoOptions.find((opt) => opt.value === item.estado)
-                              ?.color || "black",
+                              ?.color || "inherit",
                         }}
                       >
                         {estadoOptions.map((opt) => (
@@ -185,7 +185,7 @@ export default function CrudTable({
                 }
 
                 return (
-                  <td key={`${item.id}-${col.key}`} className="px-6 py-4">
+                  <td key={`${item.id}-${col.key}`} className="px-6 py-4 text-foreground">
                     {item[col.key] || "-"}
                   </td>
                 );
@@ -265,7 +265,7 @@ export default function CrudTable({
                         onChange={(e) =>
                           setForm({ ...form, [f.key]: e.target.value })
                         }
-                        className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="w-full p-2 border border-divider rounded-md focus:outline-none focus:ring-2 focus:ring-secondary bg-transparent text-foreground"
                         required={f.required}
                       />
                     )}
