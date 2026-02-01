@@ -43,6 +43,7 @@ const LicenseBadge = ({ date }) => {
 
 export default function ChoferesList() {
   const [choferes, setChoferes] = useState([]);
+  const [trips, setTrips] = useState([]); // Store all trips
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -56,7 +57,15 @@ export default function ChoferesList() {
         }
         const data = await res.json();
         setChoferes(data.choferes);
+
+        // Fetch trips for counting
+        const storedNacionales = localStorage.getItem("viajesNacionales");
+        const storedInternacionales = localStorage.getItem("viajesInternacionales");
         
+        const viajesNacionales = storedNacionales ? JSON.parse(storedNacionales) : (data.viajesNacionales || []);
+        const viajesInternacionales = storedInternacionales ? JSON.parse(storedInternacionales) : (data.viajesInternacionales || []);
+        
+        setTrips([...viajesNacionales, ...viajesInternacionales]);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -104,8 +113,17 @@ export default function ChoferesList() {
                   key: "licencia",
                   render: (value) => <LicenseBadge date={value} />
                 },
-
-                
+                { 
+                  label: "Viajes Realizados", 
+                  key: "id",
+                  render: (value, row) => {
+                      const count = trips.filter(t => 
+                          (t.tipoAsignacion === 'chofer' && t.asignadoId?.toString() === row.id.toString()) ||
+                          (t.choferId && t.choferId.toString() === row.id.toString())
+                      ).length;
+                      return <span className="font-bold">{count}</span>;
+                  }
+                },
               ]}
               formFields={[
                 { label: "Nombre", key: "nombre", required: true },

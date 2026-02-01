@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import Link from 'next/link';
 import { Button, Dropdown } from "@heroui/react";
 import { HiOutlineUser, HiOutlineLogout, HiMenu, HiBell } from "react-icons/hi";
 import WeatherWidget from "@/app/components/ui/WeatherWidget/WeatherWidget";
+import { Logo } from "@/app/components/ui/Logo";
 
 export default function Navbar({ onToggleSidebar }) {
   // Simulamos usuario logueado (más adelante podrás usar contexto o estado global)
@@ -86,8 +88,10 @@ export default function Navbar({ onToggleSidebar }) {
       )} */}
 
       {/* Logo o nombre */}
-      <div className="text-l font-bold text-gray-800">
-        Transporte Cargas SaaS
+      <div className="flex items-center">
+        <Link href="/dashboard">
+            <Logo width={260} height={70} className="cursor-pointer" />
+        </Link>
       </div>
 
       <div className="flex items-center gap-4">

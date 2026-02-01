@@ -158,6 +158,23 @@ const ViajesList = () => {
     { label: "Destino", key: "destino" },
     { label: "Fecha Salida", key: "fecha_salida" },
     { label: "Fecha Llegada", key: "fecha_llegada" },
+    { 
+        label: "Realizado Por", 
+        key: "asignadoId",
+        render: (value, row) => {
+            if (row.tipoAsignacion === 'chofer') {
+                const c = choferesOptions.find(opt => opt.id.toString() === value?.toString());
+                return c ? c.nombre : '-';
+            }
+            if (row.tipoAsignacion === 'fletero') {
+                const f = fleterosOptions.find(opt => opt.id.toString() === value?.toString());
+                return f ? f.nombre : '-';
+            }
+            // Fallback for legacy explicit names if needed, or return spacer
+            return '-';
+        }
+    },
+    { label: "Carga / Contenedor", key: "carga" },
     {
       label: "Estado",
       key: "estado",
@@ -184,6 +201,49 @@ const ViajesList = () => {
       key: "fecha_llegada", 
       type: "date",
       minDateFrom: "fecha_salida" 
+    },
+    {
+        label: "Tipo de Carga",
+        key: "tipoCarga",
+        render: ({ form, setForm }) => (
+            <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Carga</label>
+                <div className="flex gap-4">
+                    <label className="flex items-center gap-2">
+                        <input 
+                            type="radio" 
+                            name="tipoCarga" 
+                            value="contenedor" 
+                            checked={form.tipoCarga === "contenedor" || (!form.tipoCarga && form.carga && form.carga !== "ByL")}
+                            onChange={() => setForm({ ...form, tipoCarga: "contenedor", carga: form.carga === "ByL" ? "" : form.carga })}
+                        />
+                        Contenedor
+                    </label>
+                    <label className="flex items-center gap-2">
+                        <input 
+                            type="radio" 
+                            name="tipoCarga" 
+                            value="byl" 
+                            checked={form.tipoCarga === "byl" || (!form.tipoCarga && form.carga === "ByL")}
+                            onChange={() => setForm({ ...form, tipoCarga: "byl", carga: "ByL" })}
+                        />
+                        Baranda y Lona
+                    </label>
+                </div>
+                {(form.tipoCarga === "contenedor" || (!form.tipoCarga && form.carga && form.carga !== "ByL")) && (
+                    <div className="mt-2">
+                         <label className="block text-sm font-medium text-gray-700">N° Contenedor</label>
+                         <input 
+                            type="text"
+                            className="w-full mt-1 p-2 border rounded-md"
+                            placeholder="Ej: MSCU1234567"
+                            value={form.carga || ""}
+                            onChange={(e) => setForm({ ...form, carga: e.target.value })}
+                         />
+                    </div>
+                )}
+            </div>
+        )
     },
     {
       label: "Estado",
@@ -275,7 +335,6 @@ const ViajesList = () => {
                       setForm({ 
                         ...form, 
                         asignadoId: selectedId,
-                        proveedorNombre: selectedOption ? selectedOption.nombre : "" 
                       });
                     }}
                  >

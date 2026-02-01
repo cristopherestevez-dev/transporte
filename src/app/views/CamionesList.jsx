@@ -3,6 +3,7 @@ import React from 'react'
 import TabsWrapper from '../components/ui/TabsWrapper/TabsWrapper'
 import CrudTable from '../components/ui/CrudTable/CrudTable'
 import { useState, useEffect } from 'react'
+import Link from 'next/link';
 
 // Helper para calcular dias restantes y color (Reutilizado logicamente)
 const ExpirationBadge = ({ date }) => {
@@ -69,7 +70,15 @@ const CamionesList = () => {
         key="camiones-list"
         apiUrl="http://localhost:3001/api/camiones"
         columns={[
-            { label: "Patente", key: "patente" },
+            { 
+              label: "Patente", 
+              key: "patente",
+              render: (value, row) => (
+                <Link href={`/camiones/${row.id}`} className="text-blue-600 hover:underline font-bold">
+                  {value}
+                </Link>
+              )
+            },
             { label: "Marca", key: "marca" },
             { label: "Modelo", key: "modelo" },
             { label: "Año", key: "anio" },

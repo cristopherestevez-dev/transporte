@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="AtlasOps favicon">
+  <defs>
+    <style>
+      :root { --navy:#0B1F3B; --cyan:#06B6D4; --bg:#F1F6FF; }
+    </style>
+  </defs>
+
+  <!-- outer rounded square -->
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="var(--bg)"></rect>
+  <!-- inner card -->
+  <rect x="10" y="10" width="44" height="44" rx="12" fill="#fff"></rect>
+
+  <!-- stylized A / mountain -->
+  <path d="M32 16c1.4 0 2.7.7 3.4 1.9L50 44c1.4 2.4-.3 5.5-3.1 5.5h-5.2c-1.4 0-2.7-.7-3.4-1.9L32 30.8 25.7 47.6c-.7 1.2-2 1.9-3.4 1.9h-5.2c-2.8 0-4.5-3.1-3.1-5.5l14.6-26.1c.7-1.2 2-1.9 3.4-1.9Z" fill="var(--navy)"></path>
+
+  <!-- route stripe -->
+  <path d="M22.8 41.6c3.2-5.6 6.6-11.6 10-17.4.9-1.5 3-1.5 3.9 0l2.6 4.4c.5.8.5 1.8 0 2.6-2.1 3.5-4.3 7.2-6.3 10.6-.6 1-1.6 1.5-2.7 1.5h-4.2c-2.2 0-3.5-2.3-2.3-4.3Z" fill="var(--cyan)"></path>
+  <!-- destination dot -->
+  <circle cx="42.5" cy="36.5" r="3.4" fill="var(--cyan)"></circle>
+</svg>

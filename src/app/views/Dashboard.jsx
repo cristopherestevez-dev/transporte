@@ -12,8 +12,11 @@ import {
   IconUsers,
 } from "@/app/components/ui/Icons/Icons";
 import WeatherWidget from "@/app/components/ui/WeatherWidget/WeatherWidget";
-import { HiOutlineChevronLeft, HiOutlineChevronRight } from "react-icons/hi";
+
+import { HiOutlineChevronLeft, HiOutlineChevronRight, HiEye } from "react-icons/hi";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -42,8 +45,8 @@ export default function Dashboard() {
         };
 
         const ultimosViajes = [
-          ...(data.viajesNacionales || []),
-          ...(data.viajesInternacionales || []),
+          ...(data.viajesNacionales || []).map(v => ({...v, type: 'nacional'})),
+          ...(data.viajesInternacionales || []).map(v => ({...v, type: 'internacional'})),
         ]
           .sort((a, b) => new Date(b.fecha_salida) - new Date(a.fecha_salida))
           .slice(0, 5);
@@ -82,13 +85,7 @@ export default function Dashboard() {
       color: "bg-green-500 text-green-600",
       onClick: () => router.push("/camiones"),
     },
-    {
-      title: "Semis",
-      value: stats.semirremolques,
-      icon: <IconTrailer />,
-      color: "bg-red-500 text-red-600",
-      onClick: () => router.push("/camiones"),
-    },
+   
     {
       title: "Choferes",
       value: stats.choferes,
@@ -124,7 +121,7 @@ export default function Dashboard() {
     setPage((prev) => (prev - 1 + totalPages) % totalPages);
   const scrollRight = () => setPage((prev) => (prev + 1) % totalPages);
 
-  const columns = ["Origen", "Destino", "Estado", "Fecha"];
+  const columns = ["Origen", "Destino", "Estado", "Fecha", "Acciones"];
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
@@ -146,16 +143,22 @@ export default function Dashboard() {
             v.origen,
             v.destino,
             <span
-                className={
-                v.estado === "completado" ? "text-green-500" : 
-                v.estado === "en progreso" ? "text-blue-500" :
-                v.estado=== "cancelado" ? "text-red-500" :
-                "text-yellow-500"
-                }
+                className={`font-bold ${
+                v.estado === "finalizado" ? "text-green-600" : 
+                v.estado === "en_transito" ? "text-blue-600" :
+                "text-yellow-600" // pendiente
+                }`}
             >
-                {v.estado}
+                {v.estado === "finalizado" ? "Finalizado" : 
+                 v.estado === "en_transito" ? "En Tránsito" : 
+                 "Pendiente"}
             </span>,
-            v.fecha,
+            v.fecha_salida, 
+            <Link href={`/viajes/${v.type}/${v.id}`}>
+               <div className="flex justify-center text-gray-500 hover:text-blue-600 transition cursor-pointer">
+                   <HiEye size={20} />
+               </div>
+            </Link>
             ])}
         />
       </div>
@@ -170,22 +173,33 @@ export default function Dashboard() {
           <HiOutlineChevronLeft size={24} />
         </button>
 
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {visibleCards.map((c, index) => (
-            <div
-              key={index}
-              onClick={c.onClick}
-              className="cursor-pointer w-full"
+        <div className="flex-1 overflow-hidden relative" style={{ minHeight: "160px" }}> 
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={page}
+              initial={{ x: 300, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -300, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 absolute w-full"
             >
-              <StatCard
-                title={c.title}
-                value={c.value}
-                icon={c.icon}
-                color={c.color}
-                className="shadow-md rounded-xl h-full"
-              />
-            </div>
-          ))}
+              {visibleCards.map((c, index) => (
+                <div
+                  key={index}
+                  onClick={c.onClick}
+                  className="cursor-pointer w-full"
+                >
+                  <StatCard
+                    title={c.title}
+                    value={c.value}
+                    icon={c.icon}
+                    color={c.color}
+                    className="shadow-md rounded-xl h-full"
+                  />
+                </div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         <button

@@ -3,15 +3,8 @@
 @tailwind utilities;
 
 
-@font-face {
-  font-family: "Poppins";
-  src: url("/fonts/Poppins-Regular.ttf") format("truetype");
-  font-weight: normal;
-  font-style: normal;
-}
-
 :root {
-  font-family: "Poppins", sans-serif !important;
+  font-family: var(--font-poppins), sans-serif !important;
 }
 
 /* Weather Animations */

@@ -23,7 +23,10 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en">
-      <body className="flex min-h-screen bg-gray-100 font-sans">
+      <head>
+        <link rel="icon" href="/faviconAtlas.svg" type="image/svg+xml" />
+      </head>
+      <body className={`flex min-h-screen bg-gray-100 font-sans ${poppins.variable}`}>
         {/* Sidebar: oculto en sm, visible según estado */}
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 

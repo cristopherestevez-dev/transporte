@@ -140,20 +140,7 @@ export default function CrudTable({
               className="bg-white hover:bg-blue-50 transition-colors"
             >
               {columns.map((col) => {
-                // Botón para seleccionar proveedor
-                if (col.key === "proveedor") {
-                  return (
-                    <td key={item.id + "-proveedor"}>
-                      <button
-                        type="button"
-                        onClick={() => openProveedorModal(item)}
-                        className="px-2 py-1 bg-blue-500 text-white rounded"
-                      >
-                        {item.proveedorNombre || "Seleccionar Proveedor"}
-                      </button>
-                    </td>
-                  );
-                }
+
 
                 // Combo de estados
                 if (col.key === "estado") {

@@ -278,6 +278,7 @@
   ],
   "camiones": [
     {
+      "id": 1,
       "patente": "ABC123",
       "marca": "Mercedes",
       "modelo": "Actros",
@@ -288,6 +289,7 @@
       "numero_motor": "MTR001"
     },
     {
+      "id": 2,
       "patente": "DEF456",
       "marca": "Volvo",
       "modelo": "FH16",
@@ -298,6 +300,7 @@
       "numero_motor": "MTR002"
     },
     {
+      "id": 3,
       "patente": "GHI789",
       "marca": "Scania",
       "modelo": "R500",
@@ -308,6 +311,7 @@
       "numero_motor": "MTR003"
     },
     {
+      "id": 4,
       "patente": "JKL012",
       "marca": "MAN",
       "modelo": "TGX",
@@ -318,6 +322,7 @@
       "numero_motor": "MTR004"
     },
     {
+      "id": 5,
       "patente": "MNO345",
       "marca": "Iveco",
       "modelo": "Stralis",
@@ -328,6 +333,7 @@
       "numero_motor": "MTR005"
     },
     {
+      "id": 6,
       "patente": "PQR678",
       "marca": "Mercedes",
       "modelo": "Arocs",
@@ -338,6 +344,7 @@
       "numero_motor": "MTR006"
     },
     {
+      "id": 7,
       "patente": "STU901",
       "marca": "Volvo",
       "modelo": "FMX",
@@ -348,6 +355,7 @@
       "numero_motor": "MTR007"
     },
     {
+      "id": 8,
       "patente": "VWX234",
       "marca": "Scania",
       "modelo": "S730",
@@ -358,6 +366,7 @@
       "numero_motor": "MTR008"
     },
     {
+      "id": 9,
       "patente": "YZA567",
       "marca": "MAN",
       "modelo": "TGM",
@@ -368,6 +377,7 @@
       "numero_motor": "MTR009"
     },
     {
+      "id": 10,
       "patente": "BCD890",
       "marca": "Iveco",
       "modelo": "Eurocargo",
@@ -380,6 +390,7 @@
   ],
   "semirremolques": [
     {
+      "id": 101,
       "patente": "SRM001",
       "marca": "Schmitz",
       "modelo": "S.KO",
@@ -390,6 +401,7 @@
       "numero_ejes": 3
     },
     {
+      "id": 102,
       "patente": "SRM002",
       "marca": "Krone",
       "modelo": "Cool Liner",
@@ -400,6 +412,7 @@
       "numero_ejes": 3
     },
     {
+      "id": 103,
       "patente": "SRM003",
       "marca": "Schmitz",
       "modelo": "Cargoliner",
@@ -410,6 +423,7 @@
       "numero_ejes": 2
     },
     {
+      "id": 104,
       "patente": "SRM004",
       "marca": "Krone",
       "modelo": "Mega Liner",
@@ -420,6 +434,7 @@
       "numero_ejes": 3
     },
     {
+      "id": 105,
       "patente": "SRM005",
       "marca": "Wielton",
       "modelo": "NS3",
@@ -430,6 +445,7 @@
       "numero_ejes": 2
     },
     {
+      "id": 106,
       "patente": "SRM006",
       "marca": "Schmitz",
       "modelo": "Cargoliner",
@@ -440,6 +456,7 @@
       "numero_ejes": 3
     },
     {
+      "id": 107,
       "patente": "SRM007",
       "marca": "Krone",
       "modelo": "Cool Liner",
@@ -450,6 +467,7 @@
       "numero_ejes": 2
     },
     {
+      "id": 108,
       "patente": "SRM008",
       "marca": "Wielton",
       "modelo": "NS3",
@@ -460,6 +478,7 @@
       "numero_ejes": 3
     },
     {
+      "id": 109,
       "patente": "SRM009",
       "marca": "Schmitz",
       "modelo": "S.KO",
@@ -470,6 +489,7 @@
       "numero_ejes": 2
     },
     {
+      "id": 110,
       "patente": "SRM010",
       "marca": "Krone",
       "modelo": "Mega Liner",
