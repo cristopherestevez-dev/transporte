@@ -11,6 +11,7 @@ export default function CrudTable({
   setData,
   columns,
   formFields,
+  apiUrl, // URL de la API para CRUD
   openProveedorModal, // Función para abrir modal de proveedor
   validate, // NEW: Función de validación opcional (formData) => errorString | null
 }) {
@@ -64,7 +65,7 @@ export default function CrudTable({
     (f) => !f.required || (form[f.key] && form[f.key].toString().trim() !== "")
   );
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // 1. Validar si existe la prop validate
     if (validate) {
       const errorMsg = validate(form);
@@ -74,32 +75,64 @@ export default function CrudTable({
       }
     }
 
-    let newData;
-    if (editingItem) {
-      // Editar
-      newData = data.map((item) =>
-        item.id === editingItem.id ? { ...form, id: editingItem.id } : item
-      );
-    } else {
-      // Agregar
-      const newId =
-        data.length > 0 ? Math.max(...data.map((d) => d.id || 0)) + 1 : 1;
-      newData = [...(data || []), { ...form, id: newId }];
+    try {
+      let savedItem;
+      if (editingItem) {
+        // Editar - PATCH al API
+        const response = await fetch(`${apiUrl}/${editingItem._id || editingItem.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form)
+        });
+        if (!response.ok) throw new Error('Error al actualizar');
+        const json = await response.json();
+        savedItem = json.data;
+        // Actualizar en el estado local
+        setData(data.map((item) =>
+          (item._id === editingItem._id || item.id === editingItem.id) ? savedItem : item
+        ));
+      } else {
+        // Agregar - POST al API
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form)
+        });
+        if (!response.ok) throw new Error('Error al crear');
+        const json = await response.json();
+        savedItem = json.data;
+        // Agregar al estado local
+        setData([...(data || []), savedItem]);
+      }
+      setConfirmAddOpen(false);
+      setModalOpen(false);
+      setSuccessAddOpen(true);
+      setEditingItem(null);
+    } catch (error) {
+      console.error('Error guardando:', error);
+      alert('Error al guardar: ' + error.message);
     }
-    setData(newData);
-    setConfirmAddOpen(false);
-    setModalOpen(false);
-    setSuccessAddOpen(true);
-    setEditingItem(null);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (itemToDelete) {
-      const newData = data.filter((item) => item.id !== itemToDelete.id);
-      setData(newData);
-      setConfirmOpen(false);
-      setSuccessOpen(true);
-      setItemToDelete(null);
+      try {
+        const response = await fetch(`${apiUrl}/${itemToDelete._id || itemToDelete.id}`, {
+          method: 'DELETE'
+        });
+        if (!response.ok && response.status !== 204) throw new Error('Error al eliminar');
+        // Eliminar del estado local
+        const newData = data.filter((item) => 
+          (item._id !== itemToDelete._id && item.id !== itemToDelete.id)
+        );
+        setData(newData);
+        setConfirmOpen(false);
+        setSuccessOpen(true);
+        setItemToDelete(null);
+      } catch (error) {
+        console.error('Error eliminando:', error);
+        alert('Error al eliminar: ' + error.message);
+      }
     }
   };
 

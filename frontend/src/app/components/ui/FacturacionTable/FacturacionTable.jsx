@@ -1092,6 +1092,7 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
                         )}
 
                         {item.estado === "pagado" && <option value="pagado" className="text-green-600">Pagado</option>}
+                        {item.estado === "cobrado" && <option value="cobrado" className="text-green-600">Cobrado</option>}
                       </select>
                       
                       {/* Indicador visual de vencimiento debajo del select */}
