@@ -22,11 +22,19 @@ export default function Navbar({ onToggleSidebar }) {
   const [openNotifications, setOpenNotifications] = useState(false);
 
   // Fetch logic para notificaciones
+  // Fetch logic para notificaciones
   useEffect(() => {
     const checkExpirations = async () => {
        try {
          const res = await fetch("/db.json");
-         const data = await res.json();
+         const dbData = await res.json();
+         
+         // Obtener datos de facturación actualizados del localStorage
+         let facturacionData = dbData.facturacion;
+         const savedFacturacion = localStorage.getItem("facturacion_data");
+         if (savedFacturacion) {
+            facturacionData = JSON.parse(savedFacturacion);
+         }
          
          const today = new Date();
          const fourMonths = 120; // Dias aprox
@@ -55,12 +63,53 @@ export default function Navbar({ onToggleSidebar }) {
              }
          };
 
+         // Helper para chequear facturas vencidas
+         const checkFactura = (item, typeName) => {
+            if (item.estado === "pagado" || item.estado === "cobrado") return;
+            
+            const fechaEmision = new Date(item.fecha);
+            const plazo = item.plazo || 30;
+            const fechaVencimiento = new Date(fechaEmision);
+            fechaVencimiento.setDate(fechaEmision.getDate() + plazo);
+            
+            const diffTime = fechaVencimiento - today;
+            const daysDiff = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            // Alertar si está vencido (días negativos) o por vencer (próximos 5 días)
+            if (daysDiff <= 5) {
+                let severity = "text-orange-600 bg-orange-100"; // Por vencer
+                let label = "Por vencer";
+                
+                if (daysDiff < 0) {
+                    severity = "text-red-600 bg-red-100"; // Vencido
+                    label = "Vencido";
+                }
+
+                newAlerts.push({
+                    id: `factura-${item.id}-${typeName}`,
+                    type: `Factura (${typeName})`,
+                    name: `${item.razon_social} - ${label}`,
+                    date: fechaVencimiento.toLocaleDateString(),
+                    days: daysDiff,
+                    severity
+                });
+            }
+         };
+
          // Chequear Choferes
-         data.choferes?.forEach(c => checkDate(c.licencia, c.nombre, "Licencia", c.id));
+         dbData.choferes?.forEach(c => checkDate(c.licencia, c.nombre, "Licencia", c.id));
          // Chequear Camiones
-         data.camiones?.forEach(c => checkDate(c.vencimiento_seguro, `Camión ${c.patente}`, "Seguro", c.patente));
+         dbData.camiones?.forEach(c => checkDate(c.vencimiento_seguro, `Camión ${c.patente}`, "Seguro", c.patente));
          // Chequear Semis
-         data.semirremolques?.forEach(s => checkDate(s.vencimiento_seguro, `Semi ${s.patente}`, "Seguro", s.patente));
+         dbData.semirremolques?.forEach(s => checkDate(s.vencimiento_seguro, `Semi ${s.patente}`, "Seguro", s.patente));
+
+         // Chequear Facturación (Cobranzas y Pagos)
+         if (facturacionData) {
+            facturacionData.cobranzas?.nacionales?.forEach(i => checkFactura(i, "Cobranza Nac."));
+            facturacionData.cobranzas?.internacionales?.forEach(i => checkFactura(i, "Cobranza Int."));
+            facturacionData.pagos?.nacionales?.forEach(i => checkFactura(i, "Pago Nac."));
+            facturacionData.pagos?.internacionales?.forEach(i => checkFactura(i, "Pago Int."));
+         }
 
          setAlerts(newAlerts.sort((a,b) => a.days - b.days));
 
@@ -68,7 +117,11 @@ export default function Navbar({ onToggleSidebar }) {
            console.error("Error checking alerts", error);
        }
     };
+    
+    // Chequear al montar y cada 5 segundos para mantener sincronía loca con cambios de estado
     checkExpirations();
+    const interval = setInterval(checkExpirations, 5000); 
+    return () => clearInterval(interval);
   }, []);
 
   const toggleDropdown = () => { setOpenDropdown(!openDropdown); setOpenNotifications(false); };

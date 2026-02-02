@@ -15,9 +15,60 @@ export default function Facturacion() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("/db.json", { cache: "no-store" });
-        const data = await res.json();
-        setFacturacion(data.facturacion || { cobranzas: { nacionales: [], internacionales: [] }, pagos: { nacionales: [], internacionales: [] } });
+        // Intentar cargar desde localStorage primero
+        let data = null;
+        const savedData = localStorage.getItem("facturacion_data");
+        
+        if (savedData) {
+          data = JSON.parse(savedData);
+        } else {
+          const res = await fetch("/db.json", { cache: "no-store" });
+          const dbData = await res.json();
+          data = dbData.facturacion || { cobranzas: { nacionales: [], internacionales: [] }, pagos: { nacionales: [], internacionales: [] } };
+        }
+
+        // Procesar vencimientos
+        const processExpirations = (items) => {
+          if (!items) return [];
+          const today = new Date();
+          return items.map(item => {
+            if (item.estado === "pagado" || item.estado === "cobrado") return item;
+            
+          // Calcular fecha de vencimiento
+            const fechaEmision = new Date(item.fecha + "T00:00:00"); 
+            const plazoDias = item.plazo || 30; 
+            const fechaVencimiento = new Date(fechaEmision);
+            fechaVencimiento.setDate(fechaEmision.getDate() + plazoDias);
+            
+            // Normalizar hoy a medianoche para comparar solo fechas
+            const todayMidnight = new Date();
+            todayMidnight.setHours(0, 0, 0, 0);
+
+            // Si hoy es mayor a la fecha de vencimiento, marcar como vencido
+            if (todayMidnight > fechaVencimiento && item.estado !== "vencido") {
+              return { ...item, estado: "vencido" };
+            }
+            return item;
+          });
+        };
+
+        // Aplicar lógica de vencimientos a todas las listas
+        if (data) {
+          const processedData = {
+            cobranzas: {
+              nacionales: processExpirations(data.cobranzas?.nacionales),
+              internacionales: processExpirations(data.cobranzas?.internacionales)
+            },
+            pagos: {
+              nacionales: processExpirations(data.pagos?.nacionales),
+              internacionales: processExpirations(data.pagos?.internacionales)
+            }
+          };
+          
+          setFacturacion(processedData);
+          localStorage.setItem("facturacion_data", JSON.stringify(processedData));
+        }
+
       } catch (error) {
         console.error("Error cargando facturación:", error);
       } finally {
@@ -26,6 +77,13 @@ export default function Facturacion() {
     };
     fetchData();
   }, []);
+
+  // Sincronizar cambios a localStorage
+  useEffect(() => {
+    if (facturacion) {
+      localStorage.setItem("facturacion_data", JSON.stringify(facturacion));
+    }
+  }, [facturacion]);
 
   if (loading) {
     return (
@@ -102,9 +160,22 @@ export default function Facturacion() {
   return (
     <div className="p-6 bg-background min-h-screen transition-colors duration-300">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-brand-navy">Facturación</h1>
-        <p className="text-default-500 mt-1">Gestión de cobranzas, pagos y balance financiero</p>
+      <div className="mb-6 flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-brand-navy">Facturación</h1>
+          <p className="text-default-500 mt-1">Gestión de cobranzas, pagos y balance financiero</p>
+        </div>
+        <button
+          onClick={() => {
+            if (confirm("¿Estás seguro de que querés reiniciar todos los datos? Se perderá el historial de pagos actual.")) {
+              localStorage.removeItem("facturacion_data");
+              window.location.reload();
+            }
+          }}
+          className="px-4 py-2 bg-default-100 hover:bg-default-200 text-default-600 rounded-lg text-sm font-medium transition-colors"
+        >
+          Reiniciar Datos
+        </button>
       </div>
 
       {/* Main Tabs */}

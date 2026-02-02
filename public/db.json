@@ -547,8 +547,9 @@
           "cuit": "30-12345678-9",
           "tipo_comprobante": "factura_a",
           "numero_comprobante": "0001-00000125",
-          "estado": "cobrado",
-          "monto": 250000
+          "estado": "pendiente",
+          "monto": 250000,
+          "plazo": 30
         },
         {
           "id": 2,
@@ -558,7 +559,8 @@
           "tipo_comprobante": "factura_a",
           "numero_comprobante": "0001-00000126",
           "estado": "pendiente",
-          "monto": 180000
+          "monto": 180000,
+          "plazo": 15
         },
         {
           "id": 3,
@@ -567,8 +569,9 @@
           "cuit": "30-55667788-3",
           "tipo_comprobante": "factura_b",
           "numero_comprobante": "0001-00000118",
-          "estado": "vencido",
-          "monto": 320000
+          "estado": "pendiente",
+          "monto": 320000,
+          "plazo": 45
         },
         {
           "id": 4,
@@ -577,8 +580,9 @@
           "cuit": "30-99001122-7",
           "tipo_comprobante": "factura_a",
           "numero_comprobante": "0001-00000127",
-          "estado": "cobrado",
-          "monto": 150000
+          "estado": "pendiente",
+          "monto": 150000,
+          "plazo": 30
         },
         {
           "id": 5,
@@ -588,7 +592,8 @@
           "tipo_comprobante": "factura_c",
           "numero_comprobante": "0001-00000128",
           "estado": "pendiente",
-          "monto": 420000
+          "monto": 420000,
+          "plazo": 60
         }
       ],
       "internacionales": [
@@ -599,8 +604,9 @@
           "cuit": "55-12345678-0",
           "tipo_comprobante": "factura_a",
           "numero_comprobante": "0002-00000045",
-          "estado": "cobrado",
-          "monto": 850000
+          "estado": "pendiente",
+          "monto": 850000,
+          "plazo": 30
         },
         {
           "id": 2,
@@ -609,8 +615,9 @@
           "cuit": "55-98765432-1",
           "tipo_comprobante": "factura_a",
           "numero_comprobante": "0002-00000042",
-          "estado": "vencido",
-          "monto": 1200000
+          "estado": "pendiente",
+          "monto": 1200000,
+          "plazo": 30
         },
         {
           "id": 3,
@@ -620,7 +627,8 @@
           "tipo_comprobante": "factura_a",
           "numero_comprobante": "0002-00000046",
           "estado": "pendiente",
-          "monto": 750000
+          "monto": 750000,
+          "plazo": 45
         }
       ]
     },
@@ -633,8 +641,9 @@
           "cuit": "30-77889900-5",
           "tipo_comprobante": "factura_a",
           "numero_comprobante": "0003-00000089",
-          "estado": "pagado",
-          "monto": 180000
+          "estado": "pendiente",
+          "monto": 180000,
+          "plazo": 30
         },
         {
           "id": 2,
@@ -644,7 +653,8 @@
           "tipo_comprobante": "factura_b",
           "numero_comprobante": "0003-00000090",
           "estado": "pendiente",
-          "monto": 95000
+          "monto": 95000,
+          "plazo": 15
         },
         {
           "id": 3,
@@ -653,8 +663,9 @@
           "cuit": "30-55443322-6",
           "tipo_comprobante": "recibo",
           "numero_comprobante": "0003-00000085",
-          "estado": "vencido",
-          "monto": 220000
+          "estado": "pendiente",
+          "monto": 220000,
+          "plazo": 10
         },
         {
           "id": 4,
@@ -663,8 +674,9 @@
           "cuit": "30-33221100-8",
           "tipo_comprobante": "factura_c",
           "numero_comprobante": "0003-00000091",
-          "estado": "pagado",
-          "monto": 45000
+          "estado": "pendiente",
+          "monto": 45000,
+          "plazo": 30
         }
       ],
       "internacionales": [
@@ -675,8 +687,9 @@
           "cuit": "55-44332211-3",
           "tipo_comprobante": "factura_a",
           "numero_comprobante": "0004-00000023",
-          "estado": "pagado",
-          "monto": 320000
+          "estado": "pendiente",
+          "monto": 320000,
+          "plazo": 60
         },
         {
           "id": 2,
@@ -685,8 +698,9 @@
           "cuit": "55-22110099-4",
           "tipo_comprobante": "factura_a",
           "numero_comprobante": "0004-00000021",
-          "estado": "vencido",
-          "monto": 480000
+          "estado": "pendiente",
+          "monto": 480000,
+          "plazo": 30
         },
         {
           "id": 3,
@@ -696,7 +710,8 @@
           "tipo_comprobante": "factura_a",
           "numero_comprobante": "0004-00000024",
           "estado": "pendiente",
-          "monto": 290000
+          "monto": 290000,
+          "plazo": 45
         }
       ]
     }
