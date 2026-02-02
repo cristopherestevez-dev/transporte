@@ -107,10 +107,10 @@ export default function CrudTable({
     <div>
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-xl font-bold">{title}</h1>
+        <h1 className="text-xl font-bold text-brand-navy">{title}</h1>
         <button
           onClick={() => openModal()}
-          className="flex items-center gap-1 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          className="flex items-center gap-1 px-3 py-2 bg-brand-navy text-white rounded-md font-medium hover:bg-brand-navy/80 hover:shadow-md transition-all"
         >
           <HiOutlinePlus size={16} /> Agregar {title.toLowerCase()}
         </button>

@@ -6,6 +6,7 @@ import {
   HiOutlineHome,
   HiOutlineLogout,
   HiOutlineAdjustments,
+  HiOutlineDocumentText,
   HiSun,
   HiMoon,
 } from "react-icons/hi";
@@ -46,6 +47,7 @@ export default function Sidebar() {
     { name: "Viajes", icon: <IconRoutes />, href: "/viajes" },
     { name: "Choferes", icon: <IconDriver />, href: "/choferes" },
     { name: "Cotizador", icon: <IconCalculator />, href: "/cotizador" },
+    { name: "Facturación", icon: <HiOutlineDocumentText />, href: "/facturacion" },
     {
       name: "Configuración",
       icon: <HiOutlineAdjustments />,

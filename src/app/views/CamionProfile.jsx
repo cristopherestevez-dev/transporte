@@ -287,7 +287,7 @@ export default function CamionProfile({ id }) {
               ))}
               <tr>
                 <td colSpan={53} className="px-2 py-4">
-                  <button onClick={addRow} className="flex items-center gap-2 text-blue-600 font-semibold text-sm hover:underline">
+                  <button onClick={addRow} className="flex items-center gap-2 bg-brand-navy text-white px-3 py-2 rounded-md font-medium text-sm hover:bg-brand-navy/80 hover:shadow-md transition-all">
                     <FaPlus /> Agregar Registro
                   </button>
                 </td>

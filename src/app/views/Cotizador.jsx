@@ -319,8 +319,7 @@ export default function Cotizador() {
                 </div>
                 <CardBody className="p-4 bg-gray-50">
                      <Button 
-                        color="success" 
-                        className="w-full font-bold text-white shadow-lg shadow-green-200"
+                        className="w-full font-bold text-white bg-brand-navy shadow-lg hover:bg-brand-navy/80 hover:shadow-xl transition-all"
                         isDisabled={!distance || !selectedResource}
                         onPress={handleAddTrip}
                     >

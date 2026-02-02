@@ -536,5 +536,169 @@
       "telefono": "+54 11 5678-9012",
       "licencia": "2025-10-01"
     }
-  ]
+  ],
+  "facturacion": {
+    "cobranzas": {
+      "nacionales": [
+        {
+          "id": 1,
+          "fecha": "2026-01-05",
+          "razon_social": "Empresa Alfa",
+          "cuit": "30-12345678-9",
+          "tipo_comprobante": "factura_a",
+          "numero_comprobante": "0001-00000125",
+          "estado": "cobrado",
+          "monto": 250000
+        },
+        {
+          "id": 2,
+          "fecha": "2026-01-10",
+          "razon_social": "Beta Tech",
+          "cuit": "30-11223344-5",
+          "tipo_comprobante": "factura_a",
+          "numero_comprobante": "0001-00000126",
+          "estado": "pendiente",
+          "monto": 180000
+        },
+        {
+          "id": 3,
+          "fecha": "2025-12-15",
+          "razon_social": "Gamma Corp",
+          "cuit": "30-55667788-3",
+          "tipo_comprobante": "factura_b",
+          "numero_comprobante": "0001-00000118",
+          "estado": "vencido",
+          "monto": 320000
+        },
+        {
+          "id": 4,
+          "fecha": "2026-01-20",
+          "razon_social": "Delta S.A.",
+          "cuit": "30-99001122-7",
+          "tipo_comprobante": "factura_a",
+          "numero_comprobante": "0001-00000127",
+          "estado": "cobrado",
+          "monto": 150000
+        },
+        {
+          "id": 5,
+          "fecha": "2026-01-25",
+          "razon_social": "Epsilon SRL",
+          "cuit": "30-44556677-1",
+          "tipo_comprobante": "factura_c",
+          "numero_comprobante": "0001-00000128",
+          "estado": "pendiente",
+          "monto": 420000
+        }
+      ],
+      "internacionales": [
+        {
+          "id": 1,
+          "fecha": "2026-01-08",
+          "razon_social": "Global Trade LLC",
+          "cuit": "55-12345678-0",
+          "tipo_comprobante": "factura_a",
+          "numero_comprobante": "0002-00000045",
+          "estado": "cobrado",
+          "monto": 850000
+        },
+        {
+          "id": 2,
+          "fecha": "2025-12-20",
+          "razon_social": "Trans Pacific Inc",
+          "cuit": "55-98765432-1",
+          "tipo_comprobante": "factura_a",
+          "numero_comprobante": "0002-00000042",
+          "estado": "vencido",
+          "monto": 1200000
+        },
+        {
+          "id": 3,
+          "fecha": "2026-01-15",
+          "razon_social": "Euro Logistics GmbH",
+          "cuit": "55-11223344-2",
+          "tipo_comprobante": "factura_a",
+          "numero_comprobante": "0002-00000046",
+          "estado": "pendiente",
+          "monto": 750000
+        }
+      ]
+    },
+    "pagos": {
+      "nacionales": [
+        {
+          "id": 1,
+          "fecha": "2026-01-03",
+          "razon_social": "Combustibles SA",
+          "cuit": "30-77889900-5",
+          "tipo_comprobante": "factura_a",
+          "numero_comprobante": "0003-00000089",
+          "estado": "pagado",
+          "monto": 180000
+        },
+        {
+          "id": 2,
+          "fecha": "2026-01-12",
+          "razon_social": "Repuestos del Sur",
+          "cuit": "30-66778899-4",
+          "tipo_comprobante": "factura_b",
+          "numero_comprobante": "0003-00000090",
+          "estado": "pendiente",
+          "monto": 95000
+        },
+        {
+          "id": 3,
+          "fecha": "2025-12-28",
+          "razon_social": "Seguros Atlas",
+          "cuit": "30-55443322-6",
+          "tipo_comprobante": "recibo",
+          "numero_comprobante": "0003-00000085",
+          "estado": "vencido",
+          "monto": 220000
+        },
+        {
+          "id": 4,
+          "fecha": "2026-01-18",
+          "razon_social": "Lubricantes Norte",
+          "cuit": "30-33221100-8",
+          "tipo_comprobante": "factura_c",
+          "numero_comprobante": "0003-00000091",
+          "estado": "pagado",
+          "monto": 45000
+        }
+      ],
+      "internacionales": [
+        {
+          "id": 1,
+          "fecha": "2026-01-06",
+          "razon_social": "Parts Unlimited USA",
+          "cuit": "55-44332211-3",
+          "tipo_comprobante": "factura_a",
+          "numero_comprobante": "0004-00000023",
+          "estado": "pagado",
+          "monto": 320000
+        },
+        {
+          "id": 2,
+          "fecha": "2025-12-22",
+          "razon_social": "China Motor Parts",
+          "cuit": "55-22110099-4",
+          "tipo_comprobante": "factura_a",
+          "numero_comprobante": "0004-00000021",
+          "estado": "vencido",
+          "monto": 480000
+        },
+        {
+          "id": 3,
+          "fecha": "2026-01-22",
+          "razon_social": "Brazil Freight Co",
+          "cuit": "55-88776655-5",
+          "tipo_comprobante": "factura_a",
+          "numero_comprobante": "0004-00000024",
+          "estado": "pendiente",
+          "monto": 290000
+        }
+      ]
+    }
+  }
 }
