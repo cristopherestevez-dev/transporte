@@ -25,7 +25,7 @@ export default function CrudTable({
   const [successAddOpen, setSuccessAddOpen] = useState(false);
 
   const estadoOptions = [
-    { value: "pendiente", label: "Pendiente", color: "yellow" },
+    { value: "pendiente", label: "Pendiente", color: "orange" },
     { value: "en_transito", label: "En Tránsito", color: "blue" },
     { value: "finalizado", label: "Finalizado", color: "green" },
     { value: "cancelado", label: "Cancelado", color: "red" },
