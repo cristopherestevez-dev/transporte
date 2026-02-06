@@ -16,6 +16,7 @@ import { choferesRoutes } from './modules/choferes/choferes.routes';
 import { viajesRoutes } from './modules/viajes/viajes.routes';
 import { facturacionRoutes } from './modules/facturacion/facturacion.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
+import { usuariosRoutes } from './modules/usuarios/usuarios.routes';
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use(morgan('dev'));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/proveedores', proveedoresRoutes);
 app.use('/api/fleteros', fleterosRoutes);
 app.use('/api/camiones', camionesRoutes);

@@ -25,12 +25,14 @@ import { Button, Switch } from "@heroui/react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
+import { useAuth } from "@/app/contexts/AuthContext";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const { permisos, logout, user, authenticated } = useAuth();
 
   useEffect(() => {
     setMounted(true);
@@ -38,22 +40,62 @@ export default function Sidebar() {
 
   const toggleSidebar = () => setCollapsed(!collapsed);
 
-  const menuItems = [
-    { name: "Dashboard", icon: <HiOutlineHome />, href: "/dashboard" },
-    { name: "Empresas", icon: <IconBuilding />, href: "/empresas" },
-    { name: "Usuarios", icon: <IconUsers />, href: "/usuarios" },
-    { name: "Camiones", icon: <IconTruck />, href: "/camiones" },
-    // { name: "Semis", icon: <IconTrailer />, href: "/semis" },
-    { name: "Viajes", icon: <IconRoutes />, href: "/viajes" },
-    { name: "Choferes", icon: <IconDriver />, href: "/choferes" },
-    { name: "Cotizador", icon: <IconCalculator />, href: "/cotizador" },
-    { name: "Facturación", icon: <HiOutlineDocumentText />, href: "/facturacion" },
+  const allMenuItems = [
+    {
+      name: "Dashboard",
+      icon: <HiOutlineHome />,
+      href: "/dashboard",
+      permiso: "dashboard",
+    },
+    {
+      name: "Empresas",
+      icon: <IconBuilding />,
+      href: "/empresas",
+      permiso: "empresas",
+    },
+    {
+      name: "Camiones",
+      icon: <IconTruck />,
+      href: "/camiones",
+      permiso: "camiones",
+    },
+    {
+      name: "Viajes",
+      icon: <IconRoutes />,
+      href: "/viajes",
+      permiso: "viajes",
+    },
+    {
+      name: "Choferes",
+      icon: <IconDriver />,
+      href: "/choferes",
+      permiso: "choferes",
+    },
+    {
+      name: "Cotizador",
+      icon: <IconCalculator />,
+      href: "/cotizador",
+      permiso: "cotizador",
+    },
+    {
+      name: "Facturación",
+      icon: <HiOutlineDocumentText />,
+      href: "/facturacion",
+      permiso: "facturacion",
+    },
     {
       name: "Configuración",
       icon: <HiOutlineAdjustments />,
       href: "/configuracion",
+      permiso: "configuracion",
     },
   ];
+
+  // Filtrar menú según permisos del usuario
+  const menuItems =
+    permisos.length > 0
+      ? allMenuItems.filter((item) => permisos.includes(item.permiso))
+      : allMenuItems; // Si no hay permisos, mostrar todo (para desarrollo)
 
   return (
     <div
@@ -91,7 +133,9 @@ export default function Sidebar() {
             >
               <div
                 className={`text-xl ${
-                  isActive ? "text-secondary" : "text-default-500 group-hover:text-foreground"
+                  isActive
+                    ? "text-secondary"
+                    : "text-default-500 group-hover:text-foreground"
                 }`}
               >
                 {icon}
@@ -113,33 +157,39 @@ export default function Sidebar() {
       {/* Theme Switch & Logout */}
       <div className="mt-auto p-4 border-t border-divider space-y-4">
         {!collapsed && mounted && (
-             <div className="flex justify-between items-center px-2">
-                <span className="text-sm font-medium text-foreground">
-                    {theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
-                </span>
-                <Switch
-                    defaultSelected={theme === 'dark'}
-                    size="sm"
-                    color="secondary"
-                    thumbIcon={({ isSelected, className }) =>
-                        isSelected ? (
-                            <HiMoon className={className} />
-                        ) : (
-                            <HiSun className={className} />
-                        )
-                    }
-                    onValueChange={(isSelected) => setTheme(isSelected ? 'dark' : 'light')}
-                />
-             </div>
+          <div className="flex justify-between items-center px-2">
+            <span className="text-sm font-medium text-foreground">
+              {theme === "dark" ? "Modo Claro" : "Modo Oscuro"}
+            </span>
+            <Switch
+              defaultSelected={theme === "dark"}
+              size="sm"
+              color="secondary"
+              thumbIcon={({ isSelected, className }) =>
+                isSelected ? (
+                  <HiMoon className={className} />
+                ) : (
+                  <HiSun className={className} />
+                )
+              }
+              onValueChange={(isSelected) =>
+                setTheme(isSelected ? "dark" : "light")
+              }
+            />
+          </div>
         )}
         {collapsed && mounted && (
-            <div className="flex justify-center mb-2">
-                 <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="text-foreground hover:text-secondary">
-                    {theme === 'dark' ? <HiMoon size={20} /> : <HiSun size={20} />}
-                 </button>
-            </div>
+          <div className="flex justify-center mb-2">
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="text-foreground hover:text-secondary"
+            >
+              {theme === "dark" ? <HiMoon size={20} /> : <HiSun size={20} />}
+            </button>
+          </div>
         )}
         <button
+          onClick={logout}
           className={`w-full flex items-center space-x-3 p-2 rounded hover:bg-danger/10 transition-colors text-danger font-semibold ${
             collapsed ? "justify-center" : ""
           }`}

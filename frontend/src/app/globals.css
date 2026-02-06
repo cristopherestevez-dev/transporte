@@ -6,6 +6,10 @@
   font-family: var(--font-poppins), sans-serif !important;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* Weather Animations */
 @keyframes rain {
   0% {
