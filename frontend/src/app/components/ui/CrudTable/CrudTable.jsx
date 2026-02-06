@@ -1,9 +1,17 @@
 "use client";
-import { useState } from "react";
-import { HiOutlinePencil, HiOutlineTrash, HiOutlinePlus } from "react-icons/hi";
+import { useState, useMemo } from "react";
+import {
+  HiOutlinePencil,
+  HiOutlineTrash,
+  HiOutlinePlus,
+  HiSearch,
+  HiChevronLeft,
+  HiChevronRight,
+} from "react-icons/hi";
 import ModalWrapper from "../ModalWrapper/ModalWrapper";
 import ConfirmModal from "../ModalWrapper/ConfirmModal";
 import SuccessModal from "../ModalWrapper/SuccessModal";
+import { useToast } from "../Toast/Toast";
 
 export default function CrudTable({
   title,
@@ -23,6 +31,36 @@ export default function CrudTable({
   const [successOpen, setSuccessOpen] = useState(false);
   const [confirmAddOpen, setConfirmAddOpen] = useState(false);
   const [successAddOpen, setSuccessAddOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+  const toast = useToast();
+
+  // Filtrar datos por búsqueda
+  const filteredData = useMemo(() => {
+    if (!searchTerm.trim()) return data;
+    const term = searchTerm.toLowerCase();
+    return data.filter((item) =>
+      columns.some((col) => {
+        const value = item[col.key];
+        return value && String(value).toLowerCase().includes(term);
+      }),
+    );
+  }, [data, searchTerm, columns]);
+
+  // Calcular paginación
+  const totalPages = Math.ceil(filteredData.length / pageSize);
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredData.slice(start, start + pageSize);
+  }, [filteredData, currentPage, pageSize]);
+
+  // Reset página cuando cambia búsqueda
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
 
   const estadoOptions = [
     { value: "pendiente", label: "Pendiente", color: "orange" },
@@ -40,14 +78,17 @@ export default function CrudTable({
       } else {
         // Asegurar que si el item existe, se copien todas las props, no solo las de formFields
         // Esto es util para IDs ocultos o campos extras como proveedorId
-        initialForm[f.key] = item && item[f.key] !== undefined && item[f.key] !== null ? item[f.key] : "";
+        initialForm[f.key] =
+          item && item[f.key] !== undefined && item[f.key] !== null
+            ? item[f.key]
+            : "";
       }
     });
     // Si editamos, preservamos todo el objeto original en el form para no perder datos extras
     if (item) {
-        Object.keys(item).forEach(k => {
-            if (initialForm[k] === undefined) initialForm[k] = item[k];
-        });
+      Object.keys(item).forEach((k) => {
+        if (initialForm[k] === undefined) initialForm[k] = item[k];
+      });
     }
     setForm(initialForm);
     setModalOpen(true);
@@ -62,7 +103,7 @@ export default function CrudTable({
   }
 
   const requiredFilled = formFields.every(
-    (f) => !f.required || (form[f.key] && form[f.key].toString().trim() !== "")
+    (f) => !f.required || (form[f.key] && form[f.key].toString().trim() !== ""),
   );
 
   const handleSave = async () => {
@@ -70,68 +111,89 @@ export default function CrudTable({
     if (validate) {
       const errorMsg = validate(form);
       if (errorMsg) {
-        alert(errorMsg); // O usar un toast/modal de error si se prefiere
+        toast.error(errorMsg);
         return;
       }
     }
 
+    setSaving(true);
     try {
       let savedItem;
       if (editingItem) {
         // Editar - PATCH al API
-        const response = await fetch(`${apiUrl}/${editingItem._id || editingItem.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form)
-        });
-        if (!response.ok) throw new Error('Error al actualizar');
+        const response = await fetch(
+          `${apiUrl}/${editingItem._id || editingItem.id}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(form),
+          },
+        );
+        if (!response.ok) throw new Error("Error al actualizar");
         const json = await response.json();
         savedItem = json.data;
         // Actualizar en el estado local
-        setData(data.map((item) =>
-          (item._id === editingItem._id || item.id === editingItem.id) ? savedItem : item
-        ));
+        setData(
+          data.map((item) =>
+            item._id === editingItem._id || item.id === editingItem.id
+              ? savedItem
+              : item,
+          ),
+        );
+        toast.success("Registro actualizado correctamente");
       } else {
         // Agregar - POST al API
         const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form)
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
         });
-        if (!response.ok) throw new Error('Error al crear');
+        if (!response.ok) throw new Error("Error al crear");
         const json = await response.json();
         savedItem = json.data;
         // Agregar al estado local
         setData([...(data || []), savedItem]);
+        toast.success("Registro agregado correctamente");
       }
       setConfirmAddOpen(false);
       setModalOpen(false);
-      setSuccessAddOpen(true);
+      setSuccessAddOpen(false);
       setEditingItem(null);
     } catch (error) {
-      console.error('Error guardando:', error);
-      alert('Error al guardar: ' + error.message);
+      console.error("Error guardando:", error);
+      toast.error("Error al guardar: " + error.message);
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDelete = async () => {
     if (itemToDelete) {
+      setSaving(true);
       try {
-        const response = await fetch(`${apiUrl}/${itemToDelete._id || itemToDelete.id}`, {
-          method: 'DELETE'
-        });
-        if (!response.ok && response.status !== 204) throw new Error('Error al eliminar');
+        const response = await fetch(
+          `${apiUrl}/${itemToDelete._id || itemToDelete.id}`,
+          {
+            method: "DELETE",
+          },
+        );
+        if (!response.ok && response.status !== 204)
+          throw new Error("Error al eliminar");
         // Eliminar del estado local
-        const newData = data.filter((item) => 
-          (item._id !== itemToDelete._id && item.id !== itemToDelete.id)
+        const newData = data.filter(
+          (item) =>
+            item._id !== itemToDelete._id && item.id !== itemToDelete.id,
         );
         setData(newData);
         setConfirmOpen(false);
-        setSuccessOpen(true);
+        setSuccessOpen(false);
         setItemToDelete(null);
+        toast.success("Registro eliminado correctamente");
       } catch (error) {
-        console.error('Error eliminando:', error);
-        alert('Error al eliminar: ' + error.message);
+        console.error("Error eliminando:", error);
+        toast.error("Error al eliminar: " + error.message);
+      } finally {
+        setSaving(false);
       }
     }
   };
@@ -139,14 +201,30 @@ export default function CrudTable({
   return (
     <div>
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
         <h1 className="text-xl font-bold text-brand-navy">{title}</h1>
-        <button
-          onClick={() => openModal()}
-          className="flex items-center gap-1 px-3 py-2 bg-brand-navy text-white rounded-md font-medium hover:bg-brand-navy/80 hover:shadow-md transition-all"
-        >
-          <HiOutlinePlus size={16} /> Agregar {title.toLowerCase()}
-        </button>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          {/* Buscador */}
+          <div className="relative flex-1 sm:flex-none">
+            <HiSearch
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="Buscar..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-divider rounded-md bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-navy/50 w-full sm:w-64"
+            />
+          </div>
+          <button
+            onClick={() => openModal()}
+            className="flex items-center gap-1 px-3 py-2 bg-brand-navy text-white rounded-md font-medium hover:bg-brand-navy/80 hover:shadow-md transition-all whitespace-nowrap"
+          >
+            <HiOutlinePlus size={16} /> Agregar
+          </button>
+        </div>
       </div>
 
       {/* Tabla */}
@@ -167,85 +245,132 @@ export default function CrudTable({
           </tr>
         </thead>
         <tbody>
-          {data?.map((item) => (
-            <tr
-              key={item.id}
-              className="bg-content1 hover:bg-content2 transition-colors border-b border-divider"
-            >
-              {columns.map((col) => {
-
-
-                // Combo de estados
-                if (col.key === "estado") {
-                  return (
-                    <td key={`${item.id}-estado`} className="px-6 py-4">
-                      <select
-                        value={item.estado}
-                        onChange={(e) => {
-                          const updatedData = data.map((r) =>
-                            r.id === item.id ? { ...r, estado: e.target.value } : r
-                          );
-                          setData(updatedData);
-                        }}
-                        className="px-2 py-1 rounded font-semibold"
-                        style={{
-                          color:
-                            estadoOptions.find((opt) => opt.value === item.estado)
-                              ?.color || "inherit",
-                        }}
-                      >
-                        {estadoOptions.map((opt) => (
-                          <option
-                            key={opt.value}
-                            value={opt.value}
-                            style={{ color: opt.color }}
-                          >
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                  );
-                }
-
-                // Columnas normales o personalizadas
-                if (col.render) {
-                   return (
-                     <td key={`${item.id}-${col.key}`} className="px-6 py-4">
-                       {col.render(item[col.key], item)}
-                     </td>
-                   );
-                }
-
-                return (
-                  <td key={`${item.id}-${col.key}`} className="px-6 py-4 text-foreground">
-                    {item[col.key] || "-"}
-                  </td>
-                );
-              })}
-
-              {/* Acciones */}
-              <td className="px-6 py-4 text-center space-x-3">
-                <button
-                  onClick={() => openModal(item)}
-                  className="text-yellow-500 hover:text-yellow-600"
-                >
-                  <HiOutlinePencil size={20} />
-                </button>
-                <button
-                  onClick={() => {
-                    setItemToDelete(item);
-                    setConfirmOpen(true);
-                  }}
-                  className="text-red-600 hover:text-red-700"
-                >
-                  <HiOutlineTrash size={20} />
-                </button>
+          {paginatedData.length === 0 ? (
+            <tr>
+              <td
+                colSpan={columns.length + 1}
+                className="px-6 py-8 text-center text-foreground/60"
+              >
+                {searchTerm
+                  ? "No se encontraron resultados"
+                  : "No hay registros"}
               </td>
             </tr>
-          ))}
+          ) : (
+            paginatedData.map((item) => (
+              <tr
+                key={item.id}
+                className="bg-content1 hover:bg-content2 transition-colors border-b border-divider"
+              >
+                {columns.map((col) => {
+                  // Combo de estados
+                  if (col.key === "estado") {
+                    return (
+                      <td key={`${item.id}-estado`} className="px-6 py-4">
+                        <select
+                          value={item.estado}
+                          onChange={(e) => {
+                            const updatedData = data.map((r) =>
+                              r.id === item.id
+                                ? { ...r, estado: e.target.value }
+                                : r,
+                            );
+                            setData(updatedData);
+                          }}
+                          className="px-2 py-1 rounded font-semibold"
+                          style={{
+                            color:
+                              estadoOptions.find(
+                                (opt) => opt.value === item.estado,
+                              )?.color || "inherit",
+                          }}
+                        >
+                          {estadoOptions.map((opt) => (
+                            <option
+                              key={opt.value}
+                              value={opt.value}
+                              style={{ color: opt.color }}
+                            >
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    );
+                  }
+
+                  // Columnas normales o personalizadas
+                  if (col.render) {
+                    return (
+                      <td key={`${item.id}-${col.key}`} className="px-6 py-4">
+                        {col.render(item[col.key], item)}
+                      </td>
+                    );
+                  }
+
+                  return (
+                    <td
+                      key={`${item.id}-${col.key}`}
+                      className="px-6 py-4 text-foreground"
+                    >
+                      {item[col.key] || "-"}
+                    </td>
+                  );
+                })}
+
+                {/* Acciones */}
+                <td className="px-6 py-4 text-center space-x-3">
+                  <button
+                    onClick={() => openModal(item)}
+                    className="text-yellow-500 hover:text-yellow-600"
+                  >
+                    <HiOutlinePencil size={20} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setItemToDelete(item);
+                      setConfirmOpen(true);
+                    }}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <HiOutlineTrash size={20} />
+                  </button>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
+
+      {/* Paginación */}
+      {filteredData.length > pageSize && (
+        <div className="flex items-center justify-between mt-4 px-2">
+          <span className="text-sm text-foreground/60">
+            Mostrando {(currentPage - 1) * pageSize + 1}-
+            {Math.min(currentPage * pageSize, filteredData.length)} de{" "}
+            {filteredData.length}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-2 rounded-md border border-divider hover:bg-content2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <HiChevronLeft size={18} />
+            </button>
+            <span className="text-sm font-medium px-3">
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-md border border-divider hover:bg-content2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <HiChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal agregar/editar */}
       <ModalWrapper
@@ -279,12 +404,12 @@ export default function CrudTable({
                         className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
                         required={f.required}
                       >
-                         <option value="">Seleccionar</option>
-                         {f.options?.map((opt) => (
-                           <option key={opt.value} value={opt.value}>
-                             {opt.label}
-                           </option>
-                         ))}
+                        <option value="">Seleccionar</option>
+                        {f.options?.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
                       </select>
                     ) : (
                       <input
@@ -332,7 +457,7 @@ export default function CrudTable({
         onClose={() => setConfirmOpen(false)}
         onConfirm={handleDelete}
         title="Confirmar eliminación"
-        message="¿Seguro que querés eliminar este registro?"
+        message={`¿Seguro que querés eliminar "${itemToDelete?.nombre || itemToDelete?.razon_social || itemToDelete?.origen || "este registro"}"?`}
         label="Eliminar"
         bgcolor="bg-red-600"
         bghover="red"
