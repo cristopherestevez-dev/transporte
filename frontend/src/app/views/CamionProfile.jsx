@@ -1,62 +1,641 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { FaArrowLeft, FaPlus, FaTrash, FaSave } from "react-icons/fa";
+import {
+  FaArrowLeft,
+  FaPlus,
+  FaTrash,
+  FaChevronDown,
+  FaChevronUp,
+  FaOilCan,
+  FaCog,
+  FaTruckMonster,
+  FaWrench,
+  FaSave,
+  FaEdit,
+} from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 import api from "@/services/api";
+import ConfirmModal from "@/app/components/ui/ModalWrapper/ConfirmModal";
 
-// Helper for standard 4-column filters (Cambio, Marca, Codigo, Precio)
-const renderStandardGroup = (row, index, prefix, handleChange) => (
-  <>
-    <td className="border px-2 py-1 text-center">
-      <input
-        type="checkbox"
-        checked={row[prefix + "_cambio"] || false}
-        onChange={(e) => handleChange(index, prefix + "_cambio", e.target.checked)}
-      />
-    </td>
-    <td className="border px-2 py-1">
-      <input
-        className="w-full text-xs bg-transparent focus:bg-white focus:outline-none p-1"
-        value={row[prefix + "_marca"] || ""}
-        onChange={(e) => handleChange(index, prefix + "_marca", e.target.value)}
-      />
-    </td>
-    <td className="border px-2 py-1">
-      <input
-        className="w-full text-xs bg-transparent focus:bg-white focus:outline-none p-1"
-        value={row[prefix + "_codigo"] || ""}
-        onChange={(e) => handleChange(index, prefix + "_codigo", e.target.value)}
-      />
-    </td>
-    <td className="border border-divider px-2 py-1">
-      <input
-        type="number"
-        className="w-full text-xs bg-transparent focus:bg-content2 text-foreground focus:outline-none p-1"
-        value={row[prefix + "_precio"] || ""}
-        onChange={(e) => handleChange(index, prefix + "_precio", e.target.value)}
-      />
-    </td>
-  </>
+// --- Components ---
+
+const SectionHeader = ({ icon: Icon, title, className = "" }) => (
+  <div
+    className={`flex items-center gap-2 text-sm font-semibold text-foreground/80 mb-3 border-b border-divider pb-1 ${className}`}
+  >
+    {Icon && <Icon className="text-primary" />}
+    <span>{title}</span>
+  </div>
 );
+
+const InputGroup = ({ label, children }) => (
+  <div className="flex flex-col gap-1">
+    {label && (
+      <label className="text-[10px] uppercase font-bold text-foreground/50 tracking-wider">
+        {label}
+      </label>
+    )}
+    {children}
+  </div>
+);
+
+const TextInput = ({
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  className = "",
+  disabled = false,
+}) => (
+  <input
+    type={type}
+    disabled={disabled}
+    className={`w-full bg-content2 border border-divider rounded-lg px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all ${
+      disabled ? "opacity-60 cursor-not-allowed" : ""
+    } ${className}`}
+    value={value || ""}
+    onChange={(e) => onChange(e.target.value)}
+    placeholder={placeholder}
+  />
+);
+
+const Checkbox = ({ checked, onChange, label, disabled = false }) => (
+  <label
+    className={`flex items-center gap-2 cursor-pointer select-none group ${
+      disabled ? "opacity-60 cursor-not-allowed" : ""
+    }`}
+  >
+    <div
+      className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all duration-300 ${
+        checked
+          ? "bg-primary border-primary shadow-lg shadow-primary/30"
+          : "border-divider bg-content2 group-hover:border-primary/50"
+      }`}
+    >
+      <AnimatePresence>
+        {checked && (
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            className="w-2.5 h-2.5 bg-white rounded-[2px]"
+          />
+        )}
+      </AnimatePresence>
+    </div>
+    <input
+      type="checkbox"
+      className="hidden"
+      checked={checked || false}
+      onChange={(e) => !disabled && onChange(e.target.checked)}
+      disabled={disabled}
+    />
+    {label && (
+      <span
+        className={`text-xs transition-colors ${
+          checked ? "text-foreground font-medium" : "text-foreground/70"
+        }`}
+      >
+        {label}
+      </span>
+    )}
+  </label>
+);
+
+const MaintenanceCard = ({
+  row,
+  index,
+  handleChange,
+  requestDelete,
+  previousRow,
+}) => {
+  const [expanded, setExpanded] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Auto-edit new rows (optional, but good UX if row.id is very recent)
+  useEffect(() => {
+    // If it's a new row (empty fields), start in edit mode?
+    // For now, default to false unless explicitly clicked.
+  }, []);
+
+  // Calculate Row Total
+  const total = useMemo(() => {
+    let t = 0;
+    // Aceite
+    t +=
+      (parseFloat(row.aceite_precioxl) || 0) *
+      (parseFloat(row.aceite_litros) || 0);
+    // Cubiertas
+    t +=
+      (parseFloat(row.cubiertas_precio_unit) || 0) *
+      (parseFloat(row.cubiertas_cantidad) || 0);
+    // Resto
+    const simpleFields = [
+      "filtro_aceite",
+      "filtro_gasoil",
+      "trampa_agua",
+      "secado_aire",
+      "filtro_aire",
+      "filtro_habitaculo",
+      "bomba_agua",
+      "valvulas",
+      "toberas",
+      "extras",
+    ];
+    simpleFields.forEach((p) => {
+      t += parseFloat(row[p + "_precio"]) || 0;
+    });
+    return t;
+  }, [row]);
+
+  const handleEditClick = (e) => {
+    e.stopPropagation();
+    setIsEditing(true);
+    setExpanded(true);
+  };
+
+  const handleSaveClick = (e) => {
+    e.stopPropagation();
+
+    // Validation: Check vs Previous Row (Chronological order)
+    if (previousRow) {
+      if (parseFloat(row.km) < parseFloat(previousRow.km)) {
+        alert(
+          `El kilometraje (${row.km}) no puede ser menor al registro anterior (${previousRow.km}).`,
+        );
+        return;
+      }
+      if (row.fecha < previousRow.fecha) {
+        alert(
+          `La fecha (${row.fecha}) no puede ser anterior al registro previo (${previousRow.fecha}).`,
+        );
+        return;
+      }
+    }
+
+    setIsEditing(false);
+  };
+
+  // Generic Field Renderers
+  const renderStandardInputs = (prefix, label) => (
+    <div className="bg-content2/50 p-3 rounded-lg border border-divider/50 hover:border-primary/30 transition-colors">
+      <div className="flex justify-between items-start mb-2">
+        <span className="text-xs font-bold text-foreground/70">{label}</span>
+        <Checkbox
+          checked={row[prefix + "_cambio"]}
+          onChange={(v) => handleChange(index, prefix + "_cambio", v)}
+          disabled={!isEditing}
+        />
+      </div>
+      {row[prefix + "_cambio"] && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          className="grid grid-cols-2 gap-2 mt-2"
+        >
+          <InputGroup label="Marca">
+            <TextInput
+              value={row[prefix + "_marca"]}
+              onChange={(v) => handleChange(index, prefix + "_marca", v)}
+              disabled={!isEditing}
+            />
+          </InputGroup>
+          <InputGroup label="Código">
+            <TextInput
+              value={row[prefix + "_codigo"]}
+              onChange={(v) => handleChange(index, prefix + "_codigo", v)}
+              disabled={!isEditing}
+            />
+          </InputGroup>
+          <InputGroup label="Precio" className="col-span-2">
+            <TextInput
+              type="number"
+              value={row[prefix + "_precio"]}
+              onChange={(v) => handleChange(index, prefix + "_precio", v)}
+              disabled={!isEditing}
+            />
+          </InputGroup>
+        </motion.div>
+      )}
+    </div>
+  );
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      layout
+      className={`rounded-xl shadow-sm border overflow-hidden transition-all hover:shadow-md ${
+        isEditing
+          ? "bg-content1 border-primary/50 ring-1 ring-primary/20"
+          : "bg-content1 border-divider"
+      }`}
+    >
+      {/* Header / Summary Row */}
+      <div
+        className="p-4 flex flex-wrap items-center gap-4 cursor-pointer hover:bg-content2/50 transition-colors"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="flex items-center gap-3 flex-1 min-w-[200px]">
+          <div
+            className={`p-2 rounded-full transition-colors ${
+              expanded
+                ? "bg-primary/20 text-primary"
+                : "bg-content2 text-foreground/50"
+            }`}
+          >
+            {expanded ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
+          </div>
+          <div>
+            <p className="text-xs text-foreground/50 font-bold uppercase tracking-wider">
+              Fecha
+            </p>
+            {isEditing ? (
+              <input
+                type="date"
+                className="bg-transparent font-medium text-foreground focus:outline-none border-b border-primary/50"
+                value={row.fecha}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => handleChange(index, "fecha", e.target.value)}
+              />
+            ) : (
+              <span className="font-medium text-foreground">
+                {row.fecha || "-"}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="w-[1px] h-8 bg-divider hidden sm:block" />
+
+        <div className="flex-1 min-w-[120px]">
+          <p className="text-xs text-foreground/50 font-bold uppercase tracking-wider">
+            Kilometraje
+          </p>
+          <div className="flex items-center gap-1">
+            {isEditing ? (
+              <TextInput
+                type="number"
+                value={row.km}
+                onChange={(v) => handleChange(index, "km", v)}
+                placeholder="0"
+                className="w-24 bg-transparent border-transparent focus:bg-content2 focus:border-divider px-0"
+              />
+            ) : (
+              <span className="font-medium text-foreground">{row.km || 0}</span>
+            )}
+            <span className="text-xs text-foreground/50">km</span>
+          </div>
+        </div>
+
+        <div className="w-[1px] h-8 bg-divider hidden sm:block" />
+
+        <div className="flex-1 min-w-[120px] text-right sm:text-left">
+          <p className="text-xs text-foreground/50 font-bold uppercase tracking-wider">
+            Costo Total
+          </p>
+          <p className="font-bold text-success text-lg">
+            ${total.toLocaleString()}
+          </p>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="ml-auto pl-4 border-l border-divider flex items-center gap-2">
+          {isEditing ? (
+            <button
+              onClick={handleSaveClick}
+              className="p-2 text-success hover:bg-success/10 rounded-lg transition-colors"
+              title="Guardar cambios"
+            >
+              <FaSave size={16} />
+            </button>
+          ) : (
+            <button
+              onClick={handleEditClick}
+              className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+              title="Editar registro"
+            >
+              <FaEdit size={16} />
+            </button>
+          )}
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              requestDelete(row.id);
+            }}
+            className="p-2 text-danger hover:bg-danger/10 rounded-lg transition-colors"
+            title="Eliminar registro"
+          >
+            <FaTrash size={14} />
+          </button>
+        </div>
+      </div>
+
+      {/* Detailed Content */}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="border-t border-divider"
+          >
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 bg-content2/20">
+              {/* NOTE: All inputs inside renderStandardInputs and here have disabled={!isEditing} passed */}
+
+              {/* 1. Aceite y Motor */}
+              <div className="space-y-4">
+                <SectionHeader icon={FaOilCan} title="Lubricación y Motor" />
+
+                {/* Aceite Block */}
+                <div className="bg-content1 p-4 rounded-xl border border-divider shadow-sm">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="font-semibold text-sm">Aceite Motor</span>
+                    <Checkbox
+                      checked={row.aceite_cambio}
+                      onChange={(v) => handleChange(index, "aceite_cambio", v)}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                  {row.aceite_cambio && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      className="space-y-3"
+                    >
+                      <div className="grid grid-cols-2 gap-3">
+                        <InputGroup label="Marca">
+                          <TextInput
+                            value={row.aceite_marca}
+                            onChange={(v) =>
+                              handleChange(index, "aceite_marca", v)
+                            }
+                            disabled={!isEditing}
+                          />
+                        </InputGroup>
+                        <InputGroup label="Código">
+                          <TextInput
+                            value={row.aceite_codigo}
+                            onChange={(v) =>
+                              handleChange(index, "aceite_codigo", v)
+                            }
+                            disabled={!isEditing}
+                          />
+                        </InputGroup>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <InputGroup label="Precio / Litro">
+                          <TextInput
+                            type="number"
+                            value={row.aceite_precioxl}
+                            onChange={(v) =>
+                              handleChange(index, "aceite_precioxl", v)
+                            }
+                            disabled={!isEditing}
+                          />
+                        </InputGroup>
+                        <InputGroup label="Litros">
+                          <TextInput
+                            type="number"
+                            value={row.aceite_litros}
+                            onChange={(v) =>
+                              handleChange(index, "aceite_litros", v)
+                            }
+                            disabled={!isEditing}
+                          />
+                        </InputGroup>
+                      </div>
+                      <div className="pt-2 border-t border-divider flex justify-between text-xs">
+                        <span className="text-foreground/60">
+                          Subtotal Aceite:
+                        </span>
+                        <span className="font-bold">
+                          $
+                          {(
+                            (parseFloat(row.aceite_precioxl) || 0) *
+                            (parseFloat(row.aceite_litros) || 0)
+                          ).toLocaleString()}
+                        </span>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Filtros Relacionados */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {renderStandardInputs("filtro_aceite", "Filtro Aceite")}
+                  {renderStandardInputs("filtro_gasoil", "Filtro Gasoil")}
+                  {renderStandardInputs("trampa_agua", "Trampa de Agua")}
+                </div>
+              </div>
+
+              {/* 2. Aire y Refrigeración */}
+              <div className="space-y-4">
+                <SectionHeader icon={FaWrench} title="Aire y Sistemas" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {renderStandardInputs("filtro_aire", "Filtro Aire")}
+                  {renderStandardInputs("secado_aire", "Secado de Aire")}
+                  {renderStandardInputs(
+                    "filtro_habitaculo",
+                    "Filtro Habitáculo",
+                  )}
+                  {renderStandardInputs("bomba_agua", "Bomba de Agua")}
+                </div>
+
+                {/* Valvulas Special Case */}
+                <div className="bg-content2/50 p-3 rounded-lg border border-divider/50">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-xs font-bold text-foreground/70">
+                      Válvulas
+                    </span>
+                    <Checkbox
+                      checked={row.valvulas_cambio}
+                      onChange={(v) =>
+                        handleChange(index, "valvulas_cambio", v)
+                      }
+                      disabled={!isEditing}
+                    />
+                  </div>
+                  {row.valvulas_cambio && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      className="space-y-2 mt-2"
+                    >
+                      <InputGroup label="Marca">
+                        <TextInput
+                          value={row.valvulas_marca}
+                          onChange={(v) =>
+                            handleChange(index, "valvulas_marca", v)
+                          }
+                          disabled={!isEditing}
+                        />
+                      </InputGroup>
+                      <label className="flex items-center gap-2 p-2 bg-content1 rounded border border-divider">
+                        <input
+                          type="checkbox"
+                          checked={row.valvulas_regular}
+                          onChange={(e) =>
+                            handleChange(
+                              index,
+                              "valvulas_regular",
+                              e.target.checked,
+                            )
+                          }
+                          disabled={!isEditing}
+                          className="w-4 h-4 rounded border-divider bg-content2 text-primary focus:ring-primary"
+                        />
+                        <span className="text-xs">Requiere Regulación</span>
+                      </label>
+                      <InputGroup label="Precio">
+                        <TextInput
+                          type="number"
+                          value={row.valvulas_precio}
+                          onChange={(v) =>
+                            handleChange(index, "valvulas_precio", v)
+                          }
+                          disabled={!isEditing}
+                        />
+                      </InputGroup>
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+
+              {/* 3. Rodado y Extras */}
+              <div className="space-y-4">
+                <SectionHeader icon={FaTruckMonster} title="Rodado y Extras" />
+
+                {/* Cubiertas */}
+                <div className="bg-content1 p-4 rounded-xl border border-divider shadow-sm">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="font-semibold text-sm">Cubiertas</span>
+                    <Checkbox
+                      checked={row.cubiertas_cambio}
+                      onChange={(v) =>
+                        handleChange(index, "cubiertas_cambio", v)
+                      }
+                      disabled={!isEditing}
+                    />
+                  </div>
+                  {row.cubiertas_cambio && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      className="space-y-3"
+                    >
+                      <InputGroup label="Marca">
+                        <TextInput
+                          value={row.cubiertas_marca}
+                          onChange={(v) =>
+                            handleChange(index, "cubiertas_marca", v)
+                          }
+                          disabled={!isEditing}
+                        />
+                      </InputGroup>
+                      <div className="grid grid-cols-2 gap-3">
+                        <InputGroup label="Cantidad">
+                          <TextInput
+                            type="number"
+                            value={row.cubiertas_cantidad}
+                            onChange={(v) =>
+                              handleChange(index, "cubiertas_cantidad", v)
+                            }
+                            disabled={!isEditing}
+                          />
+                        </InputGroup>
+                        <InputGroup label="Precio Unit.">
+                          <TextInput
+                            type="number"
+                            value={row.cubiertas_precio_unit}
+                            onChange={(v) =>
+                              handleChange(index, "cubiertas_precio_unit", v)
+                            }
+                            disabled={!isEditing}
+                          />
+                        </InputGroup>
+                      </div>
+                      <div className="pt-2 border-t border-divider flex justify-between text-xs">
+                        <span className="text-foreground/60">
+                          Subtotal Cubiertas:
+                        </span>
+                        <span className="font-bold">
+                          $
+                          {(
+                            (parseFloat(row.cubiertas_precio_unit) || 0) *
+                            (parseFloat(row.cubiertas_cantidad) || 0)
+                          ).toLocaleString()}
+                        </span>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Toberas */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {renderStandardInputs("toberas", "Toberas")}
+                </div>
+
+                {/* Extras */}
+                <div className="bg-content1 p-4 rounded-xl border border-divider shadow-sm mt-4">
+                  <SectionHeader title="Extras / Varios" className="mb-3" />
+                  <div className="space-y-3">
+                    <InputGroup label="Descripción">
+                      <TextInput
+                        value={row.extras_descripcion}
+                        onChange={(v) =>
+                          handleChange(index, "extras_descripcion", v)
+                        }
+                        placeholder="Detalle..."
+                        disabled={!isEditing}
+                      />
+                    </InputGroup>
+                    <InputGroup label="Precio">
+                      <TextInput
+                        type="number"
+                        value={row.extras_precio}
+                        onChange={(v) =>
+                          handleChange(index, "extras_precio", v)
+                        }
+                        disabled={!isEditing}
+                      />
+                    </InputGroup>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
 
 export default function CamionProfile({ id }) {
   const [truck, setTruck] = useState(null);
   const [maintenanceLog, setMaintenanceLog] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Modal State
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [rowToDelete, setRowToDelete] = useState(null);
+
   // Load Truck Data
   useEffect(() => {
     async function fetchTruck() {
       try {
         setLoading(true);
-        // Fetch from API
         const [camiones, semirremolques] = await Promise.all([
           api.getCamiones(),
-          api.getSemirremolques()
+          api.getSemirremolques(),
         ]);
-        // Check both camiones and semirremolques incase
-        const found = camiones.find((c) => c._id.toString() === id.toString()) || 
-                      semirremolques?.find((c) => c._id.toString() === id.toString());
+        const found =
+          camiones.find((c) => c._id.toString() === id.toString()) ||
+          semirremolques?.find((c) => c._id.toString() === id.toString());
         setTruck(found);
       } catch (err) {
         console.error("Error loading truck:", err);
@@ -86,232 +665,194 @@ export default function CamionProfile({ id }) {
       fecha: new Date().toISOString().split("T")[0],
       patente: truck?.patente || "",
     };
-    saveLog([...maintenanceLog, newRow]);
+    saveLog([newRow, ...maintenanceLog]); // Add to top
   };
 
-  const removeRow = (rowId) => {
-    const newLog = maintenanceLog.filter((r) => r.id !== rowId);
-    saveLog(newLog);
+  const requestDelete = (rowId) => {
+    setRowToDelete(rowId);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (rowToDelete) {
+      const newLog = maintenanceLog.filter((r) => r.id !== rowToDelete);
+      saveLog(newLog);
+      setRowToDelete(null);
+      setDeleteModalOpen(false);
+    }
   };
 
   const handleChange = (index, field, value) => {
+    // Prevent negative numbers
+    if (
+      (field.includes("precio") ||
+        field.includes("litros") ||
+        field.includes("cantidad") ||
+        field === "km") &&
+      parseFloat(value) < 0
+    ) {
+      return;
+    }
+
+    // Chronological validation (Current vs Older record)
+    if (field === "km" || field === "fecha") {
+      const olderRow = maintenanceLog[index + 1];
+      if (olderRow) {
+        if (field === "km" && parseFloat(value) < parseFloat(olderRow.km)) {
+          // alert("El kilometraje no puede ser menor al del registro anterior.");
+          return;
+        }
+        if (field === "fecha" && value < olderRow.fecha) {
+          // alert("La fecha no puede ser anterior al registro previo.");
+          return;
+        }
+      }
+    }
+
     const newLog = [...maintenanceLog];
-    newLog[index][field] = value;
+    // IMMUTABLE UPDATE FIX
+    newLog[index] = { ...newLog[index], [field]: value };
     saveLog(newLog);
   };
 
-  // Calculate Totals
-  const calculateTotal = (row) => {
-    let total = 0;
-    
-    // Aceite
-    const aceitePrice = parseFloat(row.aceite_precioxl) || 0;
-    const aceiteLitros = parseFloat(row.aceite_litros) || 0;
-    const aceiteTotal = aceitePrice * aceiteLitros;
-    total += aceiteTotal;
+  const grandTotal = useMemo(() => {
+    return maintenanceLog.reduce((acc, row) => {
+      let t = 0;
+      t +=
+        (parseFloat(row.aceite_precioxl) || 0) *
+        (parseFloat(row.aceite_litros) || 0);
+      t +=
+        (parseFloat(row.cubiertas_precio_unit) || 0) *
+        (parseFloat(row.cubiertas_cantidad) || 0);
+      [
+        "filtro_aceite",
+        "filtro_gasoil",
+        "trampa_agua",
+        "secado_aire",
+        "filtro_aire",
+        "filtro_habitaculo",
+        "bomba_agua",
+        "valvulas",
+        "toberas",
+        "extras",
+      ].forEach((p) => {
+        t += parseFloat(row[p + "_precio"]) || 0;
+      });
+      return acc + t;
+    }, 0);
+  }, [maintenanceLog]);
 
-    // Cubiertas
-    const cubiertasPrice = parseFloat(row.cubiertas_precio_unit) || 0;
-    const cubiertasQty = parseFloat(row.cubiertas_cantidad) || 0;
-    const cubiertasTotal = cubiertasPrice * cubiertasQty;
-    total += cubiertasTotal;
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
 
-    // Filters & Parts (Simple Price addition)
-    const prefixes = [
-      "filtro_aceite", "filtro_gasoil", "trampa_agua", "secado_aire", 
-      "filtro_aire", "filtro_habitaculo", "bomba_agua", "valvulas", 
-      "toberas", "extras"
-    ];
-
-    prefixes.forEach(p => {
-      total += parseFloat(row[p + "_precio"]) || 0;
-    });
-
-    return total;
-  };
-
-  const grandTotal = maintenanceLog.reduce((acc, row) => acc + calculateTotal(row), 0);
-  const grandTotalIVA = grandTotal * 1.21; // Assuming 21% IVA
-
-  if (loading) return <div className="p-8">Cargando...</div>;
-  if (!truck) return <div className="p-8">Camión no encontrado</div>;
+  if (!truck)
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background">
+        <FaTruckMonster className="text-6xl text-foreground/20" />
+        <p className="text-lg text-foreground/60">Vehículo no encontrado</p>
+        <Link href="/dashboard" className="text-primary hover:underline">
+          Volver al Dashboard
+        </Link>
+      </div>
+    );
 
   return (
-    <div className="p-6 bg-background min-h-screen transition-colors duration-300">
-      <div className="flex items-center gap-4 mb-6">
-        <Link href="/camiones" className="p-2 bg-content1 rounded shadow hover:bg-content2 text-foreground">
-          <FaArrowLeft />
-        </Link>
-        <h1 className="text-2xl font-bold text-foreground">
-          Planilla de Mantenimiento: {truck.marca} {truck.modelo} ({truck.patente})
-        </h1>
+    <div className="min-h-screen bg-background text-foreground pb-20">
+      {/* Header */}
+      <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-lg border-b border-divider">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/dashboard/flota"
+              className="p-2 -ml-2 rounded-full hover:bg-content2 transition-colors"
+            >
+              <FaArrowLeft className="text-foreground/70" />
+            </Link>
+            <div>
+              <h1 className="text-xl font-bold flex items-center gap-2">
+                {truck.marca} {truck.modelo}
+                <span className="px-2 py-0.5 rounded text-xs font-mono bg-content2 border border-divider">
+                  {truck.patente}
+                </span>
+              </h1>
+              <p className="text-xs text-foreground/50">
+                Historial de Mantenimiento y Service
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <div className="text-right hidden sm:block">
+              <p className="text-[10px] uppercase font-bold text-foreground/40">
+                Inversión Total
+              </p>
+              <p className="text-xl font-bold text-primary">
+                ${grandTotal.toLocaleString()}
+              </p>
+            </div>
+            <button
+              onClick={addRow}
+              className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
+            >
+              <FaPlus size={14} />
+              <span>Nuevo Registro</span>
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="bg-content1 shadow rounded-lg overflow-hidden flex flex-col border border-divider">
-        <div className="overflow-x-auto pb-4">
-          <table className="min-w-[3000px] border-collapse bg-content1 text-sm text-foreground">
-            <thead className="bg-brand-navy text-white uppercase font-semibold">
-              <tr>
-                <th rowSpan={2} className="border border-divider px-2 py-1 sticky left-0 bg-brand-navy z-10 w-24">Fecha</th>
-                <th rowSpan={2} className="border border-divider px-2 py-1 w-24">Patente</th>
-                <th rowSpan={2} className="border border-divider px-2 py-1 w-20">Km</th>
-
-                <th colSpan={6} className="border border-divider px-2 py-1 text-center bg-brand-navy/90 text-white">Aceite</th>
-                <th colSpan={4} className="border border-divider px-2 py-1 text-center bg-brand-navy/80 text-white">Filtro Aceite</th>
-                <th colSpan={5} className="border border-divider px-2 py-1 text-center bg-brand-navy/90 text-white">Cubiertas</th>
-                <th colSpan={4} className="border border-divider px-2 py-1 text-center bg-brand-navy/80 text-white">Filtro Gasoil</th>
-                <th colSpan={4} className="border border-divider px-2 py-1 text-center bg-brand-navy/90 text-white">Trampa de Agua</th>
-                <th colSpan={4} className="border border-divider px-2 py-1 text-center bg-brand-navy/80 text-white">Secado de Aire</th>
-                <th colSpan={4} className="border border-divider px-2 py-1 text-center bg-brand-navy/90 text-white">Filtro de Aire</th>
-                <th colSpan={4} className="border border-divider px-2 py-1 text-center bg-brand-navy/80 text-white">Filtro Habitaculo</th>
-                <th colSpan={4} className="border border-divider px-2 py-1 text-center bg-brand-navy/90 text-white">Bomba de Agua</th>
-                <th colSpan={4} className="border border-divider px-2 py-1 text-center bg-brand-navy/80 text-white">Valvulas</th>
-                <th colSpan={4} className="border border-divider px-2 py-1 text-center bg-brand-navy/90 text-white">Toberas</th>
-                <th colSpan={2} className="border border-divider px-2 py-1 text-center bg-brand-navy/80 text-white">Extras</th>
-                <th rowSpan={2} className="border px-2 py-1 w-10"></th>
-              </tr>
-              <tr>
-                {/* Aceite Headers */}
-                <th className="border px-2 py-1 text-[10px]">Cambio</th>
-                <th className="border px-2 py-1 text-[10px]">Marca</th>
-                <th className="border px-2 py-1 text-[10px]">Codigo</th>
-                <th className="border px-2 py-1 text-[10px]">Precio x L</th>
-                <th className="border px-2 py-1 text-[10px]">Litros</th>
-                <th className="border px-2 py-1 text-[10px]">Total</th>
-
-                {/* Standard Headers (Filtro Aceite) */}
-                <th className="border px-2 py-1 text-[10px]">Cambio</th>
-                <th className="border px-2 py-1 text-[10px]">Marca</th>
-                <th className="border px-2 py-1 text-[10px]">Codigo</th>
-                <th className="border px-2 py-1 text-[10px]">Precio</th>
-
-                {/* Cubiertas Headers */}
-                <th className="border px-2 py-1 text-[10px]">Cambio</th>
-                <th className="border px-2 py-1 text-[10px]">Cantidad</th>
-                <th className="border px-2 py-1 text-[10px]">Marca</th>
-                <th className="border px-2 py-1 text-[10px]">Precio Unit</th>
-                <th className="border px-2 py-1 text-[10px]">Total</th>
-
-                {/* Standard Headers Repetition */}
-                {Array(7).fill(null).map((_, i) => (
-                  <React.Fragment key={i}>
-                    <th className="border px-2 py-1 text-[10px]">Cambio</th>
-                    <th className="border px-2 py-1 text-[10px]">Marca</th>
-                    <th className="border px-2 py-1 text-[10px]">{i === 5 ? "Regular" : "Codigo"}</th>
-                    <th className="border px-2 py-1 text-[10px]">Precio</th>
-                  </React.Fragment>
-                ))}
-
-                {/* Extras Headers */}
-                <th className="border px-2 py-1 text-[10px]">Descripcion</th>
-                <th className="border border-divider px-2 py-1 text-[10px]">Precio</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-divider">
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
+        {maintenanceLog.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-content1 rounded-2xl border border-dashed border-divider">
+            <div className="w-16 h-16 bg-content2 rounded-full flex items-center justify-center mb-4">
+              <FaCog className="text-3xl text-foreground/20 animate-slow-spin" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground/70">
+              Sin registros de mantenimiento
+            </h3>
+            <p className="text-sm text-foreground/40 max-w-xs text-center mt-2">
+              Comenzá un historial detallado para este vehículo agregando el
+              primer registro.
+            </p>
+            <button
+              onClick={addRow}
+              className="mt-6 text-primary font-medium hover:underline text-sm"
+            >
+              Crear primer registro
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <AnimatePresence>
               {maintenanceLog.map((row, index) => (
-                <tr key={row.id}>
-                  {/* General */}
-                  <td className="border border-divider px-2 py-1 sticky left-0 bg-content1 z-10">
-                    <input 
-                      type="date" 
-                      className="w-full text-xs bg-transparent outline-none"
-                      value={row.fecha}
-                      onChange={(e) => handleChange(index, 'fecha', e.target.value)}
-                    />
-                  </td>
-                  <td className="border px-2 py-1">
-                    <input 
-                      className="w-full text-xs bg-transparent outline-none"
-                      defaultValue={row.patente}
-                      readOnly
-                    />
-                  </td>
-                  <td className="border px-2 py-1">
-                    <input 
-                      type="number"
-                      className="w-full text-xs bg-transparent outline-none"
-                      value={row.km || ""}
-                      onChange={(e) => handleChange(index, 'km', e.target.value)}
-                      placeholder="KM"
-                    />
-                  </td>
-
-                  {/* Aceite */}
-                  <td className="border px-2 py-1 text-center">
-                    <input type="checkbox" checked={row.aceite_cambio || false} onChange={e => handleChange(index, 'aceite_cambio', e.target.checked)} />
-                  </td>
-                  <td className="border px-2 py-1"><input className="w-full text-xs outline-none" value={row.aceite_marca || ""} onChange={e => handleChange(index, 'aceite_marca', e.target.value)} /></td>
-                  <td className="border px-2 py-1"><input className="w-full text-xs outline-none" value={row.aceite_codigo || ""} onChange={e => handleChange(index, 'aceite_codigo', e.target.value)} /></td>
-                  <td className="border px-2 py-1"><input type="number" className="w-full text-xs outline-none" value={row.aceite_precioxl || ""} onChange={e => handleChange(index, 'aceite_precioxl', e.target.value)} /></td>
-                  <td className="border px-2 py-1"><input type="number" className="w-full text-xs outline-none" value={row.aceite_litros || ""} onChange={e => handleChange(index, 'aceite_litros', e.target.value)} /></td>
-                  <td className="border px-2 py-1 bg-gray-50 text-right font-mono text-xs">
-                    {((parseFloat(row.aceite_precioxl) || 0) * (parseFloat(row.aceite_litros) || 0)).toLocaleString()}
-                  </td>
-
-                  {/* Filtro Aceite */}
-                  {renderStandardGroup(row, index, "filtro_aceite", handleChange)}
-
-                  {/* Cubiertas */}
-                  <td className="border px-2 py-1 text-center"><input type="checkbox" checked={row.cubiertas_cambio || false} onChange={e => handleChange(index, 'cubiertas_cambio', e.target.checked)} /></td>
-                  <td className="border px-2 py-1"><input type="number" className="w-full text-xs outline-none" value={row.cubiertas_cantidad || ""} onChange={e => handleChange(index, 'cubiertas_cantidad', e.target.value)} /></td>
-                  <td className="border px-2 py-1"><input className="w-full text-xs outline-none" value={row.cubiertas_marca || ""} onChange={e => handleChange(index, 'cubiertas_marca', e.target.value)} /></td>
-                  <td className="border px-2 py-1"><input type="number" className="w-full text-xs outline-none" value={row.cubiertas_precio_unit || ""} onChange={e => handleChange(index, 'cubiertas_precio_unit', e.target.value)} /></td>
-                  <td className="border px-2 py-1 bg-gray-50 text-right font-mono text-xs">
-                    {((parseFloat(row.cubiertas_precio_unit) || 0) * (parseFloat(row.cubiertas_cantidad) || 0)).toLocaleString()}
-                  </td>
-
-                  {/* Other standard groups */}
-                  {renderStandardGroup(row, index, "filtro_gasoil", handleChange)}
-                  {renderStandardGroup(row, index, "trampa_agua", handleChange)}
-                  {renderStandardGroup(row, index, "secado_aire", handleChange)}
-                  {renderStandardGroup(row, index, "filtro_aire", handleChange)}
-                  {renderStandardGroup(row, index, "filtro_habitaculo", handleChange)}
-                  {renderStandardGroup(row, index, "bomba_agua", handleChange)}
-                  
-                  {/* Valvulas (Special: Has "Regular" checkbox instead of code?) User Text: "REGULAR" */}
-                  {/* Reuse standard but treat _codigo as Regular? No, use explicit columns */}
-                   <td className="border px-2 py-1 text-center"><input type="checkbox" checked={row.valvulas_cambio || false} onChange={e => handleChange(index, 'valvulas_cambio', e.target.checked)} /></td>
-                   <td className="border px-2 py-1"><input className="w-full text-xs outline-none" value={row.valvulas_marca || ""} onChange={e => handleChange(index, 'valvulas_marca', e.target.value)} /></td>
-                   <td className="border px-2 py-1 text-center"><input type="checkbox" checked={row.valvulas_regular || false} onChange={e => handleChange(index, 'valvulas_regular', e.target.checked)} /></td>
-                   <td className="border px-2 py-1"><input type="number" className="w-full text-xs outline-none" value={row.valvulas_precio || ""} onChange={e => handleChange(index, 'valvulas_precio', e.target.value)} /></td>
-
-                  {/* Toberas */}
-                  {renderStandardGroup(row, index, "toberas", handleChange)}
-
-                  {/* Extras */}
-                  <td className="border px-2 py-1"><input className="w-full text-xs outline-none" value={row.extras_descripcion || ""} onChange={e => handleChange(index, 'extras_descripcion', e.target.value)} /></td>
-                  <td className="border px-2 py-1"><input type="number" className="w-full text-xs outline-none" value={row.extras_precio || ""} onChange={e => handleChange(index, 'extras_precio', e.target.value)} /></td>
-
-                  <td className="border px-2 py-1 text-center">
-                    <button onClick={() => removeRow(row.id)} className="text-red-500 hover:text-red-700">
-                      <FaTrash size={12} />
-                    </button>
-                  </td>
-                </tr>
+                <MaintenanceCard
+                  key={row.id}
+                  row={row}
+                  index={index}
+                  handleChange={handleChange}
+                  requestDelete={requestDelete}
+                />
               ))}
-              <tr>
-                <td colSpan={53} className="px-2 py-4">
-                  <button onClick={addRow} className="flex items-center gap-2 bg-brand-navy text-white px-3 py-2 rounded-md font-medium text-sm hover:bg-brand-navy/80 hover:shadow-md transition-all">
-                    <FaPlus /> Agregar Registro
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        
-        {/* Footer Totals */}
-        <div className="bg-content2 p-4 border-t border-divider flex justify-end gap-8 text-sm">
-            <div className="flex gap-2">
-                <span className="font-bold text-default-500">TOTAL:</span>
-                <span className="font-bold text-foreground">${grandTotal.toLocaleString()}</span>
-            </div>
-            <div className="flex gap-2">
-                <span className="font-bold text-default-500">TOTAL c/IVA (21%):</span>
-                <span className="font-bold text-foreground">${grandTotalIVA.toLocaleString()}</span>
-            </div>
-        </div>
+            </AnimatePresence>
+          </div>
+        )}
       </div>
+
+      <ConfirmModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Eliminar Registro"
+        message="¿Estás seguro de que deseas eliminar este registro de mantenimiento? Esta acción no se puede deshacer."
+        label="Eliminar"
+        bgcolor="bg-red-600"
+        bghover="red"
+      />
     </div>
   );
 }
