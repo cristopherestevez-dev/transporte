@@ -1,212 +1,228 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 class ApiService {
-    async get(endpoint) {
-        const res = await fetch(`${API_URL}${endpoint}`);
-        if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
-        const json = await res.json();
-        return json.data;
-    }
+  async get(endpoint) {
+    const res = await fetch(`${API_URL}${endpoint}`);
+    if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+    const json = await res.json();
+    return json.data;
+  }
 
-    async post(endpoint, data) {
-        const res = await fetch(`${API_URL}${endpoint}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
-        const json = await res.json();
-        return json.data;
-    }
+  async post(endpoint, data) {
+    const res = await fetch(`${API_URL}${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+    const json = await res.json();
+    return json.data;
+  }
 
-    async patch(endpoint, data) {
-        const res = await fetch(`${API_URL}${endpoint}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
-        const json = await res.json();
-        return json.data;
-    }
+  async patch(endpoint, data) {
+    const res = await fetch(`${API_URL}${endpoint}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+    const json = await res.json();
+    return json.data;
+  }
 
-    async delete(endpoint) {
-        const res = await fetch(`${API_URL}${endpoint}`, {
-            method: 'DELETE'
-        });
-        if (!res.ok && res.status !== 204) throw new Error(`Error HTTP: ${res.status}`);
-        return true;
-    }
+  async delete(endpoint) {
+    const res = await fetch(`${API_URL}${endpoint}`, {
+      method: "DELETE",
+    });
+    if (!res.ok && res.status !== 204)
+      throw new Error(`Error HTTP: ${res.status}`);
+    return true;
+  }
 
-    // Dashboard
-    async getStats() {
-        return this.get('/dashboard/stats');
-    }
+  // Dashboard
+  async getStats() {
+    return this.get("/dashboard/stats");
+  }
 
-    async getRecentTrips() {
-        return this.get('/dashboard/recent-trips');
-    }
+  async getRecentTrips() {
+    return this.get("/dashboard/recent-trips");
+  }
 
-    // Proveedores
-    async getProveedores() {
-        return this.get('/proveedores');
-    }
+  // Notifications
+  async getNotifications() {
+    return this.get("/notifications");
+  }
 
-    async createProveedor(data) {
-        return this.post('/proveedores', data);
-    }
+  async markNotificationAsRead(id) {
+    // Assuming marking as read might not return data, or returns a simple status
+    // If the backend returns data, adjust this to return json.data
+    return this.put(`/notifications/${id}/read`, {});
+  }
 
-    async updateProveedor(id, data) {
-        return this.patch(`/proveedores/${id}`, data);
-    }
+  async clearNotifications() {
+    return this.delete("/notifications");
+  }
 
-    async deleteProveedor(id) {
-        return this.delete(`/proveedores/${id}`);
-    }
+  // Proveedores
+  async getProveedores() {
+    return this.get("/proveedores");
+  }
 
-    // Fleteros
-    async getFleteros() {
-        return this.get('/fleteros');
-    }
+  async createProveedor(data) {
+    return this.post("/proveedores", data);
+  }
 
-    async createFletero(data) {
-        return this.post('/fleteros', data);
-    }
+  async updateProveedor(id, data) {
+    return this.patch(`/proveedores/${id}`, data);
+  }
 
-    async updateFletero(id, data) {
-        return this.patch(`/fleteros/${id}`, data);
-    }
+  async deleteProveedor(id) {
+    return this.delete(`/proveedores/${id}`);
+  }
 
-    async deleteFletero(id) {
-        return this.delete(`/fleteros/${id}`);
-    }
+  // Fleteros
+  async getFleteros() {
+    return this.get("/fleteros");
+  }
 
-    // Camiones
-    async getCamiones() {
-        return this.get('/camiones');
-    }
+  async createFletero(data) {
+    return this.post("/fleteros", data);
+  }
 
-    async createCamion(data) {
-        return this.post('/camiones', data);
-    }
+  async updateFletero(id, data) {
+    return this.patch(`/fleteros/${id}`, data);
+  }
 
-    async updateCamion(id, data) {
-        return this.patch(`/camiones/${id}`, data);
-    }
+  async deleteFletero(id) {
+    return this.delete(`/fleteros/${id}`);
+  }
 
-    async deleteCamion(id) {
-        return this.delete(`/camiones/${id}`);
-    }
+  // Camiones
+  async getCamiones() {
+    return this.get("/camiones");
+  }
 
-    // Semirremolques
-    async getSemirremolques() {
-        return this.get('/semirremolques');
-    }
+  async createCamion(data) {
+    return this.post("/camiones", data);
+  }
 
-    async createSemirremolque(data) {
-        return this.post('/semirremolques', data);
-    }
+  async updateCamion(id, data) {
+    return this.patch(`/camiones/${id}`, data);
+  }
 
-    async updateSemirremolque(id, data) {
-        return this.patch(`/semirremolques/${id}`, data);
-    }
+  async deleteCamion(id) {
+    return this.delete(`/camiones/${id}`);
+  }
 
-    async deleteSemirremolque(id) {
-        return this.delete(`/semirremolques/${id}`);
-    }
+  // Semirremolques
+  async getSemirremolques() {
+    return this.get("/semirremolques");
+  }
 
-    // Choferes
-    async getChoferes() {
-        return this.get('/choferes');
-    }
+  async createSemirremolque(data) {
+    return this.post("/semirremolques", data);
+  }
 
-    async createChofer(data) {
-        return this.post('/choferes', data);
-    }
+  async updateSemirremolque(id, data) {
+    return this.patch(`/semirremolques/${id}`, data);
+  }
 
-    async updateChofer(id, data) {
-        return this.patch(`/choferes/${id}`, data);
-    }
+  async deleteSemirremolque(id) {
+    return this.delete(`/semirremolques/${id}`);
+  }
 
-    async deleteChofer(id) {
-        return this.delete(`/choferes/${id}`);
-    }
+  // Choferes
+  async getChoferes() {
+    return this.get("/choferes");
+  }
 
-    // Viajes Nacionales
-    async getViajesNacionales() {
-        return this.get('/viajes/nacionales');
-    }
+  async createChofer(data) {
+    return this.post("/choferes", data);
+  }
 
-    async createViajeNacional(data) {
-        return this.post('/viajes/nacionales', data);
-    }
+  async updateChofer(id, data) {
+    return this.patch(`/choferes/${id}`, data);
+  }
 
-    async updateViajeNacional(id, data) {
-        return this.patch(`/viajes/nacionales/${id}`, data);
-    }
+  async deleteChofer(id) {
+    return this.delete(`/choferes/${id}`);
+  }
 
-    async deleteViajeNacional(id) {
-        return this.delete(`/viajes/nacionales/${id}`);
-    }
+  // Viajes Nacionales
+  async getViajesNacionales() {
+    return this.get("/viajes/nacionales");
+  }
 
-    // Viajes Internacionales
-    async getViajesInternacionales() {
-        return this.get('/viajes/internacionales');
-    }
+  async createViajeNacional(data) {
+    return this.post("/viajes/nacionales", data);
+  }
 
-    async createViajeInternacional(data) {
-        return this.post('/viajes/internacionales', data);
-    }
+  async updateViajeNacional(id, data) {
+    return this.patch(`/viajes/nacionales/${id}`, data);
+  }
 
-    async updateViajeInternacional(id, data) {
-        return this.patch(`/viajes/internacionales/${id}`, data);
-    }
+  async deleteViajeNacional(id) {
+    return this.delete(`/viajes/nacionales/${id}`);
+  }
 
-    async deleteViajeInternacional(id) {
-        return this.delete(`/viajes/internacionales/${id}`);
-    }
+  // Viajes Internacionales
+  async getViajesInternacionales() {
+    return this.get("/viajes/internacionales");
+  }
 
-    // Facturación - Cobranzas
-    async getCobranzasNacionales() {
-        return this.get('/facturacion/cobranzas/nacionales');
-    }
+  async createViajeInternacional(data) {
+    return this.post("/viajes/internacionales", data);
+  }
 
-    async getCobranzasInternacionales() {
-        return this.get('/facturacion/cobranzas/internacionales');
-    }
+  async updateViajeInternacional(id, data) {
+    return this.patch(`/viajes/internacionales/${id}`, data);
+  }
 
-    async updateCobranzaNacional(id, data) {
-        return this.patch(`/facturacion/cobranzas/nacionales/${id}`, data);
-    }
+  async deleteViajeInternacional(id) {
+    return this.delete(`/viajes/internacionales/${id}`);
+  }
 
-    async updateCobranzaInternacional(id, data) {
-        return this.patch(`/facturacion/cobranzas/internacionales/${id}`, data);
-    }
+  // Facturación - Cobranzas
+  async getCobranzasNacionales() {
+    return this.get("/facturacion/cobranzas/nacionales");
+  }
 
-    // Facturación - Pagos
-    async getPagosNacionales() {
-        return this.get('/facturacion/pagos/nacionales');
-    }
+  async getCobranzasInternacionales() {
+    return this.get("/facturacion/cobranzas/internacionales");
+  }
 
-    async getPagosInternacionales() {
-        return this.get('/facturacion/pagos/internacionales');
-    }
+  async updateCobranzaNacional(id, data) {
+    return this.patch(`/facturacion/cobranzas/nacionales/${id}`, data);
+  }
 
-    async updatePagoNacional(id, data) {
-        return this.patch(`/facturacion/pagos/nacionales/${id}`, data);
-    }
+  async updateCobranzaInternacional(id, data) {
+    return this.patch(`/facturacion/cobranzas/internacionales/${id}`, data);
+  }
 
-    async updatePagoInternacional(id, data) {
-        return this.patch(`/facturacion/pagos/internacionales/${id}`, data);
-    }
+  // Facturación - Pagos
+  async getPagosNacionales() {
+    return this.get("/facturacion/pagos/nacionales");
+  }
 
-    // Users
-    async getUsers() {
-        const res = await fetch(`${API_URL}/users`);
-        if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
-        const json = await res.json();
-        return json.data.users;
-    }
+  async getPagosInternacionales() {
+    return this.get("/facturacion/pagos/internacionales");
+  }
+
+  async updatePagoNacional(id, data) {
+    return this.patch(`/facturacion/pagos/nacionales/${id}`, data);
+  }
+
+  async updatePagoInternacional(id, data) {
+    return this.patch(`/facturacion/pagos/internacionales/${id}`, data);
+  }
+
+  // Users
+  async getUsers() {
+    const res = await fetch(`${API_URL}/users`);
+    if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+    const json = await res.json();
+    return json.data.users;
+  }
 }
 
 export const api = new ApiService();

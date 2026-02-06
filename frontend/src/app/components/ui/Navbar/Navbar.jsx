@@ -6,6 +6,7 @@ import { Button, Dropdown } from "@heroui/react";
 import { HiOutlineUser, HiOutlineLogout, HiMenu, HiBell } from "react-icons/hi";
 import WeatherWidget from "@/app/components/ui/WeatherWidget/WeatherWidget";
 import { Logo } from "@/app/components/ui/Logo";
+import ConfirmModal from "@/app/components/ui/ModalWrapper/ConfirmModal";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import api from "@/services/api";
@@ -23,128 +24,50 @@ export default function Navbar({ onToggleSidebar }) {
   const [openNotifications, setOpenNotifications] = useState(false);
 
   // Fetch logic para notificaciones usando API
+  const fetchNotifications = async () => {
+    try {
+      const data = await api.getNotifications();
+      // Ensure data is array
+      setAlerts(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error fetching notifications", error);
+    }
+  };
+
   useEffect(() => {
-    const checkExpirations = async () => {
-      try {
-        // Obtener datos desde la API
-        const [
-          choferes,
-          camiones,
-          semirremolques,
-          cobranzasNac,
-          cobranzasInt,
-          pagosNac,
-          pagosInt,
-        ] = await Promise.all([
-          api.getChoferes().catch(() => []),
-          api.getCamiones().catch(() => []),
-          api.getSemirremolques().catch(() => []),
-          api.getCobranzasNacionales().catch(() => []),
-          api.getCobranzasInternacionales().catch(() => []),
-          api.getPagosNacionales().catch(() => []),
-          api.getPagosInternacionales().catch(() => []),
-        ]);
-
-        const today = new Date();
-        const fourMonths = 120; // Dias aprox
-        let newAlerts = [];
-
-        // Helper para chequear fechas
-        const checkDate = (dateStr, name, type, id) => {
-          if (!dateStr) return;
-          const expDate = new Date(dateStr);
-          const diffTime = expDate - today;
-          const daysDiff = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-          if (daysDiff <= fourMonths) {
-            let severity = "text-yellow-600 bg-yellow-100";
-            if (daysDiff <= 60) severity = "text-red-600 bg-red-100";
-            else if (daysDiff <= 90) severity = "text-orange-600 bg-orange-100";
-
-            newAlerts.push({
-              id: `${type}-${id}`,
-              type,
-              name,
-              date: dateStr,
-              days: daysDiff,
-              severity,
-            });
-          }
-        };
-
-        // Helper para chequear facturas vencidas
-        const checkFactura = (item, typeName) => {
-          if (item.estado === "pagado" || item.estado === "cobrado") return;
-
-          const fechaEmision = new Date(item.fecha);
-          const plazo = item.plazo || 30;
-          const fechaVencimiento = new Date(fechaEmision);
-          fechaVencimiento.setDate(fechaEmision.getDate() + plazo);
-
-          const diffTime = fechaVencimiento - today;
-          const daysDiff = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-          // Alertar si está vencido (días negativos) o por vencer (próximos 5 días)
-          if (daysDiff <= 5) {
-            let severity = "text-orange-600 bg-orange-100"; // Por vencer
-            let label = "Por vencer";
-
-            if (daysDiff < 0) {
-              severity = "text-red-600 bg-red-100"; // Vencido
-              label = "Vencido";
-            }
-
-            newAlerts.push({
-              id: `factura-${item._id}-${typeName}`,
-              type: `Factura (${typeName})`,
-              name: `${item.razon_social} - ${label}`,
-              date: fechaVencimiento.toLocaleDateString(),
-              days: daysDiff,
-              severity,
-            });
-          }
-        };
-
-        // Chequear Choferes
-        (choferes || []).forEach((c) =>
-          checkDate(c.licencia, c.nombre, "Licencia", c._id),
-        );
-        // Chequear Camiones
-        (camiones || []).forEach((c) =>
-          checkDate(
-            c.vencimiento_seguro,
-            `Camión ${c.patente}`,
-            "Seguro",
-            c.patente,
-          ),
-        );
-        // Chequear Semis
-        (semirremolques || []).forEach((s) =>
-          checkDate(
-            s.vencimiento_seguro,
-            `Semi ${s.patente}`,
-            "Seguro",
-            s.patente,
-          ),
-        );
-
-        // Chequear Facturación (Cobranzas y Pagos)
-        (cobranzasNac || []).forEach((i) => checkFactura(i, "Cobranza Nac."));
-        (cobranzasInt || []).forEach((i) => checkFactura(i, "Cobranza Int."));
-        (pagosNac || []).forEach((i) => checkFactura(i, "Pago Nac."));
-        (pagosInt || []).forEach((i) => checkFactura(i, "Pago Int."));
-
-        setAlerts(newAlerts.sort((a, b) => a.days - b.days));
-      } catch (error) {
-        console.error("Error checking alerts", error);
-      }
-    };
-
-    // Chequear al montar y cada 30 segundos
-    checkExpirations();
-    const interval = setInterval(checkExpirations, 30000);
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000); // Check every minute
     return () => clearInterval(interval);
   }, []);
+
+  const handleNotificationClick = async (alert) => {
+    try {
+      if (!alert.isRead) {
+        await api.markNotificationAsRead(alert._id);
+        // Optimistic update
+        setAlerts((prev) => prev.filter((a) => a._id !== alert._id));
+      }
+      // Close dropdown and redirect
+      setOpenNotifications(false);
+      setOpenDropdown(false);
+      // If link exists, it will navigate natively by Link wrapper or window.location
+      // But we are wrapping it in Link in the render
+    } catch (error) {
+      console.error("Error marking as read", error);
+    }
+  };
+
+  const handleClearAll = async () => {
+    try {
+      await api.clearNotifications();
+      setAlerts([]);
+    } catch (error) {
+      console.error("Error clearing notifications", error);
+    }
+  };
+
+  // Estado para confirmación de logout
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
 
   // Ref para el dropdown
   const dropdownRef = useRef(null);
@@ -172,21 +95,21 @@ export default function Navbar({ onToggleSidebar }) {
     setOpenDropdown(false);
   };
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
     setOpenDropdown(false);
+    setLogoutConfirmOpen(true);
+  };
+
+  const confirmLogout = () => {
+    setLogoutConfirmOpen(false);
     logout();
   };
 
+  // ... existing code ...
+
   return (
     <header className="w-full bg-content1 shadow-md px-6 py-4 flex justify-between items-center border-b border-divider transition-colors duration-300">
-      {/* Botón para toggle sidebar (opcional) */}
-      {/* {onToggleSidebar && (
-        <Button variant="ghost" onPress={onToggleSidebar} className=" mr-4 text-gray-700">
-          <HiMenu size={24}/>
-        </Button>
-      )} */}
-
-      {/* Logo o nombre */}
+      {/* ... Logo ... */}
       <div className="flex items-center">
         <Link href="/dashboard">
           <Logo width={260} height={70} className="cursor-pointer" />
@@ -194,7 +117,6 @@ export default function Navbar({ onToggleSidebar }) {
       </div>
 
       <div className="flex items-center gap-4">
-        {/* Weather Widget (Navbar mode) - oculto en dashboard */}
         {pathname !== "/dashboard" && <WeatherWidget mode="navbar" />}
 
         {/* Notificaciones */}
@@ -213,13 +135,23 @@ export default function Navbar({ onToggleSidebar }) {
 
           {openNotifications && (
             <div className="absolute right-0 mt-2 w-80 bg-white border rounded shadow-md z-50 max-h-96 overflow-y-auto">
-              <div className="px-4 py-2 border-b bg-gray-50 flex justify-between items-center">
+              <div className="px-4 py-2 border-b bg-gray-50 flex justify-between items-center sticky top-0 z-10">
                 <span className="font-semibold text-sm text-gray-700">
                   Notificaciones
                 </span>
-                <span className="text-xs text-gray-500">
-                  {alerts.length} alertas
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-gray-500">
+                    {alerts.length} alertas
+                  </span>
+                  {alerts.length > 0 && (
+                    <button
+                      onClick={handleClearAll}
+                      className="text-xs text-red-500 hover:text-red-700 font-medium"
+                    >
+                      Borrar todas
+                    </button>
+                  )}
+                </div>
               </div>
               <div>
                 {alerts.length === 0 ? (
@@ -228,27 +160,37 @@ export default function Navbar({ onToggleSidebar }) {
                   </div>
                 ) : (
                   alerts.map((alert) => (
-                    <div
-                      key={alert.id}
-                      className="px-4 py-3 border-b hover:bg-gray-50 last:border-b-0"
+                    <Link
+                      href={alert.link || "#"}
+                      key={alert._id}
+                      onClick={() => handleNotificationClick(alert)}
+                      className="block px-4 py-3 border-b hover:bg-gray-50 last:border-b-0 transition-colors"
                     >
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="text-sm font-medium text-gray-800">
-                            {alert.name}
+                            {alert.title}
                           </p>
-                          <p className="text-xs text-gray-500">{alert.type}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {alert.message}
+                          </p>
                         </div>
                         <span
-                          className={`px-2 py-1 text-[10px] font-bold rounded-full ${alert.severity}`}
+                          className={`flex-shrink-0 px-2 py-1 text-[10px] font-bold rounded-full ${
+                            alert.severity === "danger"
+                              ? "text-red-600 bg-red-100"
+                              : alert.severity === "warning"
+                                ? "text-orange-600 bg-orange-100"
+                                : "text-blue-600 bg-blue-100"
+                          }`}
                         >
-                          {alert.days > 0 ? `${alert.days} días` : "Vencido"}
+                          {alert.type}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Vence: {alert.date}
+                      <p className="text-xs text-gray-400 mt-1 text-right">
+                        {new Date(alert.createdAt).toLocaleDateString()}
                       </p>
-                    </div>
+                    </Link>
                   ))
                 )}
               </div>
@@ -260,11 +202,21 @@ export default function Navbar({ onToggleSidebar }) {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={toggleDropdown}
-            className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none"
+            className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 dark:text-foreground dark:hover:text-white focus:outline-none"
           >
-            <HiOutlineUser size={24} />
-            <span className="hidden sm:inline">
-              {user?.email || "Invitado"}
+            {user?.image ? (
+              <img
+                src={user.image}
+                alt="Profile"
+                className="w-8 h-8 rounded-full border border-gray-200"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-brand-navy flex items-center justify-center text-white text-xs">
+                {user?.name?.charAt(0) || <HiOutlineUser size={16} />}
+              </div>
+            )}
+            <span className="hidden sm:inline font-medium">
+              {user?.name || "Invitado"}
             </span>
           </button>
 
@@ -305,7 +257,7 @@ export default function Navbar({ onToggleSidebar }) {
 
                 <div className="p-2">
                   <button
-                    onClick={handleLogout}
+                    onClick={handleLogoutClick}
                     className="w-full flex items-center gap-2 px-3 py-2.5 text-sm rounded-xl hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors group"
                   >
                     <div className="p-1.5 rounded-lg bg-gray-100 group-hover:bg-red-100 text-gray-500 group-hover:text-red-500 transition-colors">
@@ -319,6 +271,18 @@ export default function Navbar({ onToggleSidebar }) {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Confirm Modal de Logout */}
+      <ConfirmModal
+        isOpen={logoutConfirmOpen}
+        onClose={() => setLogoutConfirmOpen(false)}
+        onConfirm={confirmLogout}
+        title="Cerrar sesión"
+        message="¿Estás seguro que querés cerrar sesión?"
+        label="Cerrar sesión"
+        bgcolor="bg-red-600"
+        bghover="red"
+      />
     </header>
   );
 }

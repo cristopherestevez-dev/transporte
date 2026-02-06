@@ -1,32 +1,43 @@
 // components/ModalWrapper.jsx
 import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { HiOutlineX } from "react-icons/hi";
 
 export default function ModalWrapper({ isOpen, onClose, title, children }) {
-  if (!isOpen) return null;
-
   return (
-    <>
-      {/* Fondo oscuro */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40"
-        onClick={onClose}
-      />
-      {/* Modal */}
-      <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative">
-          <header className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">{title}</h2>
-            <button
-              onClick={onClose}
-              aria-label="Cerrar modal"
-              className="text-gray-500 hover:text-gray-700 text-2xl font-bold leading-none"
-            >
-              &times;
-            </button>
-          </header>
-          <div>{children}</div>
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          />
+
+          {/* Modal */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: "spring", duration: 0.3 }}
+            className="relative w-full max-w-lg bg-content1 rounded-2xl shadow-xl border border-divider p-6 z-10 m-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-foreground">{title}</h2>
+              <button
+                onClick={onClose}
+                className="text-default-400 hover:text-foreground transition-colors"
+              >
+                <HiOutlineX size={20} />
+              </button>
+            </div>
+            <div className="text-foreground">{children}</div>
+          </motion.div>
         </div>
-      </div>
-    </>
+      )}
+    </AnimatePresence>
   );
 }

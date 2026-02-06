@@ -1,5 +1,6 @@
 "use client";
 import { useState, useMemo } from "react";
+import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import {
   HiOutlinePencil,
   HiOutlineTrash,
@@ -7,11 +8,14 @@ import {
   HiSearch,
   HiChevronLeft,
   HiChevronRight,
+  HiCheck,
+  HiOutlineX,
 } from "react-icons/hi";
 import ModalWrapper from "../ModalWrapper/ModalWrapper";
 import ConfirmModal from "../ModalWrapper/ConfirmModal";
 import SuccessModal from "../ModalWrapper/SuccessModal";
 import { useToast } from "../Toast/Toast";
+import { Switch } from "@heroui/react";
 
 export default function CrudTable({
   title,
@@ -95,6 +99,10 @@ export default function CrudTable({
   }
 
   function closeModal() {
+    // Si estamos confirmando o guardando, no permitir cerrar el modal principal aún
+    // Esto evita que se pierda el estado 'editingItem' y 'form' antes de 'handleSave'
+    if (confirmAddOpen || saving) return;
+
     setModalOpen(false);
     setEditingItem(null);
     const resetForm = {};
@@ -121,24 +129,28 @@ export default function CrudTable({
       let savedItem;
       if (editingItem) {
         // Editar - PATCH al API
-        const response = await fetch(
-          `${apiUrl}/${editingItem._id || editingItem.id}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(form),
-          },
-        );
+        const idToUpdate = editingItem._id || editingItem.id;
+        const response = await fetch(`${apiUrl}/${idToUpdate}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
         if (!response.ok) throw new Error("Error al actualizar");
         const json = await response.json();
         savedItem = json.data;
         // Actualizar en el estado local
         setData(
-          data.map((item) =>
-            item._id === editingItem._id || item.id === editingItem.id
-              ? savedItem
-              : item,
-          ),
+          data.map((item) => {
+            // Check _id match if both exist
+            if (item._id && editingItem._id && item._id === editingItem._id) {
+              return savedItem;
+            }
+            // Check id match if both exist
+            if (item.id && editingItem.id && item.id === editingItem.id) {
+              return savedItem;
+            }
+            return item;
+          }),
         );
         toast.success("Registro actualizado correctamente");
       } else {
@@ -202,7 +214,9 @@ export default function CrudTable({
     <div>
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-        <h1 className="text-xl font-bold text-brand-navy">{title}</h1>
+        <h1 className="text-xl font-bold text-brand-navy dark:text-foreground">
+          {title}
+        </h1>
         <div className="flex items-center gap-3 w-full sm:w-auto">
           {/* Buscador */}
           <div className="relative flex-1 sm:flex-none">
@@ -259,50 +273,42 @@ export default function CrudTable({
           ) : (
             paginatedData.map((item) => (
               <tr
-                key={item.id}
+                key={item._id || item.id}
                 className="bg-content1 hover:bg-content2 transition-colors border-b border-divider"
               >
                 {columns.map((col) => {
                   // Combo de estados
                   if (col.key === "estado") {
-                    return (
-                      <td key={`${item.id}-estado`} className="px-6 py-4">
-                        <select
-                          value={item.estado}
-                          onChange={(e) => {
-                            const updatedData = data.map((r) =>
-                              r.id === item.id
-                                ? { ...r, estado: e.target.value }
-                                : r,
-                            );
-                            setData(updatedData);
-                          }}
-                          className="px-2 py-1 rounded font-semibold"
-                          style={{
-                            color:
-                              estadoOptions.find(
-                                (opt) => opt.value === item.estado,
-                              )?.color || "inherit",
-                          }}
-                        >
-                          {estadoOptions.map((opt) => (
-                            <option
-                              key={opt.value}
-                              value={opt.value}
-                              style={{ color: opt.color }}
-                            >
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                    );
+                    <td
+                      key={`${item._id || item.id}-estado`}
+                      className="px-6 py-4"
+                    >
+                      <SearchableSelect
+                        value={item.estado}
+                        onChange={(val) => {
+                          const updatedData = data.map((r) => {
+                            if (item._id && r._id === item._id)
+                              return { ...r, estado: val };
+                            if (item.id && r.id === item.id)
+                              return { ...r, estado: val };
+                            return r;
+                          });
+                          setData(updatedData);
+                        }}
+                        options={estadoOptions}
+                        placeholder="Estado"
+                        className="w-40"
+                      />
+                    </td>;
                   }
 
                   // Columnas normales o personalizadas
                   if (col.render) {
                     return (
-                      <td key={`${item.id}-${col.key}`} className="px-6 py-4">
+                      <td
+                        key={`${item._id || item.id}-${col.key}`}
+                        className="px-6 py-4"
+                      >
                         {col.render(item[col.key], item)}
                       </td>
                     );
@@ -310,7 +316,7 @@ export default function CrudTable({
 
                   return (
                     <td
-                      key={`${item.id}-${col.key}`}
+                      key={`${item._id || item.id}-${col.key}`}
                       className="px-6 py-4 text-foreground"
                     >
                       {item[col.key] || "-"}
@@ -392,25 +398,63 @@ export default function CrudTable({
                   f.render({ form, setForm, field: f })
                 ) : (
                   <>
-                    <label className="block mb-1 font-medium">
-                      {f.label} {f.required ? "*" : ""}
-                    </label>
+                    {f.type !== "switch" && (
+                      <label className="block mb-1 font-medium">
+                        {f.label} {f.required ? "*" : ""}
+                      </label>
+                    )}
                     {f.type === "select" ? (
-                      <select
+                      <SearchableSelect
                         value={form[f.key] || ""}
-                        onChange={(e) =>
-                          setForm({ ...form, [f.key]: e.target.value })
+                        onChange={(val) => setForm({ ...form, [f.key]: val })}
+                        options={f.options || []}
+                        placeholder="Seleccionar..."
+                        className="w-full"
+                        disabled={false}
+                        variant="inline"
+                      />
+                    ) : f.type === "switch" ? (
+                      <div
+                        className="flex items-center justify-between p-4 rounded-xl border border-divider bg-content2/30 hover:bg-content2 transition-colors cursor-pointer"
+                        onClick={() =>
+                          setForm({ ...form, [f.key]: !form[f.key] })
                         }
-                        className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-                        required={f.required}
                       >
-                        <option value="">Seleccionar</option>
-                        {f.options?.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-foreground font-medium">
+                            {f.label}
+                          </span>
+                          <span
+                            className={`text-tiny ${form[f.key] ? "text-success" : "text-default-500"}`}
+                          >
+                            {form[f.key]
+                              ? "Usuario Activo"
+                              : "Usuario Inactivo"}
+                          </span>
+                        </div>
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <Switch
+                            isSelected={!!form[f.key]}
+                            onValueChange={(val) =>
+                              setForm({ ...form, [f.key]: val })
+                            }
+                            size="lg"
+                            classNames={{
+                              wrapper:
+                                "group-data-[selected=true]:bg-green-500 group-data-[selected=false]:bg-red-500 transition-colors duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-active:scale-95",
+                              thumb:
+                                "transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-data-[selected=true]:ml-6 group-data-[selected=false]:ml-0 group-active:w-7 group-data-[selected=true]:group-active:ml-5",
+                            }}
+                            thumbIcon={({ isSelected, className }) =>
+                              isSelected ? (
+                                <HiCheck className={className} />
+                              ) : (
+                                <HiOutlineX className={className} />
+                              )
+                            }
+                          />
+                        </div>
+                      </div>
                     ) : (
                       <input
                         type={f.type || "text"}

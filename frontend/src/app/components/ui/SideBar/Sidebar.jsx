@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import {
   HiMenuAlt3,
   HiOutlineHome,
@@ -109,9 +110,9 @@ export default function Sidebar() {
           variant="ghost"
           onPress={toggleSidebar}
           aria-label="Toggle sidebar"
-          className="text-foreground"
+          className="text-foreground min-w-10 h-10 px-0"
         >
-          <HiMenuAlt3 size={24} />
+          <HiMenuAlt3 size={collapsed ? 26 : 32} />
         </Button>
       </div>
 
@@ -123,18 +124,29 @@ export default function Sidebar() {
             <Link
               key={name}
               href={href}
-              className={`flex items-center space-x-3 p-2 rounded transition-colors ${
+              className={`relative flex items-center gap-3 p-2 rounded-xl transition-colors ${
                 collapsed ? "justify-center" : ""
               } ${
-                isActive
-                  ? "bg-secondary/10 text-secondary"
-                  : "hover:bg-content2 text-default-500 hover:text-foreground"
+                !isActive &&
+                "hover:bg-content2 text-default-500 hover:text-foreground"
               }`}
             >
+              {isActive && (
+                <motion.div
+                  layoutId="active-sidebar-item"
+                  className="absolute inset-0 bg-primary/10 rounded-xl"
+                  initial={false}
+                  transition={{
+                    type: "spring",
+                    stiffness: 500,
+                    damping: 30,
+                  }}
+                />
+              )}
               <div
-                className={`text-xl ${
+                className={`relative z-10 text-xl ${
                   isActive
-                    ? "text-secondary"
+                    ? "text-primary"
                     : "text-default-500 group-hover:text-foreground"
                 }`}
               >
@@ -142,8 +154,8 @@ export default function Sidebar() {
               </div>
               {!collapsed && (
                 <span
-                  className={`font-medium ${
-                    isActive ? "text-secondary" : "text-foreground"
+                  className={`relative z-10 font-medium ${
+                    isActive ? "text-primary" : "text-foreground"
                   }`}
                 >
                   {name}
@@ -156,47 +168,65 @@ export default function Sidebar() {
 
       {/* Theme Switch & Logout */}
       <div className="mt-auto p-4 border-t border-divider space-y-4">
-        {!collapsed && mounted && (
-          <div className="flex justify-between items-center px-2">
-            <span className="text-sm font-medium text-foreground">
-              {theme === "dark" ? "Modo Claro" : "Modo Oscuro"}
-            </span>
-            <Switch
-              defaultSelected={theme === "dark"}
-              size="sm"
-              color="secondary"
-              thumbIcon={({ isSelected, className }) =>
-                isSelected ? (
-                  <HiMoon className={className} />
-                ) : (
-                  <HiSun className={className} />
-                )
-              }
-              onValueChange={(isSelected) =>
-                setTheme(isSelected ? "dark" : "light")
-              }
-            />
-          </div>
-        )}
-        {collapsed && mounted && (
-          <div className="flex justify-center mb-2">
+        {mounted && (
+          <div
+            className={`flex items-center ${
+              collapsed ? "justify-center" : "justify-between px-2"
+            }`}
+          >
+            {!collapsed && (
+              <span className="text-sm font-medium text-foreground">
+                {theme === "dark" ? "Modo Oscuro" : "Modo Claro"}
+              </span>
+            )}
+
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="text-foreground hover:text-secondary"
+              className={`relative flex items-center justify-center rounded-full transition-colors focus:outline-none ${
+                collapsed
+                  ? "w-10 h-10 hover:bg-content2 text-foreground"
+                  : "w-14 h-8 bg-default-200 dark:bg-default-100"
+              }`}
             >
-              {theme === "dark" ? <HiMoon size={20} /> : <HiSun size={20} />}
+              {collapsed ? (
+                // Collapsed state: Rotating icon
+                <motion.div
+                  initial={false}
+                  animate={{ rotate: theme === "dark" ? 0 : 360 }}
+                  transition={{ duration: 0.5, type: "spring" }}
+                >
+                  {theme === "dark" ? (
+                    <HiMoon size={24} className="text-secondary" />
+                  ) : (
+                    <HiSun size={24} className="text-orange-500" />
+                  )}
+                </motion.div>
+              ) : (
+                // Expanded state: Toggle Switch
+                <>
+                  <motion.div
+                    className="absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-sm flex items-center justify-center z-10"
+                    initial={false}
+                    animate={{ x: theme === "dark" ? 24 : 0 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 700,
+                      damping: 30,
+                    }}
+                  >
+                    {theme === "dark" ? (
+                      <HiMoon size={14} className="text-secondary" />
+                    ) : (
+                      <HiSun size={14} className="text-orange-500" />
+                    )}
+                  </motion.div>
+                </>
+              )}
             </button>
           </div>
         )}
-        <button
-          onClick={logout}
-          className={`w-full flex items-center space-x-3 p-2 rounded hover:bg-danger/10 transition-colors text-danger font-semibold ${
-            collapsed ? "justify-center" : ""
-          }`}
-        >
-          <HiOutlineLogout size={20} />
-          {!collapsed && <span>Cerrar sesión</span>}
-        </button>
+
+        
       </div>
     </div>
   );
