@@ -920,14 +920,14 @@ export default function CamionProfile({ id }) {
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="text-right hidden sm:block">
+            {/* <div className="text-right hidden sm:block">
               <p className="text-[10px] uppercase font-bold text-foreground/40">
                 Inversión Total
               </p>
               <p className="text-xl font-bold text-primary">
                 ${grandTotal.toLocaleString()}
               </p>
-            </div>
+            </div> */}
             <button
               onClick={addRow}
               className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
