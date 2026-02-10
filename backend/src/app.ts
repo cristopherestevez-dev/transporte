@@ -17,6 +17,7 @@ import { viajesRoutes } from './modules/viajes/viajes.routes';
 import { facturacionRoutes } from './modules/facturacion/facturacion.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
 import { usuariosRoutes } from './modules/usuarios/usuarios.routes';
+import { mantenimientoRoutes } from './modules/mantenimiento/mantenimiento.routes';
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use('/api/choferes', choferesRoutes);
 app.use('/api/viajes', viajesRoutes);
 app.use('/api/facturacion', facturacionRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/mantenimiento', mantenimientoRoutes);
 
 app.get('/', (req, res) => {
     res.send('API is running...');

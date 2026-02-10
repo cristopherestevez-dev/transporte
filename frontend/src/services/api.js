@@ -223,6 +223,32 @@ class ApiService {
     const json = await res.json();
     return json.data.users;
   }
+
+  // Mantenimiento
+  async getMantenimiento(vehiculoId) {
+    return this.get(`/mantenimiento/${vehiculoId}`);
+  }
+
+  async searchMantenimiento(vehiculoId, filters = {}) {
+    const params = new URLSearchParams();
+    if (filters.fecha) params.append("fecha", filters.fecha);
+    if (filters.kmMin) params.append("kmMin", filters.kmMin);
+    if (filters.kmMax) params.append("kmMax", filters.kmMax);
+    const query = params.toString() ? `?${params.toString()}` : "";
+    return this.get(`/mantenimiento/${vehiculoId}/search${query}`);
+  }
+
+  async createMantenimiento(vehiculoId, data) {
+    return this.post(`/mantenimiento/${vehiculoId}`, data);
+  }
+
+  async updateMantenimiento(id, data) {
+    return this.patch(`/mantenimiento/${id}`, data);
+  }
+
+  async deleteMantenimiento(id) {
+    return this.delete(`/mantenimiento/${id}`);
+  }
 }
 
 export const api = new ApiService();

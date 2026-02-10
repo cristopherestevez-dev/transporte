@@ -13,6 +13,8 @@ import {
   FaWrench,
   FaSave,
   FaEdit,
+  FaSearch,
+  FaTimes,
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/services/api";
@@ -113,11 +115,14 @@ const MaintenanceCard = ({
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [errors, setErrors] = useState({});
 
-  // Auto-edit new rows (optional, but good UX if row.id is very recent)
+  // Auto-edit new rows
   useEffect(() => {
-    // If it's a new row (empty fields), start in edit mode?
-    // For now, default to false unless explicitly clicked.
+    if (row.isNew) {
+      setIsEditing(true);
+      setExpanded(true);
+    }
   }, []);
 
   // Calculate Row Total
@@ -152,30 +157,58 @@ const MaintenanceCard = ({
 
   const handleEditClick = (e) => {
     e.stopPropagation();
+    setErrors({});
     setIsEditing(true);
     setExpanded(true);
   };
 
   const handleSaveClick = (e) => {
     e.stopPropagation();
+    const newErrors = {};
 
     // Validation: Check vs Previous Row (Chronological order)
     if (previousRow) {
-      if (parseFloat(row.km) < parseFloat(previousRow.km)) {
-        alert(
-          `El kilometraje (${row.km}) no puede ser menor al registro anterior (${previousRow.km}).`,
-        );
-        return;
+      const currentKm = parseFloat(row.km) || 0;
+      const prevKm = parseFloat(previousRow.km) || 0;
+      if (currentKm < prevKm) {
+        newErrors.km = `El kilometraje no puede ser menor al registro anterior (${previousRow.km} km)`;
       }
       if (row.fecha < previousRow.fecha) {
-        alert(
-          `La fecha (${row.fecha}) no puede ser anterior al registro previo (${previousRow.fecha}).`,
-        );
-        return;
+        newErrors.fecha = `La fecha no puede ser anterior al registro previo (${previousRow.fecha})`;
       }
     }
 
+    // Validation: at least one item must be filled
+    const hasAnyItem = [
+      "aceite_cambio",
+      "filtro_aceite_cambio",
+      "filtro_gasoil_cambio",
+      "trampa_agua_cambio",
+      "filtro_aire_cambio",
+      "secado_aire_cambio",
+      "filtro_habitaculo_cambio",
+      "bomba_agua_cambio",
+      "valvulas_cambio",
+      "cubiertas_cambio",
+      "toberas_cambio",
+    ].some((field) => row[field]);
+
+    const hasExtras =
+      row.extras_descripcion || parseFloat(row.extras_precio) > 0;
+
+    if (!hasAnyItem && !hasExtras) {
+      newErrors.general =
+        "Debés seleccionar al menos un ítem de mantenimiento o cargar un extra";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
     setIsEditing(false);
+    setExpanded(false);
   };
 
   // Generic Field Renderers
@@ -236,8 +269,10 @@ const MaintenanceCard = ({
     >
       {/* Header / Summary Row */}
       <div
-        className="p-4 flex flex-wrap items-center gap-4 cursor-pointer hover:bg-content2/50 transition-colors"
-        onClick={() => setExpanded(!expanded)}
+        className={`p-4 flex flex-wrap items-center gap-4 transition-colors ${
+          isEditing ? "cursor-default" : "cursor-pointer hover:bg-content2/50"
+        }`}
+        onClick={() => !isEditing && setExpanded(!expanded)}
       >
         <div className="flex items-center gap-3 flex-1 min-w-[200px]">
           <div
@@ -254,13 +289,29 @@ const MaintenanceCard = ({
               Fecha
             </p>
             {isEditing ? (
-              <input
-                type="date"
-                className="bg-transparent font-medium text-foreground focus:outline-none border-b border-primary/50"
-                value={row.fecha}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => handleChange(index, "fecha", e.target.value)}
-              />
+              <div className="flex flex-col">
+                <input
+                  type="date"
+                  className={`bg-transparent font-medium text-foreground focus:outline-none border-b transition-colors ${
+                    errors.fecha ? "border-red-500" : "border-primary/50"
+                  }`}
+                  value={row.fecha}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => {
+                    handleChange(index, "fecha", e.target.value);
+                    if (errors.fecha)
+                      setErrors((prev) => {
+                        const { fecha, ...rest } = prev;
+                        return rest;
+                      });
+                  }}
+                />
+                {errors.fecha && (
+                  <span className="text-red-500 text-[10px] mt-0.5 font-medium">
+                    {errors.fecha}
+                  </span>
+                )}
+              </div>
             ) : (
               <span className="font-medium text-foreground">
                 {row.fecha || "-"}
@@ -275,19 +326,39 @@ const MaintenanceCard = ({
           <p className="text-xs text-foreground/50 font-bold uppercase tracking-wider">
             Kilometraje
           </p>
-          <div className="flex items-center gap-1">
-            {isEditing ? (
-              <TextInput
-                type="number"
-                value={row.km}
-                onChange={(v) => handleChange(index, "km", v)}
-                placeholder="0"
-                className="w-24 bg-transparent border-transparent focus:bg-content2 focus:border-divider px-0"
-              />
-            ) : (
-              <span className="font-medium text-foreground">{row.km || 0}</span>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1">
+              {isEditing ? (
+                <TextInput
+                  type="number"
+                  value={row.km}
+                  onChange={(v) => {
+                    handleChange(index, "km", v);
+                    if (errors.km)
+                      setErrors((prev) => {
+                        const { km, ...rest } = prev;
+                        return rest;
+                      });
+                  }}
+                  placeholder="0"
+                  className={`w-24 bg-transparent focus:bg-content2 px-0 ${
+                    errors.km
+                      ? "!border-red-500 !ring-red-500/30"
+                      : "border-transparent focus:border-divider"
+                  }`}
+                />
+              ) : (
+                <span className="font-medium text-foreground">
+                  {row.km || 0}
+                </span>
+              )}
+              <span className="text-xs text-foreground/50">km</span>
+            </div>
+            {errors.km && (
+              <span className="text-red-500 text-[10px] mt-0.5 font-medium">
+                {errors.km}
+              </span>
             )}
-            <span className="text-xs text-foreground/50">km</span>
           </div>
         </div>
 
@@ -334,6 +405,15 @@ const MaintenanceCard = ({
           </button>
         </div>
       </div>
+
+      {/* General Validation Error */}
+      {errors.general && (
+        <div className="mx-4 mb-2 px-3 py-2 bg-red-500/10 border border-red-500/30 rounded-lg">
+          <span className="text-red-500 text-xs font-medium">
+            {errors.general}
+          </span>
+        </div>
+      )}
 
       {/* Detailed Content */}
       <AnimatePresence>
@@ -585,14 +665,26 @@ const MaintenanceCard = ({
                   <SectionHeader title="Extras / Varios" className="mb-3" />
                   <div className="space-y-3">
                     <InputGroup label="Descripción">
-                      <TextInput
-                        value={row.extras_descripcion}
-                        onChange={(v) =>
-                          handleChange(index, "extras_descripcion", v)
+                      <textarea
+                        value={row.extras_descripcion || ""}
+                        onChange={(e) =>
+                          handleChange(
+                            index,
+                            "extras_descripcion",
+                            e.target.value,
+                          )
                         }
                         placeholder="Detalle..."
                         disabled={!isEditing}
+                        maxLength={150}
+                        rows={3}
+                        className={`w-full bg-content2 border border-divider rounded-lg px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none ${
+                          !isEditing ? "opacity-60 cursor-not-allowed" : ""
+                        }`}
                       />
+                      <span className="text-[10px] text-foreground/40 text-right">
+                        {(row.extras_descripcion || "").length}/150
+                      </span>
                     </InputGroup>
                     <InputGroup label="Precio">
                       <TextInput
@@ -624,6 +716,13 @@ export default function CamionProfile({ id }) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [rowToDelete, setRowToDelete] = useState(null);
 
+  // Search State
+  const [searchFecha, setSearchFecha] = useState("");
+  const [searchKmMin, setSearchKmMin] = useState("");
+  const [searchKmMax, setSearchKmMax] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [isFiltered, setIsFiltered] = useState(false);
+
   // Load Truck Data
   useEffect(() => {
     async function fetchTruck() {
@@ -646,26 +745,34 @@ export default function CamionProfile({ id }) {
     fetchTruck();
   }, [id]);
 
-  // Load Maintenance Log from LocalStorage
-  useEffect(() => {
-    const stored = localStorage.getItem(`maintenance_log_${id}`);
-    if (stored) {
-      setMaintenanceLog(JSON.parse(stored));
+  // Load Maintenance Log from API
+  const fetchMaintenanceLog = async () => {
+    try {
+      const data = await api.getMantenimiento(id);
+      setMaintenanceLog(data || []);
+      setIsFiltered(false);
+    } catch (err) {
+      console.error("Error loading maintenance log:", err);
     }
-  }, [id]);
-
-  const saveLog = (newLog) => {
-    setMaintenanceLog(newLog);
-    localStorage.setItem(`maintenance_log_${id}`, JSON.stringify(newLog));
   };
 
-  const addRow = () => {
-    const newRow = {
-      id: Date.now(),
-      fecha: new Date().toISOString().split("T")[0],
-      patente: truck?.patente || "",
-    };
-    saveLog([newRow, ...maintenanceLog]); // Add to top
+  useEffect(() => {
+    if (id) fetchMaintenanceLog();
+  }, [id]);
+
+  const addRow = async () => {
+    try {
+      const newData = {
+        fecha: new Date().toISOString().split("T")[0],
+        patente: truck?.patente || "",
+        km: 0,
+      };
+      const created = await api.createMantenimiento(id, newData);
+      // Mark as new for auto-edit
+      setMaintenanceLog([{ ...created, isNew: true }, ...maintenanceLog]);
+    } catch (err) {
+      console.error("Error creating maintenance record:", err);
+    }
   };
 
   const requestDelete = (rowId) => {
@@ -673,12 +780,16 @@ export default function CamionProfile({ id }) {
     setDeleteModalOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (rowToDelete) {
-      const newLog = maintenanceLog.filter((r) => r.id !== rowToDelete);
-      saveLog(newLog);
-      setRowToDelete(null);
-      setDeleteModalOpen(false);
+      try {
+        await api.deleteMantenimiento(rowToDelete);
+        setMaintenanceLog(maintenanceLog.filter((r) => r._id !== rowToDelete));
+        setRowToDelete(null);
+        setDeleteModalOpen(false);
+      } catch (err) {
+        console.error("Error deleting maintenance record:", err);
+      }
     }
   };
 
@@ -694,25 +805,48 @@ export default function CamionProfile({ id }) {
       return;
     }
 
-    // Chronological validation (Current vs Older record)
-    if (field === "km" || field === "fecha") {
-      const olderRow = maintenanceLog[index + 1];
-      if (olderRow) {
-        if (field === "km" && parseFloat(value) < parseFloat(olderRow.km)) {
-          // alert("El kilometraje no puede ser menor al del registro anterior.");
-          return;
-        }
-        if (field === "fecha" && value < olderRow.fecha) {
-          // alert("La fecha no puede ser anterior al registro previo.");
-          return;
-        }
-      }
-    }
-
     const newLog = [...maintenanceLog];
-    // IMMUTABLE UPDATE FIX
-    newLog[index] = { ...newLog[index], [field]: value };
-    saveLog(newLog);
+    const updatedRow = { ...newLog[index], [field]: value };
+    newLog[index] = updatedRow;
+    setMaintenanceLog(newLog);
+
+    // Persist to backend (debounced by React batching)
+    if (updatedRow._id && field !== "isNew") {
+      api
+        .updateMantenimiento(updatedRow._id, { [field]: value })
+        .catch((err) =>
+          console.error("Error updating maintenance record:", err),
+        );
+    }
+  };
+
+  // Search
+  const handleSearch = async () => {
+    const filters = {};
+    if (searchFecha) filters.fecha = searchFecha;
+    if (searchKmMin) filters.kmMin = searchKmMin;
+    if (searchKmMax) filters.kmMax = searchKmMax;
+
+    if (!filters.fecha && !filters.kmMin && !filters.kmMax) return;
+
+    try {
+      setIsSearching(true);
+      const data = await api.searchMantenimiento(id, filters);
+      setMaintenanceLog(data || []);
+      setIsFiltered(true);
+    } catch (err) {
+      console.error("Error searching maintenance records:", err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const clearFilters = () => {
+    setSearchFecha("");
+    setSearchKmMin("");
+    setSearchKmMax("");
+    setIsFiltered(false);
+    fetchMaintenanceLog();
   };
 
   const grandTotal = useMemo(() => {
@@ -807,6 +941,76 @@ export default function CamionProfile({ id }) {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
+        {/* Search Bar */}
+        <div className="mb-6 bg-content1 border border-divider rounded-xl p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <FaSearch className="text-primary" size={14} />
+            <span className="text-sm font-semibold text-foreground/70">
+              Buscar Registros
+            </span>
+            {isFiltered && (
+              <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full">
+                Filtrado
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] uppercase font-bold text-foreground/50 tracking-wider">
+                Fecha
+              </label>
+              <input
+                type="date"
+                value={searchFecha}
+                onChange={(e) => setSearchFecha(e.target.value)}
+                className="bg-content2 border border-divider rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] uppercase font-bold text-foreground/50 tracking-wider">
+                Km Mínimo
+              </label>
+              <input
+                type="number"
+                value={searchKmMin}
+                onChange={(e) => setSearchKmMin(e.target.value)}
+                placeholder="Desde"
+                className="w-28 bg-content2 border border-divider rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] uppercase font-bold text-foreground/50 tracking-wider">
+                Km Máximo
+              </label>
+              <input
+                type="number"
+                value={searchKmMax}
+                onChange={(e) => setSearchKmMax(e.target.value)}
+                placeholder="Hasta"
+                className="w-28 bg-content2 border border-divider rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              />
+            </div>
+            <button
+              onClick={handleSearch}
+              disabled={
+                isSearching || (!searchFecha && !searchKmMin && !searchKmMax)
+              }
+              className="flex items-center gap-2 bg-primary text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FaSearch size={11} />
+              {isSearching ? "Buscando..." : "Buscar"}
+            </button>
+            {isFiltered && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 text-foreground/60 hover:text-danger px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-danger/10 transition-all"
+              >
+                <FaTimes size={11} />
+                Limpiar filtros
+              </button>
+            )}
+          </div>
+        </div>
         {maintenanceLog.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-content1 rounded-2xl border border-dashed border-divider">
             <div className="w-16 h-16 bg-content2 rounded-full flex items-center justify-center mb-4">
@@ -831,11 +1035,12 @@ export default function CamionProfile({ id }) {
             <AnimatePresence>
               {maintenanceLog.map((row, index) => (
                 <MaintenanceCard
-                  key={row.id}
+                  key={row._id}
                   row={row}
                   index={index}
                   handleChange={handleChange}
-                  requestDelete={requestDelete}
+                  requestDelete={() => requestDelete(row._id)}
+                  previousRow={maintenanceLog[index + 1]}
                 />
               ))}
             </AnimatePresence>
