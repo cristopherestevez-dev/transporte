@@ -222,7 +222,7 @@ export default function CrudTable({
           {/* Buscador */}
           <div className="relative flex-1 sm:flex-none">
             <HiSearch
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40"
               size={18}
             />
             <input
@@ -235,7 +235,7 @@ export default function CrudTable({
           </div>
           <button
             onClick={() => openModal()}
-            className="flex items-center gap-1 px-3 py-2 bg-brand-navy text-white rounded-md font-medium hover:bg-brand-navy/80 hover:shadow-md transition-all whitespace-nowrap"
+            className="flex items-center gap-1 px-3 py-2 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/80 hover:shadow-md transition-all whitespace-nowrap"
           >
             <HiOutlinePlus size={16} /> Agregar
           </button>
@@ -483,7 +483,7 @@ export default function CrudTable({
               <button
                 type="button"
                 onClick={closeModal}
-                className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 transition"
+                className="px-4 py-2 bg-default-400 text-white rounded hover:bg-default-500 transition"
               >
                 Cancelar
               </button>

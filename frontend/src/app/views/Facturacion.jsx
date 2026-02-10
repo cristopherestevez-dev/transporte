@@ -16,25 +16,27 @@ export default function Facturacion() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [cobranzasNac, cobranzasInt, pagosNac, pagosInt] = await Promise.all([
-          api.getCobranzasNacionales(),
-          api.getCobranzasInternacionales(),
-          api.getPagosNacionales(),
-          api.getPagosInternacionales()
-        ]);
+        const [cobranzasNac, cobranzasInt, pagosNac, pagosInt] =
+          await Promise.all([
+            api.getCobranzasNacionales(),
+            api.getCobranzasInternacionales(),
+            api.getPagosNacionales(),
+            api.getPagosInternacionales(),
+          ]);
 
         // Procesar vencimientos
         const processExpirations = (items) => {
           if (!items) return [];
           const today = new Date();
-          return items.map(item => {
-            if (item.estado === "pagado" || item.estado === "cobrado") return item;
-            
-            const fechaEmision = new Date(item.fecha + "T00:00:00"); 
-            const plazoDias = item.plazo || 30; 
+          return items.map((item) => {
+            if (item.estado === "pagado" || item.estado === "cobrado")
+              return item;
+
+            const fechaEmision = new Date(item.fecha + "T00:00:00");
+            const plazoDias = item.plazo || 30;
             const fechaVencimiento = new Date(fechaEmision);
             fechaVencimiento.setDate(fechaEmision.getDate() + plazoDias);
-            
+
             const todayMidnight = new Date();
             todayMidnight.setHours(0, 0, 0, 0);
 
@@ -48,16 +50,15 @@ export default function Facturacion() {
         const data = {
           cobranzas: {
             nacionales: processExpirations(cobranzasNac),
-            internacionales: processExpirations(cobranzasInt)
+            internacionales: processExpirations(cobranzasInt),
           },
           pagos: {
             nacionales: processExpirations(pagosNac),
-            internacionales: processExpirations(pagosInt)
-          }
+            internacionales: processExpirations(pagosInt),
+          },
         };
-        
-        setFacturacion(data);
 
+        setFacturacion(data);
       } catch (error) {
         console.error("Error cargando facturación:", error);
       } finally {
@@ -82,31 +83,35 @@ export default function Facturacion() {
       content: (
         <FacturacionTable
           data={facturacion?.cobranzas?.nacionales || []}
-          setData={(newData) => setFacturacion(prev => ({
-            ...prev,
-            cobranzas: { ...prev.cobranzas, nacionales: newData }
-          }))}
+          setData={(newData) =>
+            setFacturacion((prev) => ({
+              ...prev,
+              cobranzas: { ...prev.cobranzas, nacionales: newData },
+            }))
+          }
           title="Cobranzas Nacionales"
           tipo="cobranzas"
           apiUrl="http://localhost:3001/api/facturacion/cobranzas/nacionales"
         />
-      )
+      ),
     },
     {
       label: "Internacionales",
       content: (
         <FacturacionTable
           data={facturacion?.cobranzas?.internacionales || []}
-          setData={(newData) => setFacturacion(prev => ({
-            ...prev,
-            cobranzas: { ...prev.cobranzas, internacionales: newData }
-          }))}
+          setData={(newData) =>
+            setFacturacion((prev) => ({
+              ...prev,
+              cobranzas: { ...prev.cobranzas, internacionales: newData },
+            }))
+          }
           title="Cobranzas Internacionales"
           tipo="cobranzas"
           apiUrl="http://localhost:3001/api/facturacion/cobranzas/internacionales"
         />
-      )
-    }
+      ),
+    },
   ];
 
   // Tabs para Pagos Nacionales/Internacionales
@@ -116,31 +121,35 @@ export default function Facturacion() {
       content: (
         <FacturacionTable
           data={facturacion?.pagos?.nacionales || []}
-          setData={(newData) => setFacturacion(prev => ({
-            ...prev,
-            pagos: { ...prev.pagos, nacionales: newData }
-          }))}
+          setData={(newData) =>
+            setFacturacion((prev) => ({
+              ...prev,
+              pagos: { ...prev.pagos, nacionales: newData },
+            }))
+          }
           title="Pagos Nacionales"
           tipo="pagos"
           apiUrl="http://localhost:3001/api/facturacion/pagos/nacionales"
         />
-      )
+      ),
     },
     {
       label: "Internacionales",
       content: (
         <FacturacionTable
           data={facturacion?.pagos?.internacionales || []}
-          setData={(newData) => setFacturacion(prev => ({
-            ...prev,
-            pagos: { ...prev.pagos, internacionales: newData }
-          }))}
+          setData={(newData) =>
+            setFacturacion((prev) => ({
+              ...prev,
+              pagos: { ...prev.pagos, internacionales: newData },
+            }))
+          }
           title="Pagos Internacionales"
           tipo="pagos"
           apiUrl="http://localhost:3001/api/facturacion/pagos/internacionales"
         />
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -148,8 +157,10 @@ export default function Facturacion() {
       {/* Header */}
       <div className="mb-6 flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-brand-navy">Facturación</h1>
-          <p className="text-default-500 mt-1">Gestión de cobranzas, pagos y balance financiero</p>
+          <h1 className="text-3xl font-bold text-foreground">Facturación</h1>
+          <p className="text-default-500 mt-1">
+            Gestión de cobranzas, pagos y balance financiero
+          </p>
         </div>
       </div>
 

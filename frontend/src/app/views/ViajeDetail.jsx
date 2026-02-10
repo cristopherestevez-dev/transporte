@@ -119,10 +119,10 @@ export default function ViajeDetail() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">
+            <h1 className="text-2xl font-bold text-foreground">
               Detalle del Viaje #{trip._id?.slice(-6)}
             </h1>
-            <p className="text-gray-500 capitalize">
+            <p className="text-foreground/50 capitalize">
               {type} - {trip.estado}
             </p>
           </div>
@@ -131,7 +131,7 @@ export default function ViajeDetail() {
           {perfil === "operador_administrativo" && (
             <Button
               color="success"
-              className="text-black"
+              className="text-foreground"
               variant="solid"
               startContent={<HiCurrencyDollar />}
             >
@@ -151,55 +151,55 @@ export default function ViajeDetail() {
 
       <div
         id="trip-detail-content"
-        className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50 rounded-xl"
+        className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-content2/50 rounded-xl"
       >
         {/* Card: Ruta y Fechas */}
-        <div className="bg-white p-6 rounded-lg shadow space-y-4">
+        <div className="bg-content1 p-6 rounded-lg shadow border border-divider space-y-4">
           <h2 className="text-lg font-semibold border-b pb-2">
             Información de Ruta
           </h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-500">Origen</p>
+              <p className="text-sm text-foreground/50">Origen</p>
               <p className="font-medium text-lg">{trip.origen}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Destino</p>
+              <p className="text-sm text-foreground/50">Destino</p>
               <p className="font-medium text-lg">{trip.destino}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Fecha Salida</p>
+              <p className="text-sm text-foreground/50">Fecha Salida</p>
               <p className="font-medium">{trip.fecha_salida}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Fecha Llegada</p>
+              <p className="text-sm text-foreground/50">Fecha Llegada</p>
               <p className="font-medium">{trip.fecha_llegada || "-"}</p>
             </div>
           </div>
         </div>
 
         {/* Card: Carga y Entidades */}
-        <div className="bg-white p-6 rounded-lg shadow space-y-4">
+        <div className="bg-content1 p-6 rounded-lg shadow border border-divider space-y-4">
           <h2 className="text-lg font-semibold border-b pb-2">
             Detalles Operativos
           </h2>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-gray-500">Carga / Contenedor:</span>
+              <span className="text-foreground/50">Carga / Contenedor:</span>
               <span className="font-medium">
                 {trip.carga || "No especificado"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Proveedor:</span>
+              <span className="text-foreground/50">Proveedor:</span>
               <span className="font-medium">{entities.providerName}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Fletero:</span>
+              <span className="text-foreground/50">Fletero:</span>
               <span className="font-medium">{entities.fleteroName}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Chofer Asignado:</span>
+              <span className="text-foreground/50">Chofer Asignado:</span>
               <span className="font-medium text-blue-600">
                 {entities.driverName}
               </span>
@@ -208,26 +208,26 @@ export default function ViajeDetail() {
         </div>
 
         {/* Card: Vehículos (Si aplica) */}
-        <div className="bg-white p-6 rounded-lg shadow space-y-4 md:col-span-2">
+        <div className="bg-content1 p-6 rounded-lg shadow border border-divider space-y-4 md:col-span-2">
           <h2 className="text-lg font-semibold border-b pb-2">
             Recursos Asignados
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <p className="text-sm text-gray-500">Camión</p>
+              <p className="text-sm text-foreground/50">Camión</p>
               <p className="font-bold">{entities.truck}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Semirremolque</p>
+              <p className="text-sm text-foreground/50">Semirremolque</p>
               <p className="font-bold">{entities.trailer}</p>
             </div>
             {/* More fields can be added here */}
             <div>
-              <p className="text-sm text-gray-500">Km Estimados</p>
+              <p className="text-sm text-foreground/50">Km Estimados</p>
               <p className="font-bold">{trip.km || "-"}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Tarifa Acordada</p>
+              <p className="text-sm text-foreground/50">Tarifa Acordada</p>
               <p className="font-bold">
                 $ {trip.tarifa ? trip.tarifa.toLocaleString() : "-"}
               </p>

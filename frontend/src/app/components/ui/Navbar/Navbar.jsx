@@ -123,7 +123,7 @@ export default function Navbar({ onToggleSidebar }) {
         <div className="relative">
           <button
             onClick={toggleNotifications}
-            className="relative p-2 text-gray-600 hover:text-gray-800 focus:outline-none"
+            className="relative p-2 text-foreground/60 hover:text-foreground focus:outline-none"
           >
             <HiBell size={24} />
             {alerts.length > 0 && (
@@ -134,13 +134,13 @@ export default function Navbar({ onToggleSidebar }) {
           </button>
 
           {openNotifications && (
-            <div className="absolute right-0 mt-2 w-80 bg-white border rounded shadow-md z-50 max-h-96 overflow-y-auto">
-              <div className="px-4 py-2 border-b bg-gray-50 flex justify-between items-center sticky top-0 z-10">
-                <span className="font-semibold text-sm text-gray-700">
+            <div className="absolute right-0 mt-2 w-80 bg-content1 border border-divider rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto">
+              <div className="px-4 py-2 border-b border-divider bg-content2 flex justify-between items-center sticky top-0 z-10">
+                <span className="font-semibold text-sm text-foreground">
                   Notificaciones
                 </span>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-foreground/50">
                     {alerts.length} alertas
                   </span>
                   {alerts.length > 0 && (
@@ -155,7 +155,7 @@ export default function Navbar({ onToggleSidebar }) {
               </div>
               <div>
                 {alerts.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500 text-sm">
+                  <div className="p-4 text-center text-foreground/50 text-sm">
                     Sin alertas pendientes
                   </div>
                 ) : (
@@ -164,30 +164,30 @@ export default function Navbar({ onToggleSidebar }) {
                       href={alert.link || "#"}
                       key={alert._id}
                       onClick={() => handleNotificationClick(alert)}
-                      className="block px-4 py-3 border-b hover:bg-gray-50 last:border-b-0 transition-colors"
+                      className="block px-4 py-3 border-b border-divider hover:bg-content2 last:border-b-0 transition-colors"
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="text-sm font-medium text-gray-800">
+                          <p className="text-sm font-medium text-foreground">
                             {alert.title}
                           </p>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-foreground/50 mt-1">
                             {alert.message}
                           </p>
                         </div>
                         <span
                           className={`flex-shrink-0 px-2 py-1 text-[10px] font-bold rounded-full ${
                             alert.severity === "danger"
-                              ? "text-red-600 bg-red-100"
+                              ? "text-red-500 bg-red-500/15"
                               : alert.severity === "warning"
-                                ? "text-orange-600 bg-orange-100"
-                                : "text-blue-600 bg-blue-100"
+                                ? "text-orange-500 bg-orange-500/15"
+                                : "text-blue-500 bg-blue-500/15"
                           }`}
                         >
                           {alert.type}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-400 mt-1 text-right">
+                      <p className="text-xs text-foreground/40 mt-1 text-right">
                         {new Date(alert.createdAt).toLocaleDateString()}
                       </p>
                     </Link>
@@ -202,13 +202,13 @@ export default function Navbar({ onToggleSidebar }) {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={toggleDropdown}
-            className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 dark:text-foreground dark:hover:text-white focus:outline-none"
+            className="flex items-center space-x-2 text-foreground/70 hover:text-foreground focus:outline-none"
           >
             {user?.image ? (
               <img
                 src={user.image}
                 alt="Profile"
-                className="w-8 h-8 rounded-full border border-gray-200"
+                className="w-8 h-8 rounded-full border border-divider"
               />
             ) : (
               <div className="w-8 h-8 rounded-full bg-brand-navy flex items-center justify-center text-white text-xs">
@@ -228,10 +228,10 @@ export default function Navbar({ onToggleSidebar }) {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="absolute right-0 mt-3 w-64 bg-white border border-gray-100/50 rounded-2xl shadow-xl shadow-slate-200/50 ring-1 ring-black/5 z-50 overflow-hidden glass-morphism"
+                className="absolute right-0 mt-3 w-64 bg-content1 border border-divider rounded-2xl shadow-xl ring-1 ring-black/5 z-50 overflow-hidden"
               >
                 {/* User Info Header */}
-                <div className="px-5 py-4 border-b border-gray-50 bg-gray-50/50">
+                <div className="px-5 py-4 border-b border-divider bg-content2/50">
                   <div className="flex items-center gap-3">
                     {user?.image ? (
                       <img
@@ -245,10 +245,10 @@ export default function Navbar({ onToggleSidebar }) {
                       </div>
                     )}
                     <div className="flex flex-col overflow-hidden">
-                      <span className="font-semibold text-gray-800 text-sm truncate">
+                      <span className="font-semibold text-foreground text-sm truncate">
                         {user?.name || "Usuario"}
                       </span>
-                      <span className="text-xs text-gray-500 truncate">
+                      <span className="text-xs text-foreground/50 truncate">
                         {user?.email}
                       </span>
                     </div>
@@ -258,9 +258,9 @@ export default function Navbar({ onToggleSidebar }) {
                 <div className="p-2">
                   <button
                     onClick={handleLogoutClick}
-                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm rounded-xl hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors group"
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm rounded-xl hover:bg-red-500/10 text-foreground/70 hover:text-red-500 transition-colors group"
                   >
-                    <div className="p-1.5 rounded-lg bg-gray-100 group-hover:bg-red-100 text-gray-500 group-hover:text-red-500 transition-colors">
+                    <div className="p-1.5 rounded-lg bg-content2 group-hover:bg-red-500/15 text-foreground/50 group-hover:text-red-500 transition-colors">
                       <HiOutlineLogout size={16} />
                     </div>
                     <span>Cerrar sesión</span>

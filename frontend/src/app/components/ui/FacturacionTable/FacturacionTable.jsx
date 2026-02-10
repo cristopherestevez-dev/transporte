@@ -1,11 +1,31 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
-import { HiSearch, HiX, HiUpload, HiDocumentDownload, HiDocument, HiCash, HiCreditCard } from "react-icons/hi";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
+import {
+  HiSearch,
+  HiX,
+  HiUpload,
+  HiDocumentDownload,
+  HiDocument,
+  HiCash,
+  HiCreditCard,
+} from "react-icons/hi";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+} from "@heroui/react";
 import jsPDF from "jspdf";
 
-export default function FacturacionTable({ data = [], setData, title, tipo = "cobranzas" }) {
+export default function FacturacionTable({
+  data = [],
+  setData,
+  title,
+  tipo = "cobranzas",
+}) {
   const [filters, setFilters] = useState({
     razon_social: "",
     cuit: "",
@@ -24,7 +44,7 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
   const [metodosPago, setMetodosPago] = useState({
     efectivo: { enabled: false, monto: "" },
     transferencia: { enabled: false, monto: "" },
-    cheque: { enabled: false, monto: "" }
+    cheque: { enabled: false, monto: "" },
   });
   const [cheques, setCheques] = useState([{ numero: "", monto: "" }]);
 
@@ -88,10 +108,20 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
         ? item.tipo_comprobante === filters.tipo_comprobante
         : true;
       const matchNumeroComprobante = filters.numero_comprobante
-        ? (item.numero_comprobante || "").toLowerCase().includes(filters.numero_comprobante.toLowerCase())
+        ? (item.numero_comprobante || "")
+            .toLowerCase()
+            .includes(filters.numero_comprobante.toLowerCase())
         : true;
 
-      return matchRazon && matchCuit && matchFecha && matchEstado && matchMonto && matchTipoComprobante && matchNumeroComprobante;
+      return (
+        matchRazon &&
+        matchCuit &&
+        matchFecha &&
+        matchEstado &&
+        matchMonto &&
+        matchTipoComprobante &&
+        matchNumeroComprobante
+      );
     });
   }, [data, filters]);
 
@@ -125,7 +155,7 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
   // Cambiar estado de un item
   const handleEstadoChange = (itemId, newEstado) => {
     if (!setData) return;
-    
+
     const currentItem = data.find((i) => i.id === itemId);
     if (!currentItem) return;
 
@@ -142,7 +172,7 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
         openPaymentModal(currentItem);
         return;
       }
-      
+
       // Si es pendiente o vencido, pedir confirmación primero
       setPendingStatusChange({ itemId, newEstado });
       setConfirmModalOpen(true);
@@ -150,12 +180,10 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
     }
 
     const updatedData = data.map((item) =>
-      item.id === itemId ? { ...item, estado: newEstado } : item
+      item.id === itemId ? { ...item, estado: newEstado } : item,
     );
     setData(updatedData);
   };
-
-
 
   // Auto-corregir estados vencidos visualmente
   useEffect(() => {
@@ -165,30 +193,30 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
     today.setHours(0, 0, 0, 0);
 
     const updates = [];
-    data.forEach(item => {
+    data.forEach((item) => {
       // Solo chequear si está pendiente
       if (item.estado === "pendiente") {
         const fechaEmision = new Date((item.fecha || "") + "T00:00:00");
         const plazo = item.plazo || 30;
         const vencimiento = new Date(fechaEmision);
         vencimiento.setDate(fechaEmision.getDate() + plazo);
-        
+
         // Si vencimiento < hoy, ya venció
         if (vencimiento < today) {
-           updates.push({ ...item, estado: "vencido" });
+          updates.push({ ...item, estado: "vencido" });
         }
       }
     });
 
     if (updates.length > 0) {
-      const updatedData = data.map(item => {
-        const update = updates.find(u => u.id === item.id);
+      const updatedData = data.map((item) => {
+        const update = updates.find((u) => u.id === item.id);
         return update ? update : item;
       });
       // Evitar loop infinito: solo actualizar si hay cambios reales
       if (JSON.stringify(updatedData) !== JSON.stringify(data)) {
-         console.log("Auto-corrigiendo estados vencidos:", updates.length);
-         setData(updatedData);
+        console.log("Auto-corrigiendo estados vencidos:", updates.length);
+        setData(updatedData);
       }
     }
   }, [data, setData]);
@@ -199,7 +227,7 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
     setMetodosPago({
       efectivo: { enabled: false, monto: "" },
       transferencia: { enabled: false, monto: "" },
-      cheque: { enabled: false, monto: "" }
+      cheque: { enabled: false, monto: "" },
     });
     setCheques([{ numero: "", monto: "" }]);
     setPaymentModalOpen(true);
@@ -209,7 +237,7 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
     if (!pendingStatusChange) return;
     const { itemId, newEstado } = pendingStatusChange;
     const item = data.find((i) => i.id === itemId);
-    
+
     setConfirmModalOpen(false);
     setPendingStatusChange(null);
 
@@ -217,7 +245,7 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
       openPaymentModal(item);
     } else {
       const updatedData = data.map((i) =>
-        i.id === itemId ? { ...i, estado: newEstado } : i
+        i.id === itemId ? { ...i, estado: newEstado } : i,
       );
       setData(updatedData);
     }
@@ -225,27 +253,29 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
 
   // Toggle método de pago
   const toggleMetodo = (metodo) => {
-    setMetodosPago(prev => ({
+    setMetodosPago((prev) => ({
       ...prev,
-      [metodo]: { ...prev[metodo], enabled: !prev[metodo].enabled }
+      [metodo]: { ...prev[metodo], enabled: !prev[metodo].enabled },
     }));
   };
 
   // Actualizar monto de método
   const updateMetodoMonto = (metodo, monto) => {
-    setMetodosPago(prev => ({
+    setMetodosPago((prev) => ({
       ...prev,
-      [metodo]: { ...prev[metodo], monto }
+      [metodo]: { ...prev[metodo], monto },
     }));
   };
 
   // Calcular total ingresado
   const totalIngresado = useMemo(() => {
     let total = 0;
-    if (metodosPago.efectivo.enabled) total += parseFloat(metodosPago.efectivo.monto) || 0;
-    if (metodosPago.transferencia.enabled) total += parseFloat(metodosPago.transferencia.monto) || 0;
+    if (metodosPago.efectivo.enabled)
+      total += parseFloat(metodosPago.efectivo.monto) || 0;
+    if (metodosPago.transferencia.enabled)
+      total += parseFloat(metodosPago.transferencia.monto) || 0;
     if (metodosPago.cheque.enabled) {
-      cheques.forEach(c => total += parseFloat(c.monto) || 0);
+      cheques.forEach((c) => (total += parseFloat(c.monto) || 0));
     }
     return total;
   }, [metodosPago, cheques]);
@@ -272,14 +302,17 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
     if (!paymentItem || !setData) return;
 
     // Verificar que al menos un método esté habilitado
-    const metodosActivos = Object.entries(metodosPago).filter(([_, v]) => v.enabled);
+    const metodosActivos = Object.entries(metodosPago).filter(
+      ([_, v]) => v.enabled,
+    );
     if (metodosActivos.length === 0) {
       alert("Debe seleccionar al menos un método de pago");
       return;
     }
 
     // Calcular si es pago parcial
-    const esPagoParcial = totalIngresado < (paymentItem.monto_restante ?? paymentItem.monto);
+    const esPagoParcial =
+      totalIngresado < (paymentItem.monto_restante ?? paymentItem.monto);
     const nuevoEstado = esPagoParcial ? "pago_parcial" : "pagado";
     const montoPagado = (paymentItem.monto_pagado || 0) + totalIngresado;
     const montoRestante = paymentItem.monto - montoPagado;
@@ -289,35 +322,42 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
       fecha: new Date().toLocaleDateString(),
       monto: totalIngresado,
       metodos_pago: { ...metodosPago },
-      cheques: metodosPago.cheque.enabled ? [...cheques] : []
+      cheques: metodosPago.cheque.enabled ? [...cheques] : [],
     };
-    
-    const historialActualizado = [...(paymentItem.historial_pagos || []), nuevoPago];
+
+    const historialActualizado = [
+      ...(paymentItem.historial_pagos || []),
+      nuevoPago,
+    ];
 
     // Generar orden de pago PDF y obtener URL (pasamos el item actualizado con el historial)
     const itemActualizadoParaPDF = {
       ...paymentItem,
       historial_pagos: historialActualizado,
       monto_pagado: montoPagado,
-      monto_restante: montoRestante > 0 ? montoRestante : 0
+      monto_restante: montoRestante > 0 ? montoRestante : 0,
     };
-    
-    const pdfUrl = generatePaymentOrder(itemActualizadoParaPDF, metodosPago, cheques);
+
+    const pdfUrl = generatePaymentOrder(
+      itemActualizadoParaPDF,
+      metodosPago,
+      cheques,
+    );
 
     // Actualizar estado con URL del PDF y montos
     const updatedData = data.map((item) =>
       item.id === paymentItem.id
-        ? { 
-            ...item, 
-            estado: montoRestante <= 0 ? "pagado" : nuevoEstado, 
-            metodos_pago: metodosPago, 
+        ? {
+            ...item,
+            estado: montoRestante <= 0 ? "pagado" : nuevoEstado,
+            metodos_pago: metodosPago,
             cheques: metodosPago.cheque.enabled ? cheques : null,
             orden_pago_url: pdfUrl,
             monto_pagado: montoPagado,
             monto_restante: montoRestante > 0 ? montoRestante : 0,
-            historial_pagos: historialActualizado
+            historial_pagos: historialActualizado,
           }
-        : item
+        : item,
     );
     setData(updatedData);
 
@@ -329,17 +369,17 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
   // Generar orden de pago PDF (duplicado: emisor y receptor)
   const generatePaymentOrder = (item, metodos, chequesData) => {
     const doc = new jsPDF();
-    
+
     const metodosLabels = {
       efectivo: "Efectivo",
       transferencia: "Transferencia Bancaria",
-      cheque: "Cheque"
+      cheque: "Cheque",
     };
 
     // Función para generar una copia
     const generateCopy = (copyType, startY = 0) => {
       const offsetY = startY;
-      
+
       // Header
       doc.setFillColor(11, 31, 59); // brand-navy
       doc.rect(0, offsetY, 210, 35, "F");
@@ -352,7 +392,7 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
       // Body
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(10);
-      
+
       let y = offsetY + 45;
       const addField = (label, value) => {
         doc.setFont(undefined, "bold");
@@ -365,11 +405,16 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
       addField("Fecha", item.fecha);
       addField("Razón Social", item.razon_social);
       addField("CUIT/CUIL", item.cuit);
-      addField("Tipo Comprobante", getTipoComprobanteLabel(item.tipo_comprobante));
+      addField(
+        "Tipo Comprobante",
+        getTipoComprobanteLabel(item.tipo_comprobante),
+      );
       addField("Nº Comprobante", item.numero_comprobante || "-");
 
       // Pagos Anteriores (si existen)
-      const pagosAnteriores = item.historial_pagos ? item.historial_pagos.slice(0, -1) : [];
+      const pagosAnteriores = item.historial_pagos
+        ? item.historial_pagos.slice(0, -1)
+        : [];
       if (pagosAnteriores.length > 0) {
         y += 5;
         doc.setFont(undefined, "bold");
@@ -381,7 +426,9 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
           doc.setFont(undefined, "italic");
           doc.text(`Pago del ${pago.fecha}:`, 20, y);
           doc.setFont(undefined, "normal");
-          doc.text(`$${pago.monto.toLocaleString()}`, 160, y, { align: "right" });
+          doc.text(`$${pago.monto.toLocaleString()}`, 160, y, {
+            align: "right",
+          });
           y += 5;
         });
         y += 3;
@@ -402,25 +449,53 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
       y += 8;
 
       doc.setFont(undefined, "normal");
-      
+
       // Detalles del pago actual
-      if (metodos.efectivo && metodos.efectivo.enabled && metodos.efectivo.monto) {
+      if (
+        metodos.efectivo &&
+        metodos.efectivo.enabled &&
+        metodos.efectivo.monto
+      ) {
         doc.text("Efectivo", 20, y);
-        doc.text(`$${parseFloat(metodos.efectivo.monto).toLocaleString()}`, 160, y, { align: "right" });
+        doc.text(
+          `$${parseFloat(metodos.efectivo.monto).toLocaleString()}`,
+          160,
+          y,
+          { align: "right" },
+        );
         y += 6;
       }
 
-      if (metodos.transferencia && metodos.transferencia.enabled && metodos.transferencia.monto) {
+      if (
+        metodos.transferencia &&
+        metodos.transferencia.enabled &&
+        metodos.transferencia.monto
+      ) {
         doc.text("Transferencia Bancaria", 20, y);
-        doc.text(`$${parseFloat(metodos.transferencia.monto).toLocaleString()}`, 160, y, { align: "right" });
+        doc.text(
+          `$${parseFloat(metodos.transferencia.monto).toLocaleString()}`,
+          160,
+          y,
+          { align: "right" },
+        );
         y += 6;
       }
 
-      if (metodos.cheque && metodos.cheque.enabled && chequesData && chequesData.length > 0) {
+      if (
+        metodos.cheque &&
+        metodos.cheque.enabled &&
+        chequesData &&
+        chequesData.length > 0
+      ) {
         chequesData.forEach((cheque) => {
           if (cheque.numero || cheque.monto) {
             doc.text(`Cheque Nº ${cheque.numero || "-"}`, 20, y);
-            doc.text(`$${parseFloat(cheque.monto || 0).toLocaleString()}`, 160, y, { align: "right" });
+            doc.text(
+              `$${parseFloat(cheque.monto || 0).toLocaleString()}`,
+              160,
+              y,
+              { align: "right" },
+            );
             y += 6;
           }
         });
@@ -434,7 +509,9 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
       doc.setFont(undefined, "bold");
       doc.text("MONTO TOTAL:", 15, y + 6);
       doc.setTextColor(22, 163, 74); // green
-      doc.text(`$${item.monto.toLocaleString()}`, 195, y + 6, { align: "right" });
+      doc.text(`$${item.monto.toLocaleString()}`, 195, y + 6, {
+        align: "right",
+      });
 
       // Información de pago parcial si existe
       if (item.monto_pagado !== undefined && item.monto_restante > 0) {
@@ -447,7 +524,12 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
         doc.text("⚠ PAGO PARCIAL", 105, y + 3, { align: "center" });
         doc.setFont(undefined, "normal");
         doc.setFontSize(9);
-        doc.text(`Monto pagado hasta ahora: $${(item.monto_pagado || 0).toLocaleString()} | Saldo restante: $${item.monto_restante.toLocaleString()}`, 105, y + 12, { align: "center" });
+        doc.text(
+          `Monto pagado hasta ahora: $${(item.monto_pagado || 0).toLocaleString()} | Saldo restante: $${item.monto_restante.toLocaleString()}`,
+          105,
+          y + 12,
+          { align: "center" },
+        );
         y += 8;
       }
 
@@ -455,7 +537,11 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(8);
       const estadoLabel = item.monto_restante > 0 ? "PAGO PARCIAL" : "PAGADO";
-      doc.text(`Estado: ${estadoLabel} | Emisión: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 15, y);
+      doc.text(
+        `Estado: ${estadoLabel} | Emisión: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+        15,
+        y,
+      );
 
       // Líneas de firma
       y += 12;
@@ -470,21 +556,26 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
       y += 35;
       doc.setFontSize(7);
       doc.setTextColor(128, 128, 128);
-      doc.text("Este documento es una orden de pago generada automáticamente.", 105, y, { align: "center" });
+      doc.text(
+        "Este documento es una orden de pago generada automáticamente.",
+        105,
+        y,
+        { align: "center" },
+      );
     };
 
     // Generar copia EMISOR (página 1)
     generateCopy("ORIGINAL - EMISOR", 0);
-    
+
     // Agregar nueva página para el receptor
     doc.addPage();
-    
+
     // Generar copia RECEPTOR (página 2)
     generateCopy("DUPLICADO - RECEPTOR", 0);
 
     // Guardar archivo
     doc.save(`orden_pago_${item.numero_comprobante || item.id}.pdf`);
-    
+
     // Retornar blob URL para visualización posterior
     const pdfBlob = doc.output("blob");
     return URL.createObjectURL(pdfBlob);
@@ -501,8 +592,12 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
     if (file && uploadingItemId && setData) {
       const updatedData = data.map((item) =>
         item.id === uploadingItemId
-          ? { ...item, orden_pago_pdf: file.name, orden_pago_url: URL.createObjectURL(file) }
-          : item
+          ? {
+              ...item,
+              orden_pago_pdf: file.name,
+              orden_pago_url: URL.createObjectURL(file),
+            }
+          : item,
       );
       setData(updatedData);
       alert(`PDF "${file.name}" subido correctamente`);
@@ -517,7 +612,7 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
     const metodos = item.metodos_pago || {
       efectivo: { enabled: true, monto: item.monto },
       transferencia: { enabled: false, monto: "" },
-      cheque: { enabled: false, monto: "" }
+      cheque: { enabled: false, monto: "" },
     };
     generatePaymentOrder(item, metodos, item.cheques || []);
   };
@@ -527,22 +622,22 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
     const metodos = item.metodos_pago || {
       efectivo: { enabled: true, monto: item.monto },
       transferencia: { enabled: false, monto: "" },
-      cheque: { enabled: false, monto: "" }
+      cheque: { enabled: false, monto: "" },
     };
     const cheques = item.cheques || [];
-    
+
     const doc = new jsPDF();
-    
+
     const metodosLabels = {
       efectivo: "Efectivo",
       transferencia: "Transferencia Bancaria",
-      cheque: "Cheque"
+      cheque: "Cheque",
     };
 
     // Función para generar una copia
     const generateCopy = (copyType, startY = 0) => {
       const offsetY = startY;
-      
+
       // Header
       doc.setFillColor(11, 31, 59);
       doc.rect(0, offsetY, 210, 35, "F");
@@ -554,7 +649,7 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
 
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(10);
-      
+
       let y = offsetY + 45;
       const addField = (label, value) => {
         doc.setFont(undefined, "bold");
@@ -567,7 +662,10 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
       addField("Fecha", item.fecha);
       addField("Razón Social", item.razon_social);
       addField("CUIT/CUIL", item.cuit);
-      addField("Tipo Comprobante", getTipoComprobanteLabel(item.tipo_comprobante));
+      addField(
+        "Tipo Comprobante",
+        getTipoComprobanteLabel(item.tipo_comprobante),
+      );
       addField("Nº Comprobante", item.numero_comprobante || "-");
 
       // Pagos Anteriores (si existen)
@@ -583,15 +681,21 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
           doc.setFont(undefined, "italic");
           doc.text(`Pago del ${pago.fecha}:`, 20, y);
           doc.setFont(undefined, "normal");
-          doc.text(`$${pago.monto.toLocaleString()}`, 160, y, { align: "right" });
+          doc.text(`$${pago.monto.toLocaleString()}`, 160, y, {
+            align: "right",
+          });
           y += 5;
         });
         y += 3;
       }
 
-      // Nota: Para "Visualizar", si ya está pagado o en pago parcial, 
+      // Nota: Para "Visualizar", si ya está pagado o en pago parcial,
       // mostramos el resumen histórico en lugar de un "Pago Actual" duplicado.
-      if (!metodos.efectivo.enabled && !metodos.transferencia.enabled && !metodos.cheque.enabled) {
+      if (
+        !metodos.efectivo.enabled &&
+        !metodos.transferencia.enabled &&
+        !metodos.cheque.enabled
+      ) {
         y += 5;
         doc.setFontSize(9);
         doc.setFont(undefined, "bold");
@@ -611,24 +715,52 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
         y += 8;
 
         doc.setFont(undefined, "normal");
-        
-        if (metodos.efectivo && metodos.efectivo.enabled && metodos.efectivo.monto) {
+
+        if (
+          metodos.efectivo &&
+          metodos.efectivo.enabled &&
+          metodos.efectivo.monto
+        ) {
           doc.text("Efectivo", 20, y);
-          doc.text(`$${parseFloat(metodos.efectivo.monto).toLocaleString()}`, 160, y, { align: "right" });
+          doc.text(
+            `$${parseFloat(metodos.efectivo.monto).toLocaleString()}`,
+            160,
+            y,
+            { align: "right" },
+          );
           y += 6;
         }
 
-        if (metodos.transferencia && metodos.transferencia.enabled && metodos.transferencia.monto) {
+        if (
+          metodos.transferencia &&
+          metodos.transferencia.enabled &&
+          metodos.transferencia.monto
+        ) {
           doc.text("Transferencia Bancaria", 20, y);
-          doc.text(`$${parseFloat(metodos.transferencia.monto).toLocaleString()}`, 160, y, { align: "right" });
+          doc.text(
+            `$${parseFloat(metodos.transferencia.monto).toLocaleString()}`,
+            160,
+            y,
+            { align: "right" },
+          );
           y += 6;
         }
 
-        if (metodos.cheque && metodos.cheque.enabled && cheques && cheques.length > 0) {
+        if (
+          metodos.cheque &&
+          metodos.cheque.enabled &&
+          cheques &&
+          cheques.length > 0
+        ) {
           cheques.forEach((cheque) => {
             if (cheque.numero || cheque.monto) {
               doc.text(`Cheque Nº ${cheque.numero || "-"}`, 20, y);
-              doc.text(`$${parseFloat(cheque.monto || 0).toLocaleString()}`, 160, y, { align: "right" });
+              doc.text(
+                `$${parseFloat(cheque.monto || 0).toLocaleString()}`,
+                160,
+                y,
+                { align: "right" },
+              );
               y += 6;
             }
           });
@@ -642,7 +774,9 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
       doc.setFont(undefined, "bold");
       doc.text("MONTO TOTAL:", 15, y + 6);
       doc.setTextColor(22, 163, 74);
-      doc.text(`$${item.monto.toLocaleString()}`, 195, y + 6, { align: "right" });
+      doc.text(`$${item.monto.toLocaleString()}`, 195, y + 6, {
+        align: "right",
+      });
 
       // Información de pago parcial si existe
       if (item.monto_pagado !== undefined && item.monto_restante > 0) {
@@ -655,7 +789,12 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
         doc.text("⚠ PAGO PARCIAL", 105, y + 3, { align: "center" });
         doc.setFont(undefined, "normal");
         doc.setFontSize(9);
-        doc.text(`Monto pagado hasta ahora: $${(item.monto_pagado || 0).toLocaleString()} | Saldo restante: $${item.monto_restante.toLocaleString()}`, 105, y + 12, { align: "center" });
+        doc.text(
+          `Monto pagado hasta ahora: $${(item.monto_pagado || 0).toLocaleString()} | Saldo restante: $${item.monto_restante.toLocaleString()}`,
+          105,
+          y + 12,
+          { align: "center" },
+        );
         y += 8;
       }
 
@@ -663,7 +802,11 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(8);
       const estadoLabel = item.monto_restante > 0 ? "PAGO PARCIAL" : "PAGADO";
-      doc.text(`Estado: ${estadoLabel} | Emisión: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 15, y);
+      doc.text(
+        `Estado: ${estadoLabel} | Emisión: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+        15,
+        y,
+      );
 
       y += 12;
       doc.setDrawColor(0, 0, 0);
@@ -676,7 +819,12 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
       y += 35;
       doc.setFontSize(7);
       doc.setTextColor(128, 128, 128);
-      doc.text("Este documento es una orden de pago generada automáticamente.", 105, y, { align: "center" });
+      doc.text(
+        "Este documento es una orden de pago generada automáticamente.",
+        105,
+        y,
+        { align: "center" },
+      );
     };
 
     generateCopy("ORIGINAL - EMISOR", 0);
@@ -701,9 +849,9 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
       />
 
       {/* Modal de método de pago */}
-      <Modal 
-        isOpen={paymentModalOpen} 
-        onClose={() => setPaymentModalOpen(false)} 
+      <Modal
+        isOpen={paymentModalOpen}
+        onClose={() => setPaymentModalOpen(false)}
         size="md"
         backdrop="blur"
       >
@@ -712,20 +860,26 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
             <span className="text-xl">Registrar Pago</span>
             {paymentItem && (
               <span className="text-sm font-normal opacity-80">
-                {paymentItem.razon_social} - ${paymentItem.monto?.toLocaleString()}
+                {paymentItem.razon_social} - $
+                {paymentItem.monto?.toLocaleString()}
               </span>
             )}
           </ModalHeader>
           <ModalBody className="py-6">
             {/* Instrucciones */}
             <p className="text-sm text-default-500 mb-4">
-              Seleccione los métodos de pago y complete los montos correspondientes.
+              Seleccione los métodos de pago y complete los montos
+              correspondientes.
             </p>
 
             {/* Efectivo */}
-            <div className={`p-3 rounded-lg border-2 mb-3 transition-all ${
-              metodosPago.efectivo.enabled ? "border-brand-navy bg-brand-navy/5" : "border-divider"
-            }`}>
+            <div
+              className={`p-3 rounded-lg border-2 mb-3 transition-all ${
+                metodosPago.efectivo.enabled
+                  ? "border-brand-navy bg-brand-navy/5"
+                  : "border-divider"
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-3 cursor-pointer flex-1">
                   <input
@@ -734,8 +888,17 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
                     onChange={() => toggleMetodo("efectivo")}
                     className="w-4 h-4 accent-brand-navy"
                   />
-                  <HiCash size={22} className={metodosPago.efectivo.enabled ? "text-brand-navy" : "text-default-400"} />
-                  <span className={`font-medium ${metodosPago.efectivo.enabled ? "text-brand-navy" : "text-foreground"}`}>
+                  <HiCash
+                    size={22}
+                    className={
+                      metodosPago.efectivo.enabled
+                        ? "text-primary"
+                        : "text-default-400"
+                    }
+                  />
+                  <span
+                    className={`font-medium ${metodosPago.efectivo.enabled ? "text-primary" : "text-foreground"}`}
+                  >
                     Efectivo
                   </span>
                 </label>
@@ -745,16 +908,32 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
                       type="number"
                       placeholder="Monto"
                       value={metodosPago.efectivo.monto}
-                      onChange={(e) => updateMetodoMonto("efectivo", e.target.value)}
+                      onChange={(e) =>
+                        updateMetodoMonto("efectivo", e.target.value)
+                      }
                       className="w-28 px-3 py-1 text-sm border border-divider rounded-md bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-navy text-right"
                     />
                     <button
                       type="button"
                       onClick={() => {
-                        const totalADeber = paymentItem?.monto_restante ?? paymentItem?.monto ?? 0;
-                        const otrosMetodos = (metodosPago.transferencia.enabled ? parseFloat(metodosPago.transferencia.monto) || 0 : 0) + 
-                                            (metodosPago.cheque.enabled ? cheques.reduce((acc, c) => acc + (parseFloat(c.monto) || 0), 0) : 0);
-                        updateMetodoMonto("efectivo", String(Math.max(0, totalADeber - otrosMetodos)));
+                        const totalADeber =
+                          paymentItem?.monto_restante ??
+                          paymentItem?.monto ??
+                          0;
+                        const otrosMetodos =
+                          (metodosPago.transferencia.enabled
+                            ? parseFloat(metodosPago.transferencia.monto) || 0
+                            : 0) +
+                          (metodosPago.cheque.enabled
+                            ? cheques.reduce(
+                                (acc, c) => acc + (parseFloat(c.monto) || 0),
+                                0,
+                              )
+                            : 0);
+                        updateMetodoMonto(
+                          "efectivo",
+                          String(Math.max(0, totalADeber - otrosMetodos)),
+                        );
                       }}
                       className="px-2 py-1 text-xs bg-brand-navy text-white rounded hover:bg-brand-navy/80 transition"
                       title="Poner el total"
@@ -767,9 +946,13 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
             </div>
 
             {/* Transferencia */}
-            <div className={`p-3 rounded-lg border-2 mb-3 transition-all ${
-              metodosPago.transferencia.enabled ? "border-brand-navy bg-brand-navy/5" : "border-divider"
-            }`}>
+            <div
+              className={`p-3 rounded-lg border-2 mb-3 transition-all ${
+                metodosPago.transferencia.enabled
+                  ? "border-brand-navy bg-brand-navy/5"
+                  : "border-divider"
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-3 cursor-pointer flex-1">
                   <input
@@ -778,8 +961,17 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
                     onChange={() => toggleMetodo("transferencia")}
                     className="w-4 h-4 accent-brand-navy"
                   />
-                  <HiCreditCard size={22} className={metodosPago.transferencia.enabled ? "text-brand-navy" : "text-default-400"} />
-                  <span className={`font-medium ${metodosPago.transferencia.enabled ? "text-brand-navy" : "text-foreground"}`}>
+                  <HiCreditCard
+                    size={22}
+                    className={
+                      metodosPago.transferencia.enabled
+                        ? "text-primary"
+                        : "text-default-400"
+                    }
+                  />
+                  <span
+                    className={`font-medium ${metodosPago.transferencia.enabled ? "text-primary" : "text-foreground"}`}
+                  >
                     Transferencia
                   </span>
                 </label>
@@ -789,16 +981,32 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
                       type="number"
                       placeholder="Monto"
                       value={metodosPago.transferencia.monto}
-                      onChange={(e) => updateMetodoMonto("transferencia", e.target.value)}
+                      onChange={(e) =>
+                        updateMetodoMonto("transferencia", e.target.value)
+                      }
                       className="w-28 px-3 py-1 text-sm border border-divider rounded-md bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-navy text-right"
                     />
                     <button
                       type="button"
                       onClick={() => {
-                        const totalADeber = paymentItem?.monto_restante ?? paymentItem?.monto ?? 0;
-                        const otrosMetodos = (metodosPago.efectivo.enabled ? parseFloat(metodosPago.efectivo.monto) || 0 : 0) + 
-                                            (metodosPago.cheque.enabled ? cheques.reduce((acc, c) => acc + (parseFloat(c.monto) || 0), 0) : 0);
-                        updateMetodoMonto("transferencia", String(Math.max(0, totalADeber - otrosMetodos)));
+                        const totalADeber =
+                          paymentItem?.monto_restante ??
+                          paymentItem?.monto ??
+                          0;
+                        const otrosMetodos =
+                          (metodosPago.efectivo.enabled
+                            ? parseFloat(metodosPago.efectivo.monto) || 0
+                            : 0) +
+                          (metodosPago.cheque.enabled
+                            ? cheques.reduce(
+                                (acc, c) => acc + (parseFloat(c.monto) || 0),
+                                0,
+                              )
+                            : 0);
+                        updateMetodoMonto(
+                          "transferencia",
+                          String(Math.max(0, totalADeber - otrosMetodos)),
+                        );
                       }}
                       className="px-2 py-1 text-xs bg-brand-navy text-white rounded hover:bg-brand-navy/80 transition"
                       title="Poner el total"
@@ -811,9 +1019,13 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
             </div>
 
             {/* Cheque */}
-            <div className={`p-3 rounded-lg border-2 mb-3 transition-all ${
-              metodosPago.cheque.enabled ? "border-brand-navy bg-brand-navy/5" : "border-divider"
-            }`}>
+            <div
+              className={`p-3 rounded-lg border-2 mb-3 transition-all ${
+                metodosPago.cheque.enabled
+                  ? "border-brand-navy bg-brand-navy/5"
+                  : "border-divider"
+              }`}
+            >
               <div className="flex items-center">
                 <label className="flex items-center gap-3 cursor-pointer flex-1">
                   <input
@@ -822,13 +1034,22 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
                     onChange={() => toggleMetodo("cheque")}
                     className="w-4 h-4 accent-brand-navy"
                   />
-                  <HiDocument size={22} className={metodosPago.cheque.enabled ? "text-brand-navy" : "text-default-400"} />
-                  <span className={`font-medium ${metodosPago.cheque.enabled ? "text-brand-navy" : "text-foreground"}`}>
+                  <HiDocument
+                    size={22}
+                    className={
+                      metodosPago.cheque.enabled
+                        ? "text-primary"
+                        : "text-default-400"
+                    }
+                  />
+                  <span
+                    className={`font-medium ${metodosPago.cheque.enabled ? "text-primary" : "text-foreground"}`}
+                  >
                     Cheque
                   </span>
                 </label>
               </div>
-              
+
               {/* Detalle de cheques */}
               {metodosPago.cheque.enabled && (
                 <div className="mt-4 ml-8 space-y-3">
@@ -838,24 +1059,45 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
                         type="text"
                         placeholder="Nº Cheque"
                         value={cheque.numero}
-                        onChange={(e) => updateCheque(index, "numero", e.target.value)}
+                        onChange={(e) =>
+                          updateCheque(index, "numero", e.target.value)
+                        }
                         className="flex-1 px-3 py-2 text-sm border border-divider rounded-md bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-navy"
                       />
                       <input
                         type="number"
                         placeholder="Monto"
                         value={cheque.monto}
-                        onChange={(e) => updateCheque(index, "monto", e.target.value)}
+                        onChange={(e) =>
+                          updateCheque(index, "monto", e.target.value)
+                        }
                         className="w-24 px-3 py-2 text-sm border border-divider rounded-md bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-navy text-right"
                       />
                       <button
                         type="button"
                         onClick={() => {
-                          const totalADeber = paymentItem?.monto_restante ?? paymentItem?.monto ?? 0;
-                          const otrosMetodos = (metodosPago.efectivo.enabled ? parseFloat(metodosPago.efectivo.monto) || 0 : 0) + 
-                                              (metodosPago.transferencia.enabled ? parseFloat(metodosPago.transferencia.monto) || 0 : 0) +
-                                              cheques.reduce((acc, c, i) => acc + (i !== index ? (parseFloat(c.monto) || 0) : 0), 0);
-                          updateCheque(index, "monto", String(Math.max(0, totalADeber - otrosMetodos)));
+                          const totalADeber =
+                            paymentItem?.monto_restante ??
+                            paymentItem?.monto ??
+                            0;
+                          const otrosMetodos =
+                            (metodosPago.efectivo.enabled
+                              ? parseFloat(metodosPago.efectivo.monto) || 0
+                              : 0) +
+                            (metodosPago.transferencia.enabled
+                              ? parseFloat(metodosPago.transferencia.monto) || 0
+                              : 0) +
+                            cheques.reduce(
+                              (acc, c, i) =>
+                                acc +
+                                (i !== index ? parseFloat(c.monto) || 0 : 0),
+                              0,
+                            );
+                          updateCheque(
+                            index,
+                            "monto",
+                            String(Math.max(0, totalADeber - otrosMetodos)),
+                          );
                         }}
                         className="px-2 py-1 text-xs bg-brand-navy text-white rounded hover:bg-brand-navy/80 transition"
                         title="Poner el total"
@@ -874,7 +1116,7 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
                   ))}
                   <button
                     onClick={addCheque}
-                    className="text-sm text-brand-navy font-medium hover:underline"
+                    className="text-sm text-primary font-medium hover:underline"
                   >
                     + Agregar cheque
                   </button>
@@ -885,45 +1127,69 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
             {/* Resumen de totales */}
             <div className="mt-4 p-3 bg-content2 rounded-lg">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-default-500">Total ingresado:</span>
-                <span className={`font-bold ${totalIngresado === (paymentItem?.monto_restante ?? paymentItem?.monto) ? "text-green-600" : "text-foreground"}`}>
+                <span className="text-sm text-default-500">
+                  Total ingresado:
+                </span>
+                <span
+                  className={`font-bold ${totalIngresado === (paymentItem?.monto_restante ?? paymentItem?.monto) ? "text-green-600" : "text-foreground"}`}
+                >
                   ${totalIngresado.toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-default-500">
-                  {paymentItem?.monto_restante ? "Monto restante:" : "Monto a pagar:"}
+                  {paymentItem?.monto_restante
+                    ? "Monto restante:"
+                    : "Monto a pagar:"}
                 </span>
-                <span className="font-bold text-brand-navy">
-                  ${(paymentItem?.monto_restante ?? paymentItem?.monto)?.toLocaleString()}
+                <span className="font-bold text-primary">
+                  $
+                  {(
+                    paymentItem?.monto_restante ?? paymentItem?.monto
+                  )?.toLocaleString()}
                 </span>
               </div>
               {paymentItem?.monto_pagado > 0 && (
                 <div className="flex justify-between items-center mt-1">
                   <span className="text-sm text-default-500">Ya pagado:</span>
-                  <span className="font-bold text-green-600">${paymentItem.monto_pagado.toLocaleString()}</span>
-                </div>
-              )}
-              {totalIngresado !== (paymentItem?.monto_restante ?? paymentItem?.monto) && totalIngresado > 0 && (
-                <div className="flex justify-between items-center mt-2 pt-2 border-t border-divider">
-                  <span className="text-sm text-default-500">Diferencia:</span>
-                  <span className={`font-bold ${totalIngresado > (paymentItem?.monto_restante ?? paymentItem?.monto) ? "text-yellow-600" : "text-red-600"}`}>
-                    ${Math.abs((paymentItem?.monto_restante ?? paymentItem?.monto) - totalIngresado).toLocaleString()}
+                  <span className="font-bold text-green-600">
+                    ${paymentItem.monto_pagado.toLocaleString()}
                   </span>
                 </div>
               )}
-              {totalIngresado > 0 && totalIngresado < (paymentItem?.monto_restante ?? paymentItem?.monto) && (
-                <div className="mt-2 p-2 bg-orange-100 text-orange-700 rounded text-sm text-center">
-                  ⚠️ Pago parcial: quedará un saldo de ${((paymentItem?.monto_restante ?? paymentItem?.monto) - totalIngresado).toLocaleString()}
-                </div>
-              )}
+              {totalIngresado !==
+                (paymentItem?.monto_restante ?? paymentItem?.monto) &&
+                totalIngresado > 0 && (
+                  <div className="flex justify-between items-center mt-2 pt-2 border-t border-divider">
+                    <span className="text-sm text-default-500">
+                      Diferencia:
+                    </span>
+                    <span
+                      className={`font-bold ${totalIngresado > (paymentItem?.monto_restante ?? paymentItem?.monto) ? "text-yellow-600" : "text-red-600"}`}
+                    >
+                      $
+                      {Math.abs(
+                        (paymentItem?.monto_restante ?? paymentItem?.monto) -
+                          totalIngresado,
+                      ).toLocaleString()}
+                    </span>
+                  </div>
+                )}
+              {totalIngresado > 0 &&
+                totalIngresado <
+                  (paymentItem?.monto_restante ?? paymentItem?.monto) && (
+                  <div className="mt-2 p-2 bg-orange-500/15 text-orange-500 rounded text-sm text-center">
+                    ⚠️ Pago parcial: quedará un saldo de $
+                    {(
+                      (paymentItem?.monto_restante ?? paymentItem?.monto) -
+                      totalIngresado
+                    ).toLocaleString()}
+                  </div>
+                )}
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button
-              variant="light"
-              onPress={() => setPaymentModalOpen(false)}
-            >
+            <Button variant="light" onPress={() => setPaymentModalOpen(false)}>
               Cancelar
             </Button>
             <Button
@@ -938,7 +1204,7 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
 
       {/* Header */}
       <div className="px-4 py-3 border-b border-divider flex justify-between items-center">
-        <h3 className="text-lg font-bold text-brand-navy">{title}</h3>
+        <h3 className="text-lg font-bold text-foreground">{title}</h3>
         {hasActiveFilters && (
           <button
             onClick={clearFilters}
@@ -952,17 +1218,25 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
       {/* Filters */}
       <div className="px-4 py-3 bg-content2 border-b border-divider grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-3">
         <div className="relative">
-          <HiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-default-400" size={16} />
+          <HiSearch
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-default-400"
+            size={16}
+          />
           <input
             type="text"
             placeholder="Razón Social"
             value={filters.razon_social}
-            onChange={(e) => setFilters({ ...filters, razon_social: e.target.value })}
+            onChange={(e) =>
+              setFilters({ ...filters, razon_social: e.target.value })
+            }
             className="w-full pl-9 pr-3 py-2 text-sm border border-divider rounded-md bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
           />
         </div>
         <div className="relative">
-          <HiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-default-400" size={16} />
+          <HiSearch
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-default-400"
+            size={16}
+          />
           <input
             type="text"
             placeholder="CUIT/CUIL"
@@ -979,7 +1253,9 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
         />
         <select
           value={filters.tipo_comprobante}
-          onChange={(e) => setFilters({ ...filters, tipo_comprobante: e.target.value })}
+          onChange={(e) =>
+            setFilters({ ...filters, tipo_comprobante: e.target.value })
+          }
           className="w-full px-3 py-2 text-sm border border-divider rounded-md bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
         >
           {tipoComprobanteOptions.map((opt) => (
@@ -989,12 +1265,17 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
           ))}
         </select>
         <div className="relative">
-          <HiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-default-400" size={16} />
+          <HiSearch
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-default-400"
+            size={16}
+          />
           <input
             type="text"
             placeholder="Nº Comprobante"
             value={filters.numero_comprobante}
-            onChange={(e) => setFilters({ ...filters, numero_comprobante: e.target.value })}
+            onChange={(e) =>
+              setFilters({ ...filters, numero_comprobante: e.target.value })
+            }
             className="w-full pl-9 pr-3 py-2 text-sm border border-divider rounded-md bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
           />
         </div>
@@ -1052,7 +1333,10 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
           <tbody>
             {filteredData.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-default-500">
+                <td
+                  colSpan={8}
+                  className="px-4 py-8 text-center text-default-500"
+                >
                   No se encontraron registros
                 </td>
               </tr>
@@ -1062,7 +1346,9 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
                   key={item.id}
                   className="bg-content1 hover:bg-content2 transition-colors border-b border-divider"
                 >
-                  <td className="px-4 py-3 text-sm text-foreground">{item.fecha}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.fecha}
+                  </td>
                   <td className="px-4 py-3 text-sm text-foreground">
                     {getTipoComprobanteLabel(item.tipo_comprobante)}
                   </td>
@@ -1072,64 +1358,105 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
                   <td className="px-4 py-3 text-sm text-foreground font-medium">
                     {item.razon_social}
                   </td>
-                  <td className="px-4 py-3 text-sm text-foreground">{item.cuit}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">
+                    {item.cuit}
+                  </td>
                   <td className="px-4 py-3 text-center">
-                      <select
-                        value={item.estado}
-                        onChange={(e) => handleEstadoChange(item.id, e.target.value)}
-                        disabled={!setData || item.estado === "pagado"}
-                        className={`px-2 py-1 rounded text-xs font-bold border-0 bg-transparent cursor-pointer ${getEstadoColor(item.estado)} ${item.estado === "pagado" ? "cursor-not-allowed opacity-80" : ""}`}
-                      >
-                        {item.estado === "pendiente" && <option value="pendiente" className="text-yellow-600">Pendiente</option>}
-                        {item.estado === "vencido" && <option value="vencido" className="text-red-600">Vencido</option>}
-                        {item.estado === "pago_parcial" && <option value="pago_parcial" className="text-orange-600">Pago Parcial</option>}
-                        
-                        {/* Solo permitir cambiar a Pagado/Cobrado */}
-                        {tipo === "cobranzas" ? (
-                          item.estado !== "pagado" && item.estado !== "cobrado" && <option value="cobrado" className="text-green-600">Cobrado</option>
-                        ) : (
-                          item.estado !== "pagado" && <option value="pagado" className="text-green-600">Pagado</option>
-                        )}
+                    <select
+                      value={item.estado}
+                      onChange={(e) =>
+                        handleEstadoChange(item.id, e.target.value)
+                      }
+                      disabled={!setData || item.estado === "pagado"}
+                      className={`px-2 py-1 rounded text-xs font-bold border-0 bg-transparent cursor-pointer ${getEstadoColor(item.estado)} ${item.estado === "pagado" ? "cursor-not-allowed opacity-80" : ""}`}
+                    >
+                      {item.estado === "pendiente" && (
+                        <option value="pendiente" className="text-yellow-600">
+                          Pendiente
+                        </option>
+                      )}
+                      {item.estado === "vencido" && (
+                        <option value="vencido" className="text-red-600">
+                          Vencido
+                        </option>
+                      )}
+                      {item.estado === "pago_parcial" && (
+                        <option
+                          value="pago_parcial"
+                          className="text-orange-600"
+                        >
+                          Pago Parcial
+                        </option>
+                      )}
 
-                        {item.estado === "pagado" && <option value="pagado" className="text-green-600">Pagado</option>}
-                        {item.estado === "cobrado" && <option value="cobrado" className="text-green-600">Cobrado</option>}
-                      </select>
-                      
-                      {/* Indicador visual de vencimiento debajo del select */}
-                      {(() => {
-                         if (item.estado === "pagado" || item.estado === "cobrado") return null;
-                         
-                         const fechaEmision = new Date((item.fecha || "") + "T00:00:00");
-                         const plazo = item.plazo || 30;
-                         const vencimiento = new Date(fechaEmision);
-                         vencimiento.setDate(fechaEmision.getDate() + plazo);
-                         
-                         const today = new Date();
-                         today.setHours(0,0,0,0);
-                         
-                         const timeDiff = vencimiento - today;
-                         const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-                         const isExpired = daysDiff < 0;
-                         const isNear = daysDiff >= 0 && daysDiff <= 5;
+                      {/* Solo permitir cambiar a Pagado/Cobrado */}
+                      {tipo === "cobranzas"
+                        ? item.estado !== "pagado" &&
+                          item.estado !== "cobrado" && (
+                            <option value="cobrado" className="text-green-600">
+                              Cobrado
+                            </option>
+                          )
+                        : item.estado !== "pagado" && (
+                            <option value="pagado" className="text-green-600">
+                              Pagado
+                            </option>
+                          )}
 
-                         if (!isExpired && !isNear) return null;
+                      {item.estado === "pagado" && (
+                        <option value="pagado" className="text-green-600">
+                          Pagado
+                        </option>
+                      )}
+                      {item.estado === "cobrado" && (
+                        <option value="cobrado" className="text-green-600">
+                          Cobrado
+                        </option>
+                      )}
+                    </select>
 
-                         return (
-                           <div className="flex flex-col items-center mt-1">
-                             <span className={`text-[9px] font-bold ${isExpired ? "text-red-600" : "text-orange-500"}`}>
-                               {isExpired ? "VENCIDO" : "POR VENCER"}
-                             </span>
-                             <span className="text-[9px] text-default-400 leading-tight">
-                               {vencimiento.toLocaleDateString()}
-                             </span>
-                           </div>
-                         )
-                      })()}
+                    {/* Indicador visual de vencimiento debajo del select */}
+                    {(() => {
+                      if (item.estado === "pagado" || item.estado === "cobrado")
+                        return null;
+
+                      const fechaEmision = new Date(
+                        (item.fecha || "") + "T00:00:00",
+                      );
+                      const plazo = item.plazo || 30;
+                      const vencimiento = new Date(fechaEmision);
+                      vencimiento.setDate(fechaEmision.getDate() + plazo);
+
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+
+                      const timeDiff = vencimiento - today;
+                      const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                      const isExpired = daysDiff < 0;
+                      const isNear = daysDiff >= 0 && daysDiff <= 5;
+
+                      if (!isExpired && !isNear) return null;
+
+                      return (
+                        <div className="flex flex-col items-center mt-1">
+                          <span
+                            className={`text-[9px] font-bold ${isExpired ? "text-red-600" : "text-orange-500"}`}
+                          >
+                            {isExpired ? "VENCIDO" : "POR VENCER"}
+                          </span>
+                          <span className="text-[9px] text-default-400 leading-tight">
+                            {vencimiento.toLocaleDateString()}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="px-4 py-3 text-sm text-foreground text-right font-mono">
                     {item.estado === "pago_parcial" && item.monto_restante ? (
                       <div>
-                        <span className="text-orange-600">${item.monto_restante.toLocaleString()}</span>
+                        <span className="text-orange-600">
+                          ${item.monto_restante.toLocaleString()}
+                        </span>
                         <span className="text-xs text-default-500 block">
                           (pagado: ${item.monto_pagado?.toLocaleString() || 0})
                         </span>
@@ -1164,24 +1491,26 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
                         </>
                       )}
                       {/* Si es pagado o pago_parcial (pagos) - Ver/Descargar PDF */}
-                      {tipo === "pagos" && (item.estado === "pagado" || item.estado === "pago_parcial") && (
-                        <>
-                          <button
-                            onClick={() => viewPaymentOrder(item)}
-                            className="p-1 text-blue-500 hover:text-blue-700 transition"
-                            title="Ver orden de pago"
-                          >
-                            <HiDocument size={18} />
-                          </button>
-                          <button
-                            onClick={() => generatePaymentReceipt(item)}
-                            className="p-1 text-green-500 hover:text-green-700 transition"
-                            title="Descargar orden de pago (PDF)"
-                          >
-                            <HiDocumentDownload size={18} />
-                          </button>
-                        </>
-                      )}
+                      {tipo === "pagos" &&
+                        (item.estado === "pagado" ||
+                          item.estado === "pago_parcial") && (
+                          <>
+                            <button
+                              onClick={() => viewPaymentOrder(item)}
+                              className="p-1 text-blue-500 hover:text-blue-700 transition"
+                              title="Ver orden de pago"
+                            >
+                              <HiDocument size={18} />
+                            </button>
+                            <button
+                              onClick={() => generatePaymentReceipt(item)}
+                              className="p-1 text-green-500 hover:text-green-700 transition"
+                              title="Descargar orden de pago (PDF)"
+                            >
+                              <HiDocumentDownload size={18} />
+                            </button>
+                          </>
+                        )}
                     </div>
                   </td>
                 </tr>
@@ -1193,12 +1522,16 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
 
       {/* Footer Total */}
       <div className="px-4 py-4 bg-content2 border-t border-divider flex justify-end items-center gap-4">
-        <span className="text-sm font-medium text-default-500">{totalLabel}:</span>
-        <span className="text-xl font-bold text-brand-navy">${total.toLocaleString()}</span>
+        <span className="text-sm font-medium text-default-500">
+          {totalLabel}:
+        </span>
+        <span className="text-xl font-bold text-primary">
+          ${total.toLocaleString()}
+        </span>
       </div>
       {/* Modal de confirmación para estado FINAL */}
-      <Modal 
-        isOpen={confirmModalOpen} 
+      <Modal
+        isOpen={confirmModalOpen}
         onOpenChange={setConfirmModalOpen}
         backdrop="blur"
       >
@@ -1208,15 +1541,18 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
           </ModalHeader>
           <ModalBody>
             <p className="text-foreground">
-              Si cambia el estado a <span className="font-bold text-green-600">Pagado</span>, no podrá volver a cambiar el estado de esta factura.
+              Si cambia el estado a{" "}
+              <span className="font-bold text-green-600">Pagado</span>, no podrá
+              volver a cambiar el estado de esta factura.
             </p>
             <p className="text-sm text-default-500 mt-2">
-              Esto asegura que no se generen duplicados de órdenes de pago y que el registro sea definitivo.
+              Esto asegura que no se generen duplicados de órdenes de pago y que
+              el registro sea definitivo.
             </p>
           </ModalBody>
           <ModalFooter>
-            <Button 
-              variant="light" 
+            <Button
+              variant="light"
               onPress={() => {
                 setConfirmModalOpen(false);
                 setPendingStatusChange(null);
@@ -1224,7 +1560,7 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
             >
               Cancelar
             </Button>
-            <Button 
+            <Button
               className="bg-brand-navy text-white"
               onPress={confirmStatusChange}
             >
@@ -1233,7 +1569,6 @@ export default function FacturacionTable({ data = [], setData, title, tipo = "co
           </ModalFooter>
         </ModalContent>
       </Modal>
-
     </div>
   );
 }

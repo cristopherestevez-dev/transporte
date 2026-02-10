@@ -9,7 +9,7 @@ import api from "@/services/api";
 const PLAZO_OPTIONS = [15, 30, 45, 60, 90];
 
 function getVencimientoBadge(fecha, plazo) {
-  if (!fecha) return { label: "-", color: "bg-gray-200 text-gray-600" };
+  if (!fecha) return { label: "-", color: "bg-default-100 text-default-500" };
 
   const fechaEmision = new Date(fecha + "T00:00:00");
   const vencimiento = new Date(fechaEmision);
@@ -26,25 +26,25 @@ function getVencimientoBadge(fecha, plazo) {
   if (daysDiff < 0) {
     return {
       label: fechaStr,
-      color: "bg-red-100 text-red-700 border border-red-300",
+      color: "bg-red-500/15 text-red-500 border border-red-500/30",
       tooltip: "Vencida",
     };
   } else if (daysDiff <= 15) {
     return {
       label: fechaStr,
-      color: "bg-yellow-100 text-yellow-700 border border-yellow-300",
+      color: "bg-yellow-500/15 text-yellow-500 border border-yellow-500/30",
       tooltip: `${daysDiff} días restantes`,
     };
   } else if (daysDiff <= 30) {
     return {
       label: fechaStr,
-      color: "bg-blue-100 text-blue-700 border border-blue-300",
+      color: "bg-blue-500/15 text-blue-500 border border-blue-500/30",
       tooltip: `${daysDiff} días restantes`,
     };
   } else {
     return {
       label: fechaStr,
-      color: "bg-green-100 text-green-700 border border-green-300",
+      color: "bg-green-500/15 text-green-500 border border-green-500/30",
       tooltip: `${daysDiff} días restantes`,
     };
   }
@@ -360,7 +360,7 @@ export default function EmpresaDetail({ id }) {
                         <td className="px-4 py-3 text-center">
                           <button
                             onClick={() => viewFactura(item)}
-                            className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-2 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
                             title="Ver factura"
                           >
                             <FaEye size={16} />
