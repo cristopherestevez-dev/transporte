@@ -1,8 +1,7 @@
 import CrudTable from "../components/ui/CrudTable/CrudTable";
 import TabsWrapper from "../components/ui/TabsWrapper/TabsWrapper";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { FaEye } from "react-icons/fa";
+import Link from "next/link";
 import api from "@/services/api";
 
 export default function EmpresasYFleteros() {
@@ -10,7 +9,6 @@ export default function EmpresasYFleteros() {
   const [fleteros, setFleteros] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const router = useRouter();
 
   useEffect(() => {
     async function fetchData() {
@@ -52,25 +50,24 @@ export default function EmpresasYFleteros() {
               setData={setProveedores}
               apiUrl="http://localhost:3001/api/proveedores"
               columns={[
-                { label: "Nombre", key: "nombre" },
+                {
+                  label: "Nombre",
+                  key: "nombre",
+                  render: (value, row) => (
+                    <Link
+                      href={`/empresas/${row._id || row.id}`}
+                      className="text-blue-600 hover:underline font-bold"
+                    >
+                      {value}
+                    </Link>
+                  ),
+                },
                 { label: "CUIL/CUIT", key: "cuil_cuit" },
                 { label: "Tipo", key: "tipo" },
                 { label: "Dirección", key: "direccion" },
                 { label: "Teléfono", key: "telefono" },
                 { label: "Email", key: "email" },
               ]}
-              extraActions={(item) => (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    router.push(`/empresas/${item._id || item.id}`);
-                  }}
-                  className="text-blue-500 hover:text-blue-700"
-                  title="Ver facturación"
-                >
-                  <FaEye size={18} />
-                </button>
-              )}
               formFields={[
                 { label: "Nombre", key: "nombre", required: true },
                 { label: "CUIL/CUIT", key: "cuil_cuit", required: true },
