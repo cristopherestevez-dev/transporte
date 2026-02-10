@@ -13,7 +13,7 @@ import api from "@/services/api";
 import { useAuth } from "@/app/contexts/AuthContext";
 
 export default function Navbar({ onToggleSidebar }) {
-  const { user, logout, authenticated } = useAuth();
+  const { user, perfil, logout, authenticated } = useAuth();
   const pathname = usePathname();
 
   // Estado para abrir/cerrar dropdown de usuario
@@ -215,9 +215,17 @@ export default function Navbar({ onToggleSidebar }) {
                 {user?.name?.charAt(0) || <HiOutlineUser size={16} />}
               </div>
             )}
-            <span className="hidden sm:inline font-medium">
-              {user?.name || "Invitado"}
-            </span>
+            <div className="hidden sm:flex flex-col items-start text-left ml-1">
+              <span className="font-medium text-sm leading-tight text-foreground">
+                {user?.name || "Invitado"}
+              </span>
+              {perfil && (
+                <span className="text-[10px] font-bold text-foreground/50 tracking-wide">
+                  {perfil.replace(/[_-]/g, " ").charAt(0).toUpperCase() +
+                    perfil.replace(/[_-]/g, " ").slice(1).toLowerCase()}
+                </span>
+              )}
+            </div>
           </button>
 
           {/* Dropdown */}
