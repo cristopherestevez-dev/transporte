@@ -1,6 +1,8 @@
 import CrudTable from "../components/ui/CrudTable/CrudTable";
 import TabsWrapper from "../components/ui/TabsWrapper/TabsWrapper";
-import { useState , useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { FaEye } from "react-icons/fa";
 import api from "@/services/api";
 
 export default function EmpresasYFleteros() {
@@ -8,6 +10,7 @@ export default function EmpresasYFleteros() {
   const [fleteros, setFleteros] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchData() {
@@ -15,7 +18,7 @@ export default function EmpresasYFleteros() {
         setLoading(true);
         const [proveedoresData, fleterosData] = await Promise.all([
           api.getProveedores(),
-          api.getFleteros()
+          api.getFleteros(),
         ]);
         setProveedores(proveedoresData || []);
         setFleteros(fleterosData || []);
@@ -56,6 +59,18 @@ export default function EmpresasYFleteros() {
                 { label: "Teléfono", key: "telefono" },
                 { label: "Email", key: "email" },
               ]}
+              extraActions={(item) => (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/empresas/${item._id || item.id}`);
+                  }}
+                  className="text-blue-500 hover:text-blue-700"
+                  title="Ver facturación"
+                >
+                  <FaEye size={18} />
+                </button>
+              )}
               formFields={[
                 { label: "Nombre", key: "nombre", required: true },
                 { label: "CUIL/CUIT", key: "cuil_cuit", required: true },

@@ -26,6 +26,7 @@ export default function CrudTable({
   apiUrl, // URL de la API para CRUD
   openProveedorModal, // Función para abrir modal de proveedor
   validate, // NEW: Función de validación opcional (formData) => errorString | null
+  extraActions, // (item) => JSX — acciones adicionales en la columna Acciones
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -325,22 +326,25 @@ export default function CrudTable({
                 })}
 
                 {/* Acciones */}
-                <td className="px-6 py-4 text-center space-x-3">
-                  <button
-                    onClick={() => openModal(item)}
-                    className="text-yellow-500 hover:text-yellow-600"
-                  >
-                    <HiOutlinePencil size={20} />
-                  </button>
-                  <button
-                    onClick={() => {
-                      setItemToDelete(item);
-                      setConfirmOpen(true);
-                    }}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <HiOutlineTrash size={20} />
-                  </button>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center justify-center gap-3">
+                    {extraActions && extraActions(item)}
+                    <button
+                      onClick={() => openModal(item)}
+                      className="text-yellow-500 hover:text-yellow-600"
+                    >
+                      <HiOutlinePencil size={20} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setItemToDelete(item);
+                        setConfirmOpen(true);
+                      }}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <HiOutlineTrash size={20} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))

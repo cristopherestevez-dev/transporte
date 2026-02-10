@@ -30,7 +30,7 @@ import { useAuth } from "@/app/contexts/AuthContext";
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { permisos, logout, user, authenticated } = useAuth();
@@ -72,12 +72,12 @@ export default function Sidebar() {
       href: "/choferes",
       permiso: "choferes",
     },
-    {
-      name: "Cotizador",
-      icon: <IconCalculator />,
-      href: "/cotizador",
-      permiso: "cotizador",
-    },
+    // {
+    //   name: "Cotizador",
+    //   icon: <IconCalculator />,
+    //   href: "/cotizador",
+    //   permiso: "cotizador",
+    // },
     {
       name: "Facturación",
       icon: <HiOutlineDocumentText />,
@@ -225,8 +225,6 @@ export default function Sidebar() {
             </button>
           </div>
         )}
-
-        
       </div>
     </div>
   );
