@@ -12,6 +12,28 @@ export interface IViaje extends Document {
     carga?: string;
     tipoCarga?: 'contenedor' | 'byl';
     estado: 'pendiente' | 'en_transito' | 'finalizado' | 'cancelado';
+    tarifaTotalAr?: number;
+    tarifaChoferPorcentaje?: number;
+    tarifaChoferAr?: number;
+    tarifaTotalUsd?: number;
+    tarifaChoferUsd?: number;
+    tarifaChoferUsdAr?: number;
+    estadiaCh?: number;
+    estadiaAr?: number;
+    totalChofer?: number;
+    viaticoChileno?: number;
+    peajeCh?: number;
+    devolCh?: number;
+    restoCh?: number;
+    viaticoArgentino?: number;
+    peajeAr?: number;
+    devolAr?: number;
+    restoAr?: number;
+    adelantoMonto?: number;
+    adelantoMoneda?: string;
+    adelantoAr?: number;
+    pago?: number;
+    subtotal?: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -28,6 +50,28 @@ const viajeFields = {
     carga: { type: String },
     tipoCarga: { type: String, enum: ['contenedor', 'byl'] },
     estado: { type: String, enum: ['pendiente', 'en_transito', 'finalizado', 'cancelado'], default: 'pendiente' },
+    tarifaTotalAr: { type: Number },
+    tarifaChoferPorcentaje: { type: Number },
+    tarifaChoferAr: { type: Number },
+    tarifaTotalUsd: { type: Number },
+    tarifaChoferUsd: { type: Number },
+    tarifaChoferUsdAr: { type: Number },
+    estadiaCh: { type: Number },
+    estadiaAr: { type: Number },
+    totalChofer: { type: Number },
+    viaticoChileno: { type: Number },
+    peajeCh: { type: Number },
+    devolCh: { type: Number },
+    restoCh: { type: Number },
+    viaticoArgentino: { type: Number },
+    peajeAr: { type: Number },
+    devolAr: { type: Number },
+    restoAr: { type: Number },
+    adelantoMonto: { type: Number },
+    adelantoMoneda: { type: String },
+    adelantoAr: { type: Number },
+    pago: { type: Number },
+    subtotal: { type: Number },
 };
 
 const ViajeNacionalSchema: Schema = new Schema(viajeFields, { timestamps: true, collection: 'viajesNacionales' });

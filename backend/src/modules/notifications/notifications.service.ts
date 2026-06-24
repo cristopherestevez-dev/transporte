@@ -79,7 +79,7 @@ export class NotificationService {
         // 1. Choferes (Licencias)
         const choferes = await ChoferModel.find();
         for (const c of choferes) {
-            await processEntity(c._id.toString(), c.licencia_vencimiento || c.licencia || '', c.nombre, 'LICENCIA', '/dashboard/choferes');
+            await processEntity(c._id.toString(), c.licencia || '', c.nombre, 'LICENCIA', '/dashboard/choferes');
         }
 
         // 2. Camiones (Seguros)

@@ -18,6 +18,7 @@ import {
   ModalFooter,
   Button,
 } from "@heroui/react";
+import SelectSearch from "../SelectSearch/Select";
 import jsPDF from "jspdf";
 
 export default function FacturacionTable({
@@ -1251,19 +1252,23 @@ export default function FacturacionTable({
           onChange={(e) => setFilters({ ...filters, fecha: e.target.value })}
           className="w-full px-3 py-2 text-sm border border-divider rounded-md bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
         />
-        <select
-          value={filters.tipo_comprobante}
-          onChange={(e) =>
-            setFilters({ ...filters, tipo_comprobante: e.target.value })
-          }
-          className="w-full px-3 py-2 text-sm border border-divider rounded-md bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
-        >
-          {tipoComprobanteOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        {(() => {
+          const options = tipoComprobanteOptions.map((opt) => ({
+            label: opt.label,
+            value: opt.value,
+          }));
+          const selectedOption = options.find((opt) => opt.value === filters.tipo_comprobante) || options[0];
+          return (
+            <SelectSearch
+              options={options}
+              selectedOption={selectedOption}
+              onOptionChange={(opt) =>
+                setFilters({ ...filters, tipo_comprobante: opt.value })
+              }
+              className="w-full h-[38px] text-sm border-divider"
+            />
+          );
+        })()}
         <div className="relative">
           <HiSearch
             className="absolute left-3 top-1/2 -translate-y-1/2 text-default-400"
@@ -1279,17 +1284,23 @@ export default function FacturacionTable({
             className="w-full pl-9 pr-3 py-2 text-sm border border-divider rounded-md bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
           />
         </div>
-        <select
-          value={filters.estado}
-          onChange={(e) => setFilters({ ...filters, estado: e.target.value })}
-          className="w-full px-3 py-2 text-sm border border-divider rounded-md bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
-        >
-          {estadoOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        {(() => {
+          const options = estadoOptions.map((opt) => ({
+            label: opt.label,
+            value: opt.value,
+          }));
+          const selectedOption = options.find((opt) => opt.value === filters.estado) || options[0];
+          return (
+            <SelectSearch
+              options={options}
+              selectedOption={selectedOption}
+              onOptionChange={(opt) =>
+                setFilters({ ...filters, estado: opt.value })
+              }
+              className="w-full h-[38px] text-sm border-divider"
+            />
+          );
+        })()}
         <input
           type="number"
           placeholder="Monto mínimo"
@@ -1362,58 +1373,38 @@ export default function FacturacionTable({
                     {item.cuit}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <select
-                      value={item.estado}
-                      onChange={(e) =>
-                        handleEstadoChange(item.id, e.target.value)
+                    {(() => {
+                      const options = [];
+                      if (item.estado === "pendiente") options.push({ label: "Pendiente", value: "pendiente", color: "text-yellow-600" });
+                      if (item.estado === "vencido") options.push({ label: "Vencido", value: "vencido", color: "text-red-600" });
+                      if (item.estado === "pago_parcial") options.push({ label: "Pago Parcial", value: "pago_parcial", color: "text-orange-600" });
+                      
+                      if (tipo === "cobranzas") {
+                        if (item.estado !== "pagado" && item.estado !== "cobrado") {
+                          options.push({ label: "Cobrado", value: "cobrado", color: "text-green-600" });
+                        }
+                      } else {
+                        if (item.estado !== "pagado") {
+                          options.push({ label: "Pagado", value: "pagado", color: "text-green-600" });
+                        }
                       }
-                      disabled={!setData || item.estado === "pagado"}
-                      className={`px-2 py-1 rounded text-xs font-bold border-0 bg-transparent cursor-pointer ${getEstadoColor(item.estado)} ${item.estado === "pagado" ? "cursor-not-allowed opacity-80" : ""}`}
-                    >
-                      {item.estado === "pendiente" && (
-                        <option value="pendiente" className="text-yellow-600">
-                          Pendiente
-                        </option>
-                      )}
-                      {item.estado === "vencido" && (
-                        <option value="vencido" className="text-red-600">
-                          Vencido
-                        </option>
-                      )}
-                      {item.estado === "pago_parcial" && (
-                        <option
-                          value="pago_parcial"
-                          className="text-orange-600"
-                        >
-                          Pago Parcial
-                        </option>
-                      )}
 
-                      {/* Solo permitir cambiar a Pagado/Cobrado */}
-                      {tipo === "cobranzas"
-                        ? item.estado !== "pagado" &&
-                          item.estado !== "cobrado" && (
-                            <option value="cobrado" className="text-green-600">
-                              Cobrado
-                            </option>
-                          )
-                        : item.estado !== "pagado" && (
-                            <option value="pagado" className="text-green-600">
-                              Pagado
-                            </option>
-                          )}
+                      if (item.estado === "pagado") options.push({ label: "Pagado", value: "pagado", color: "text-green-600" });
+                      if (item.estado === "cobrado") options.push({ label: "Cobrado", value: "cobrado", color: "text-green-600" });
 
-                      {item.estado === "pagado" && (
-                        <option value="pagado" className="text-green-600">
-                          Pagado
-                        </option>
-                      )}
-                      {item.estado === "cobrado" && (
-                        <option value="cobrado" className="text-green-600">
-                          Cobrado
-                        </option>
-                      )}
-                    </select>
+                      const selectedOption = options.find((opt) => opt.value === item.estado) || options[0];
+                      const disabled = !setData || item.estado === "pagado" || item.estado === "cobrado";
+
+                      return (
+                        <SelectSearch
+                          options={options}
+                          selectedOption={selectedOption}
+                          onOptionChange={(opt) => handleEstadoChange(item.id, opt.value)}
+                          className={`h-8 font-bold border-0 bg-transparent text-xs ${getEstadoColor(item.estado)} ${disabled ? "cursor-not-allowed opacity-80" : "cursor-pointer"}`}
+                          width="130px"
+                        />
+                      );
+                    })()}
 
                     {/* Indicador visual de vencimiento debajo del select */}
                     {(() => {

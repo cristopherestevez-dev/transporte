@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Button, Input, Select, SelectItem, Card, CardBody, CardHeader, Tab, Tabs, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@heroui/react";
+import { Button, Input, Card, CardBody, CardHeader, Tab, Tabs, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@heroui/react";
 import { IconCalculator, IconTruck, IconDriver, IconBuilding, IconTrailer, IconRoutes, IconBuilding as IconCompany } from "@/app/components/ui/Icons/Icons";
 import Script from "next/script";
 import api from "@/services/api";
+import SelectSearch from "../components/ui/SelectSearch/Select";
 
 export default function Cotizador() {
   // --- Data & State ---
@@ -239,23 +240,35 @@ export default function Cotizador() {
                         <Tab key="choferes" title="Choferes" />
                     </Tabs>
 
-                    <Select 
-                        label={`Seleccionar ${selectedType}`}
-                        placeholder="Busca en la lista..."
-                        selectedKeys={selectedResource ? [selectedResource] : []}
-                        onChange={(e) => setSelectedResource(e.target.value)}
-                        variant="faded"
-                        className="max-w-full"
-                    >
-                        {(data[selectedType] || []).map((item) => (
-                            <SelectItem key={item.id || item.patente} textValue={item.nombre || `${item.marca} ${item.patente}`}>
-                                <div className="flex flex-col">
-                                    <span className="font-bold">{item.nombre || `${item.marca} ${item.modelo}`}</span>
-                                    <span className="text-xs text-gray-500">{item.patente || item.dni || item.cuil_cuit || "Sin patente"}</span>
-                                </div>
-                            </SelectItem>
-                        ))}
-                    </Select>
+                    {(() => {
+                        const options = (data[selectedType] || []).map((item) => {
+                            const val = item._id || item.id || item.patente;
+                            const selectedLabel = item.nombre || `${item.marca} ${item.modelo}`;
+                            return {
+                                value: val,
+                                selectedLabel,
+                                label: (
+                                    <div className="flex flex-col py-1">
+                                        <span className="font-semibold text-sm text-foreground">{item.nombre || `${item.marca} ${item.modelo}`}</span>
+                                        <span className="text-xs text-default-500">{item.patente || item.dni || item.cuil_cuit || "Sin patente"}</span>
+                                    </div>
+                                )
+                            };
+                        });
+                        const selectedOption = options.find((opt) => opt.value === selectedResource) || null;
+                        return (
+                            <div className="space-y-1">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-foreground/80">Seleccionar {selectedType}</label>
+                                <SelectSearch
+                                    options={options}
+                                    selectedOption={selectedOption}
+                                    onOptionChange={(opt) => setSelectedResource(opt ? opt.value : "")}
+                                    placeholder="Busca en la lista..."
+                                    className="w-full text-foreground"
+                                />
+                            </div>
+                        );
+                    })()}
                 </CardBody>
             </Card>
 

@@ -13,6 +13,7 @@ export default function SearchableSelect({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [extraMargin, setExtraMargin] = useState(0);
   const containerRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -30,13 +31,60 @@ export default function SearchableSelect({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Enfocar input al abrir
+  // Enfocar input al abrir y realizar scroll automático para evitar recortes
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
-    if (!isOpen) {
+    if (isOpen) {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+
+      // Encontrar el parent scrollable
+      const container = containerRef.current;
+      if (!container) return;
+
+      let parent = container.parentElement;
+      while (parent && parent !== document.body) {
+        const overflowY = window.getComputedStyle(parent).overflowY;
+        if (overflowY === "auto" || overflowY === "scroll") {
+          break;
+        }
+        parent = parent.parentElement;
+      }
+
+      if (parent) {
+        const rect = container.getBoundingClientRect();
+        const parentRect = parent.getBoundingClientRect();
+        
+        const dropdownHeight = 240;
+        const requiredSpace = dropdownHeight + 16;
+        
+        const triggerBottomRelative = rect.bottom - parentRect.top + parent.scrollTop;
+        const scrollableSpaceBelow = parent.scrollHeight - triggerBottomRelative;
+        
+        if (scrollableSpaceBelow < requiredSpace) {
+          const needed = requiredSpace - scrollableSpaceBelow;
+          setExtraMargin(needed);
+        } else {
+          setExtraMargin(0);
+        }
+
+        // Realizar el scroll después de que se aplique el margen
+        setTimeout(() => {
+          const updatedRect = container.getBoundingClientRect();
+          const updatedParentRect = parent.getBoundingClientRect();
+          const excess = (updatedRect.bottom + dropdownHeight) - updatedParentRect.bottom;
+          
+          if (excess > 0) {
+            parent.scrollBy({
+              top: excess + 16,
+              behavior: "smooth"
+            });
+          }
+        }, 100);
+      }
+    } else {
       setSearchTerm(""); // Resetear búsqueda al cerrar
+      setExtraMargin(0); // Resetear margen
     }
   }, [isOpen]);
 
@@ -60,7 +108,13 @@ export default function SearchableSelect({
   const selectedOption = options.find((opt) => opt.value === value);
 
   return (
-    <div ref={containerRef} className={`relative w-full ${className}`}>
+    <div
+      ref={containerRef}
+      className={`relative w-full ${className}`}
+      style={{
+        marginBottom: extraMargin > 0 ? `${extraMargin}px` : undefined,
+      }}
+    >
       {/* Trigger Button */}
       <button
         type="button"

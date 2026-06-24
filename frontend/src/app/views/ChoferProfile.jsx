@@ -55,7 +55,9 @@ export default function ChoferProfile() {
           api.getViajesInternacionales()
         ]);
 
-        const allTrips = [...(viajesNacionales || []), ...(viajesInternacionales || [])];
+        const mappedNacionales = (viajesNacionales || []).map(t => ({ ...t, tipoViaje: "nacional" }));
+        const mappedInternacionales = (viajesInternacionales || []).map(t => ({ ...t, tipoViaje: "internacional" }));
+        const allTrips = [...mappedNacionales, ...mappedInternacionales];
         
         const driverTrips = allTrips.filter((t) => {
             // Logica principal: tipoAsignacion es 'chofer' y el ID coincide

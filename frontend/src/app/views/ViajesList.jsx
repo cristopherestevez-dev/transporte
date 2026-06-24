@@ -5,6 +5,8 @@ import TabsWrapper from "../components/ui/TabsWrapper/TabsWrapper";
 import CrudTable from "../components/ui/CrudTable/CrudTable";
 import ProveedorWrapper from "../components/ui/ModalWrapper/ProveedorWrapper";
 import api from "@/services/api";
+import SelectSearch from "../components/ui/SelectSearch/Select";
+import SearchableSelect from "../components/ui/SearchableSelect/SearchableSelect";
 
 // Definimos los estados y sus colores
 const estados = [
@@ -16,19 +18,20 @@ const estados = [
 
 // Componente para el combo de estado
 const EstadoSelect = ({ value, onChange }) => {
-  const estadoSeleccionado = estados.find((e) => e.value === value) || {};
+  const options = estados.map((e) => ({
+    label: e.label,
+    value: e.value,
+    color: e.color,
+  }));
+  const selectedOption = options.find((opt) => opt.value === value) || options[0];
   return (
-    <select
-      className={`px-2 py-1 rounded font-semibold ${estadoSeleccionado.color}`}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-    >
-      {estados.map((e) => (
-        <option key={e.value} value={e.value}>
-          {e.label}
-        </option>
-      ))}
-    </select>
+    <SelectSearch
+      options={options}
+      selectedOption={selectedOption}
+      onOptionChange={(opt) => onChange(opt.value)}
+      className={`h-8 font-semibold border-divider ${selectedOption.color || ""}`}
+      width="150px"
+    />
   );
 };
 
@@ -230,31 +233,31 @@ const ViajesList = () => {
     {
       label: "Proveedor",
       key: "proveedor",
-      render: ({ form, setForm }) => (
-        <div>
-           <label className="block text-sm font-medium text-gray-700">Proveedor</label>
-           <select
-              className="w-full mt-1 p-2 border rounded-md"
-              value={form.proveedorId || ""}
-              onChange={(e) => {
-                const selectedId = e.target.value;
-                const selectedOption = proveedoresOptions.find(opt => opt._id?.toString() === selectedId?.toString());
-                setForm({ 
-                  ...form, 
-                  proveedorId: selectedId,
-                  proveedor: selectedOption ? selectedOption.nombre : "" 
+      render: ({ form, setForm }) => {
+        const options = proveedoresOptions.map((opt) => ({
+          label: opt.nombre,
+          value: opt._id,
+        }));
+        return (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
+            <SearchableSelect
+              options={options}
+              value={form.proveedorId}
+              onChange={(val) => {
+                const selectedOption = proveedoresOptions.find(opt => opt._id?.toString() === val?.toString());
+                setForm({
+                  ...form,
+                  proveedorId: val,
+                  proveedor: selectedOption ? selectedOption.nombre : "",
                 });
               }}
-           >
-              <option value="">-- Seleccionar Proveedor --</option>
-              {proveedoresOptions.map((opt) => (
-                <option key={opt._id} value={opt._id}>
-                  {opt.nombre}
-                </option>
-              ))}
-           </select>
-        </div>
-      )
+              placeholder="Seleccionar Proveedor..."
+              className="w-full"
+            />
+          </div>
+        );
+      }
     },
     {
       label: "Asignación",
@@ -296,27 +299,29 @@ const ViajesList = () => {
 
             {tipoAsignacion !== "ninguno" && (
               <div>
-                 <label className="block text-sm font-medium text-gray-700">
+                 <label className="block text-sm font-medium text-gray-700 mb-1">
                     Seleccionar {tipoAsignacion === "chofer" ? "Chofer" : "Fletero"}
                  </label>
-                 <select
-                    className="w-full mt-1 p-2 border rounded-md"
-                    value={form.asignadoId || ""}
-                    onChange={(e) => {
-                      const selectedId = e.target.value;
-                      setForm({ 
-                        ...form, 
-                        asignadoId: selectedId,
-                      });
-                    }}
-                 >
-                    <option value="">-- Seleccionar --</option>
-                    {(tipoAsignacion === "chofer" ? choferesOptions : fleterosOptions).map((opt) => (
-                      <option key={opt._id} value={opt._id}>
-                        {opt.nombre}
-                      </option>
-                    ))}
-                 </select>
+                 {(() => {
+                   const options = (tipoAsignacion === "chofer" ? choferesOptions : fleterosOptions).map((opt) => ({
+                     label: opt.nombre,
+                     value: opt._id,
+                   }));
+                   return (
+                     <SearchableSelect
+                       options={options}
+                       value={form.asignadoId}
+                       onChange={(val) => {
+                         setForm({
+                           ...form,
+                           asignadoId: val,
+                         });
+                       }}
+                       placeholder={`Seleccionar ${tipoAsignacion === "chofer" ? "Chofer" : "Fletero"}...`}
+                       className="w-full"
+                     />
+                   );
+                 })()}
               </div>
             )}
           </div>

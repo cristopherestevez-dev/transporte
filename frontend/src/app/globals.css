@@ -4,6 +4,14 @@
 
 :root {
   font-family: var(--font-poppins), sans-serif !important;
+  --font-size-caption: 0.875rem;
+  --color-primary: #0B1F3B;
+  --color-primary-light: #F1F6FF;
+}
+
+.dark {
+  --color-primary: #3B82F6;
+  --color-primary-light: #0F1B2D;
 }
 
 html {

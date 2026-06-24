@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FaArrowLeft, FaEye } from "react-icons/fa";
 import { HiSearch, HiX } from "react-icons/hi";
 import api from "@/services/api";
+import SelectSearch from "../components/ui/SelectSearch/Select";
 
 const PLAZO_OPTIONS = [15, 30, 45, 60, 90];
 
@@ -322,23 +323,25 @@ export default function EmpresaDetail({ id }) {
                         </td>
 
                         {/* Días de vencimiento (select) */}
-                        <td className="px-4 py-3 text-center">
-                          <select
-                            value={plazo}
-                            onChange={(e) =>
-                              handlePlazoChange(
-                                item._id || item.id,
-                                e.target.value,
-                              )
-                            }
-                            className="px-2 py-1 rounded-lg text-xs border border-divider bg-content2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer"
-                          >
-                            {PLAZO_OPTIONS.map((d) => (
-                              <option key={d} value={d}>
-                                {d} días
-                              </option>
-                            ))}
-                          </select>
+                        <td className="px-4 py-3 text-center flex justify-center">
+                          {(() => {
+                            const options = PLAZO_OPTIONS.map((d) => ({
+                              label: `${d} días`,
+                              value: d,
+                            }));
+                            const selectedOption = options.find((opt) => opt.value === plazo);
+                            return (
+                              <SelectSearch
+                                options={options}
+                                selectedOption={selectedOption}
+                                onOptionChange={(opt) =>
+                                  handlePlazoChange(item._id || item.id, opt.value)
+                                }
+                                className="h-8 border-divider"
+                                width="110px"
+                              />
+                            );
+                          })()}
                         </td>
 
                         {/* Fecha de vencimiento (pastilla color) */}

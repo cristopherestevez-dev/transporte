@@ -243,7 +243,7 @@ export default function CrudTable({
       </div>
 
       {/* Tabla */}
-      <table className="w-full border-collapse rounded-lg overflow-hidden shadow-sm">
+      <table className="w-full border-collapse rounded-lg overflow-visible shadow-sm">
         <thead className="bg-brand-navy border-b border-brand-navy">
           <tr>
             {columns.map((col) => (
@@ -278,39 +278,39 @@ export default function CrudTable({
                 className="bg-content1 hover:bg-content2 transition-colors border-b border-divider"
               >
                 {columns.map((col) => {
-                  // Combo de estados
-                  if (col.key === "estado") {
-                    <td
-                      key={`${item._id || item.id}-estado`}
-                      className="px-6 py-4"
-                    >
-                      <SearchableSelect
-                        value={item.estado}
-                        onChange={(val) => {
-                          const updatedData = data.map((r) => {
-                            if (item._id && r._id === item._id)
-                              return { ...r, estado: val };
-                            if (item.id && r.id === item.id)
-                              return { ...r, estado: val };
-                            return r;
-                          });
-                          setData(updatedData);
-                        }}
-                        options={estadoOptions}
-                        placeholder="Estado"
-                        className="w-40"
-                      />
-                    </td>;
-                  }
-
                   // Columnas normales o personalizadas
                   if (col.render) {
+                    const setRowData = async (updatedRow) => {
+                      try {
+                        const idToUpdate = updatedRow._id || updatedRow.id;
+                        const response = await fetch(`${apiUrl}/${idToUpdate}`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify(updatedRow),
+                        });
+                        if (!response.ok) throw new Error("Error al actualizar");
+                        const json = await response.json();
+                        const savedItem = json.data;
+                        setData(
+                          data.map((r) => {
+                            if (r._id && savedItem._id && r._id === savedItem._id) return savedItem;
+                            if (r.id && savedItem.id && r.id === savedItem.id) return savedItem;
+                            return r;
+                          })
+                        );
+                        toast.success("Registro actualizado correctamente");
+                      } catch (error) {
+                        console.error("Error al actualizar:", error);
+                        toast.error("Error al actualizar: " + error.message);
+                      }
+                    };
+
                     return (
                       <td
                         key={`${item._id || item.id}-${col.key}`}
                         className="px-6 py-4"
                       >
-                        {col.render(item[col.key], item)}
+                        {col.render(item[col.key], item, setRowData)}
                       </td>
                     );
                   }
