@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link';
 import api from '@/services/api';
 
+
 // Helper para calcular dias restantes y color
 const ExpirationBadge = ({ date }) => {
   if (!date) return <span className="text-gray-400">Sin fecha</span>;
@@ -68,7 +69,7 @@ const CamionesList = () => {
         data={camiones}
         setData={setCamiones}
         key="camiones-list"
-        apiUrl="http://localhost:3001/api/camiones"
+        apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/camiones`}
         columns={[
             { 
               label: "Patente", 
@@ -111,7 +112,7 @@ const CamionesList = () => {
           key="semirremolques-list"
           data={semirremolques}
           setData={setSemirremolques}
-          apiUrl="http://localhost:3001/api/semirremolques"
+          apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/semirremolques`}
           columns={[
               { label: "Patente", key: "patente" },
               { label: "Marca", key: "marca" },

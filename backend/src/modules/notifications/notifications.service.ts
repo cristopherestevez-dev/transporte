@@ -37,7 +37,7 @@ export class NotificationService {
     // Logic to check all entities and create notifications if needed
     private async checkExpirations() {
         const today = new Date();
-        const fourMonthsInMs = 120 * 24 * 60 * 60 * 1000;
+        const activeResourceIds = new Set<string>();
 
         // --- Helper for Date Checks ---
         const processEntity = async (
@@ -59,19 +59,34 @@ export class NotificationService {
 
                 const notifType = type;
                 const resourceId = `${type}-${entityId}`;
+                activeResourceIds.add(resourceId);
                 
                 // Check if already exists to avoid spamming
                 const existing = await this.notificationRepo.findExisting(notifType, resourceId);
+                const message = `${entityName} vence en ${daysDiff} días`;
                 if (!existing) {
                     await this.notificationRepo.create({
                         type: notifType,
                         resourceId,
                         title: `${type === 'LICENCIA' ? 'Licencia' : 'Seguro'} por vencer`,
-                        message: `${entityName} vence en ${daysDiff} días`,
+                        message,
                         severity,
                         link,
                         role: 'admin' // Default to admin or operator
                     });
+                } else {
+                    let changed = false;
+                    if (existing.message !== message) {
+                        existing.message = message;
+                        changed = true;
+                    }
+                    if (existing.severity !== severity) {
+                        existing.severity = severity;
+                        changed = true;
+                    }
+                    if (changed) {
+                        await (existing as any).save();
+                    }
                 }
             }
         };
@@ -97,39 +112,56 @@ export class NotificationService {
         // 4. Facturación (Cobranzas/Pagos)
         const processFactura = async (f: any, typeName: string, link: string) => {
              const fechaEmision = new Date(f.fecha);
-            const plazo = f.plazo || 30;
-            const fechaVencimiento = new Date(fechaEmision);
-            fechaVencimiento.setDate(fechaEmision.getDate() + plazo);
+             const plazo = f.plazo || 30;
+             const fechaVencimiento = new Date(fechaEmision);
+             fechaVencimiento.setDate(fechaEmision.getDate() + plazo);
 
-            const diffTime = fechaVencimiento.getTime() - today.getTime();
-            const daysDiff = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+             const diffTime = fechaVencimiento.getTime() - today.getTime();
+             const daysDiff = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            if (daysDiff <= 5) {
-                let severity: 'info' | 'warning' | 'danger' = 'warning';
-                let label = 'Por vencer';
-                
-                if (daysDiff < 0) {
-                    severity = 'danger';
-                    label = 'Vencido';
-                }
+             if (diffTime <= 5 * 24 * 60 * 60 * 1000) {
+                 let severity: 'info' | 'warning' | 'danger' = 'warning';
+                 let label = 'Por vencer';
+                 
+                 if (diffTime < 0) {
+                     severity = 'danger';
+                     label = 'Vencido';
+                 }
 
-                const type = typeName.includes('Cobranza') ? 'COBRANZA' : 'PAGO';
-                const resourceId = `FACT-${f._id}`;
-                
-                const existing = await this.notificationRepo.findExisting(type, resourceId);
-                if (!existing) {
-                     await this.notificationRepo.create({
-                        type,
-                        resourceId,
-                        title: `${type} ${label}`,
-                        message: `${f.razon_social} - ${daysDiff < 0 ? 'Vencido hace ' + Math.abs(daysDiff) + ' días' : 'Vence en ' + daysDiff + ' días'}`,
-                        severity,
-                        link,
-                        role: 'admin' // Financial alerts
-                    });
-                }
-            }
-        };
+                 const type = typeName.includes('Cobranza') ? 'COBRANZA' : 'PAGO';
+                 const resourceId = `FACT-${f._id}`;
+                 activeResourceIds.add(resourceId);
+                 
+                 const existing = await this.notificationRepo.findExisting(type, resourceId);
+                 const daysPassed = Math.abs(daysDiff);
+                 const message = `${f.razon_social} - ${daysDiff < 0 ? 'Vencido hace ' + daysPassed + ' días' : 'Vence en ' + daysDiff + ' días'}`;
+                 
+                 if (!existing) {
+                      await this.notificationRepo.create({
+                         type,
+                         resourceId,
+                         title: `${type} ${label}`,
+                         message,
+                         severity,
+                         link,
+                         role: 'admin' // Financial alerts
+                     });
+                 } else {
+                     let changed = false;
+                     if (existing.message !== message) {
+                         existing.message = message;
+                         changed = true;
+                     }
+                     if (existing.severity !== severity) {
+                         existing.severity = severity;
+                         changed = true;
+                     }
+                     if (changed) {
+                         await (existing as any).save();
+                     }
+                 }
+             }
+         };
 
         const cobNac = await CobranzaNacionalModel.find({ estado: { $nin: ['pagado', 'cobrado'] } });
         for (const f of cobNac) await processFactura(f, 'Cobranza Nac.', '/dashboard/facturacion/cobranzas');
@@ -142,5 +174,9 @@ export class NotificationService {
 
         const pagInt = await PagoInternacionalModel.find({ estado: { $nin: ['pagado', 'cobrado'] } });
         for (const f of pagInt) await processFactura(f, 'Pago Int.', '/dashboard/facturacion/pagos');
+
+        // 5. Borrar notificaciones que ya no expiran ni están vencidas (seguro renovado, factura cobrada, etc.)
+        const types = ['LICENCIA', 'SEGURO', 'COBRANZA', 'PAGO'];
+        await this.notificationRepo.deleteInactive(types, Array.from(activeResourceIds));
     }
 }

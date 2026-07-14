@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.proveedoresRoutes = void 0;
+const express_1 = require("express");
+const proveedores_controller_1 = require("./proveedores.controller");
+const asyncHandler_1 = require("../../shared/asyncHandler");
+const router = (0, express_1.Router)();
+const proveedoresController = new proveedores_controller_1.ProveedoresController();
+router.get('/', (0, asyncHandler_1.asyncHandler)(proveedoresController.getAll));
+router.get('/:id', (0, asyncHandler_1.asyncHandler)(proveedoresController.getOne));
+router.post('/', (0, asyncHandler_1.asyncHandler)(proveedoresController.create));
+router.patch('/:id', (0, asyncHandler_1.asyncHandler)(proveedoresController.update));
+router.delete('/:id', (0, asyncHandler_1.asyncHandler)(proveedoresController.delete));
+exports.proveedoresRoutes = router;

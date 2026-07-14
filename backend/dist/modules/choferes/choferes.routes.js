@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.choferesRoutes = void 0;
+const express_1 = require("express");
+const choferes_controller_1 = require("./choferes.controller");
+const asyncHandler_1 = require("../../shared/asyncHandler");
+const router = (0, express_1.Router)();
+const choferesController = new choferes_controller_1.ChoferesController();
+router.get('/', (0, asyncHandler_1.asyncHandler)(choferesController.getAll));
+router.get('/:id', (0, asyncHandler_1.asyncHandler)(choferesController.getOne));
+router.post('/', (0, asyncHandler_1.asyncHandler)(choferesController.create));
+router.patch('/:id', (0, asyncHandler_1.asyncHandler)(choferesController.update));
+router.delete('/:id', (0, asyncHandler_1.asyncHandler)(choferesController.delete));
+exports.choferesRoutes = router;

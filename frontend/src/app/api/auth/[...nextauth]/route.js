@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const authOptions = {
   providers: [

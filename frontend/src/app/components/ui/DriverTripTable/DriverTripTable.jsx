@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useToast } from "../Toast/Toast";
 
+
 const InputCell = ({ row, field, bg = "bg-content1", onChange }) => (
   <input
     type="number"
@@ -273,7 +274,7 @@ export default function DriverTripTable({ trips = [] }) {
       await Promise.all(
         data.map(async (row) => {
           const endpoint = row.tipoViaje === "nacional" ? "nacionales" : "internacionales";
-          const url = `http://localhost:3001/api/viajes/${endpoint}/${row.id}`;
+          const url = `${process.env.NEXT_PUBLIC_API_URL}/viajes/${endpoint}/${row.id}`;
           
           const payload = {
             tarifaTotalAr: row.tarifaTotalAr,

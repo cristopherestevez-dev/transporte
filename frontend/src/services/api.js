@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 class ApiService {
   async get(endpoint) {
@@ -29,6 +29,18 @@ class ApiService {
     const json = await res.json();
     return json.data;
   }
+
+  async put(endpoint, data) {
+    const res = await fetch(`${API_URL}${endpoint}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+    const json = await res.json();
+    return json.data;
+  }
+
 
   async delete(endpoint) {
     const res = await fetch(`${API_URL}${endpoint}`, {

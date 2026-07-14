@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.dashboardRoutes = void 0;
+const express_1 = require("express");
+const dashboard_controller_1 = require("./dashboard.controller");
+const asyncHandler_1 = require("../../shared/asyncHandler");
+const router = (0, express_1.Router)();
+const dashboardController = new dashboard_controller_1.DashboardController();
+router.get('/stats', (0, asyncHandler_1.asyncHandler)(dashboardController.getStats));
+router.get('/recent-trips', (0, asyncHandler_1.asyncHandler)(dashboardController.getRecentTrips));
+exports.dashboardRoutes = router;

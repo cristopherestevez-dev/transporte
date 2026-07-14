@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.usersRoutes = void 0;
+const express_1 = require("express");
+const users_controller_1 = require("./users.controller");
+const asyncHandler_1 = require("../../shared/asyncHandler");
+const router = (0, express_1.Router)();
+const usersController = new users_controller_1.UsersController();
+router.get('/', (0, asyncHandler_1.asyncHandler)(usersController.getAll));
+router.get('/:id', (0, asyncHandler_1.asyncHandler)(usersController.getOne));
+router.patch('/:id', (0, asyncHandler_1.asyncHandler)(usersController.update));
+router.delete('/:id', (0, asyncHandler_1.asyncHandler)(usersController.delete));
+exports.usersRoutes = router;

@@ -6,8 +6,11 @@ import { IconCalculator, IconTruck, IconDriver, IconBuilding, IconTrailer, IconR
 import Script from "next/script";
 import api from "@/services/api";
 import SelectSearch from "../components/ui/SelectSearch/Select";
+import { useToast } from "@/app/components/ui/Toast/Toast";
 
 export default function Cotizador() {
+  const toast = useToast();
+  const [savingTrip, setSavingTrip] = useState(false);
   // --- Data & State ---
   const [data, setData] = useState({ fleteros: [], camiones: [], semis: [], choferes: [] });
   const [loadingResources, setLoadingResources] = useState(true);
@@ -151,19 +154,42 @@ export default function Cotizador() {
     }, 1000);
   };
 
-  const handleAddTrip = () => {
-    const isInternational = originCountry !== destCountry;
-    const endpoint = isInternational ? "/viajesInternacionales" : "/viajesNacionales";
-    
-    // Simulate API call
-    console.log(`Saving to ${endpoint}:`, { 
-        origin, destination, 
-        recurso: selectedResource, 
-        tipo: selectedType,
-        distancia: distance 
-    });
-    
-    alert(`Viaje Agregado a: ${isInternational ? "INTERNACIONALES" : "LOCALES"}\nOrigen: ${originCountry}\nDestino: ${destCountry}`);
+  const handleAddTrip = async () => {
+    if (!origin || !destination) return;
+    setSavingTrip(true);
+    try {
+      const isInternational = originCountry !== destCountry;
+      const calculatedTarifa = distance ? Math.round(distance.value * 2.5) : 0;
+      
+      const payload = {
+        origen: origin,
+        destino: destination,
+        estado: "pendiente",
+        tipoAsignacion: selectedType === "choferes" ? "chofer" : selectedType === "fleteros" ? "fletero" : "ninguno",
+        asignadoId: selectedResource || undefined,
+        tarifaTotalAr: isInternational ? undefined : calculatedTarifa,
+        tarifaTotalUsd: isInternational ? calculatedTarifa : undefined,
+      };
+
+      if (isInternational) {
+        await api.createViajeInternacional(payload);
+      } else {
+        await api.createViajeNacional(payload);
+      }
+
+      toast.success("Viaje cotizado y guardado con éxito.");
+      
+      // Limpiar formulario
+      setOrigin("");
+      setDestination("");
+      setDistance(null);
+      setSelectedResource("");
+    } catch (error) {
+      console.error("Error saving trip:", error);
+      toast.error("Error al guardar el viaje: " + error.message);
+    } finally {
+      setSavingTrip(false);
+    }
   };
 
   // Helper to get selected resource details
@@ -344,10 +370,11 @@ export default function Cotizador() {
                      <Button 
                         className="w-full font-bold text-white bg-brand-navy shadow-lg hover:bg-brand-navy/80 hover:shadow-xl transition-all"
                         isDisabled={!distance || !selectedResource}
+                        isLoading={savingTrip}
                         onPress={handleAddTrip}
                     >
                         AGREGAR VIAJE
-                    </Button>
+                     </Button>
                 </CardBody>
              </Card>
         </div>

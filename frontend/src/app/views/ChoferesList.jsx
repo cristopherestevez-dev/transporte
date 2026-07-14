@@ -6,6 +6,7 @@ import { useState , useEffect } from "react";
 import Link from "next/link";
 import api from "@/services/api";
 
+
 // Helper para calcular dias restantes y color
 const LicenseBadge = ({ date }) => {
   if (!date) return <span className="text-gray-400">Sin fecha</span>;
@@ -143,7 +144,7 @@ export default function ChoferesList() {
                 key="choferes"
                 data={choferes}
                 setData={setChoferes}
-                apiUrl="http://localhost:3001/api/choferes"
+                apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/choferes`}
                 columns={[
                   { 
                     label: "Nombre", 

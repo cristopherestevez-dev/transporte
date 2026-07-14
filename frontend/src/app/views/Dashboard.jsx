@@ -85,7 +85,7 @@ export default function Dashboard() {
       value: stats.users,
       icon: <IconUsers />,
       color: "bg-indigo-500 text-indigo-600",
-      onClick: () => router.push("/usuarios"),
+      onClick: () => router.push("/configuracion"),
     },
   ];
 

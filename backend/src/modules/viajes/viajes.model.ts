@@ -46,7 +46,7 @@ const viajeFields = {
     proveedorId: { type: String },
     proveedor: { type: String },
     asignadoId: { type: String },
-    tipoAsignacion: { type: String, enum: ['chofer', 'fletero'] },
+    tipoAsignacion: { type: String, enum: ['chofer', 'fletero', 'ninguno', null] },
     carga: { type: String },
     tipoCarga: { type: String, enum: ['contenedor', 'byl'] },
     estado: { type: String, enum: ['pendiente', 'en_transito', 'finalizado', 'cancelado'], default: 'pendiente' },

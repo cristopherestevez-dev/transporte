@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import api from "@/services/api";
 
+
 export default function EmpresasYFleteros() {
   const [proveedores, setProveedores] = useState([]);
   const [fleteros, setFleteros] = useState([]);
@@ -48,7 +49,7 @@ export default function EmpresasYFleteros() {
               key="fleteros-proveedores"
               data={proveedores}
               setData={setProveedores}
-              apiUrl="http://localhost:3001/api/proveedores"
+              apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/proveedores`}
               columns={[
                 {
                   label: "Nombre",
@@ -96,7 +97,7 @@ export default function EmpresasYFleteros() {
               key="fleteros"
               data={fleteros}
               setData={setFleteros}
-              apiUrl="http://localhost:3001/api/fleteros"
+              apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/fleteros`}
               columns={[
                 { label: "Nombre", key: "nombre" },
                 { label: "CUIL/CUIT", key: "cuil_cuit" },

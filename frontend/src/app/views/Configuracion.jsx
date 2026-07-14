@@ -5,7 +5,6 @@ import CrudTable from "@/app/components/ui/CrudTable/CrudTable";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { useToast } from "@/app/components/ui/Toast/Toast";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 const perfilOptions = [
   { value: "operador_logistico", label: "Operador Logístico" },
@@ -34,7 +33,7 @@ export default function Configuracion() {
   useEffect(() => {
     async function fetchUsuarios() {
       try {
-        const res = await fetch(`${API_URL}/usuarios`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios`);
         if (!res.ok) throw new Error("Error cargando usuarios");
         const data = await res.json();
         setUsuarios(data.data || []);
@@ -204,7 +203,7 @@ export default function Configuracion() {
         setData={setUsuarios}
         columns={columns}
         formFields={formFields}
-        apiUrl={`${API_URL}/usuarios`}
+        apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/usuarios`}
       />
     </div>
   );

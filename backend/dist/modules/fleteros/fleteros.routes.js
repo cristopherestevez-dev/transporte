@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.fleterosRoutes = void 0;
+const express_1 = require("express");
+const fleteros_controller_1 = require("./fleteros.controller");
+const asyncHandler_1 = require("../../shared/asyncHandler");
+const router = (0, express_1.Router)();
+const fleterosController = new fleteros_controller_1.FleterosController();
+router.get('/', (0, asyncHandler_1.asyncHandler)(fleterosController.getAll));
+router.get('/:id', (0, asyncHandler_1.asyncHandler)(fleterosController.getOne));
+router.post('/', (0, asyncHandler_1.asyncHandler)(fleterosController.create));
+router.patch('/:id', (0, asyncHandler_1.asyncHandler)(fleterosController.update));
+router.delete('/:id', (0, asyncHandler_1.asyncHandler)(fleterosController.delete));
+exports.fleterosRoutes = router;

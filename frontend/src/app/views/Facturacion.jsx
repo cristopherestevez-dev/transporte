@@ -8,6 +8,7 @@ import TabsWrapper from "@/app/components/ui/TabsWrapper/TabsWrapper";
 import { HiCash, HiTrendingUp, HiTrendingDown } from "react-icons/hi";
 import api from "@/services/api";
 
+
 export default function Facturacion() {
   const [facturacion, setFacturacion] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -91,7 +92,7 @@ export default function Facturacion() {
           }
           title="Cobranzas Nacionales"
           tipo="cobranzas"
-          apiUrl="http://localhost:3001/api/facturacion/cobranzas/nacionales"
+          apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/facturacion/cobranzas/nacionales`}
         />
       ),
     },
@@ -108,7 +109,7 @@ export default function Facturacion() {
           }
           title="Cobranzas Internacionales"
           tipo="cobranzas"
-          apiUrl="http://localhost:3001/api/facturacion/cobranzas/internacionales"
+          apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/facturacion/cobranzas/internacionales`}
         />
       ),
     },
@@ -129,7 +130,7 @@ export default function Facturacion() {
           }
           title="Pagos Nacionales"
           tipo="pagos"
-          apiUrl="http://localhost:3001/api/facturacion/pagos/nacionales"
+          apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/facturacion/pagos/nacionales`}
         />
       ),
     },
@@ -146,7 +147,7 @@ export default function Facturacion() {
           }
           title="Pagos Internacionales"
           tipo="pagos"
-          apiUrl="http://localhost:3001/api/facturacion/pagos/internacionales"
+          apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/facturacion/pagos/internacionales`}
         />
       ),
     },

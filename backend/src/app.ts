@@ -6,8 +6,6 @@ import { globalErrorHandler } from './shared/errors/errorMiddleware';
 import { AppError } from './shared/errors/AppError';
 
 // Import routes
-import { authRoutes } from './modules/auth/auth.routes';
-import { usersRoutes } from './modules/users/users.routes';
 import { proveedoresRoutes } from './modules/proveedores/proveedores.routes';
 import { fleterosRoutes } from './modules/fleteros/fleteros.routes';
 import { camionesRoutes } from './modules/camiones/camiones.routes';
@@ -29,8 +27,6 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', usersRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/proveedores', proveedoresRoutes);
 app.use('/api/fleteros', fleterosRoutes);

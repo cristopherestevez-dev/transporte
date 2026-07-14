@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.semirremolquesRoutes = void 0;
+const express_1 = require("express");
+const semirremolques_controller_1 = require("./semirremolques.controller");
+const asyncHandler_1 = require("../../shared/asyncHandler");
+const router = (0, express_1.Router)();
+const semirremolquesController = new semirremolques_controller_1.SemirremolquesController();
+router.get('/', (0, asyncHandler_1.asyncHandler)(semirremolquesController.getAll));
+router.get('/:id', (0, asyncHandler_1.asyncHandler)(semirremolquesController.getOne));
+router.post('/', (0, asyncHandler_1.asyncHandler)(semirremolquesController.create));
+router.patch('/:id', (0, asyncHandler_1.asyncHandler)(semirremolquesController.update));
+router.delete('/:id', (0, asyncHandler_1.asyncHandler)(semirremolquesController.delete));
+exports.semirremolquesRoutes = router;

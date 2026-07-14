@@ -8,6 +8,7 @@ import api from "@/services/api";
 import SelectSearch from "../components/ui/SelectSearch/Select";
 import SearchableSelect from "../components/ui/SearchableSelect/SearchableSelect";
 
+
 // Definimos los estados y sus colores
 const estados = [
   { value: "pendiente", label: "Pendiente", color: "text-yellow-500" },
@@ -341,7 +342,7 @@ const ViajesList = () => {
                 title="Viajes Nacionales"
                 data={nacionales}
                 setData={setNacionales}
-                apiUrl="http://localhost:3001/api/viajes/nacionales"
+                apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/viajes/nacionales`}
                 columns={columns}
                 formFields={formFields}
                 openProveedorModal={(row) =>
@@ -358,7 +359,7 @@ const ViajesList = () => {
                 title="Viajes Internacionales"
                 data={internacionales}
                 setData={setInternacionales}
-                apiUrl="http://localhost:3001/api/viajes/internacionales"
+                apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/viajes/internacionales`}
                 columns={columns}
                 formFields={formFields}
                 openProveedorModal={(row) =>

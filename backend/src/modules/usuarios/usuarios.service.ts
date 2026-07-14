@@ -66,4 +66,8 @@ export class UsuariosService {
     async delete(id: string) {
         return Usuario.findByIdAndDelete(id);
     }
+
+    async count() {
+        return Usuario.countDocuments();
+    }
 }

@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.camionesRoutes = void 0;
+const express_1 = require("express");
+const camiones_controller_1 = require("./camiones.controller");
+const asyncHandler_1 = require("../../shared/asyncHandler");
+const router = (0, express_1.Router)();
+const camionesController = new camiones_controller_1.CamionesController();
+router.get('/', (0, asyncHandler_1.asyncHandler)(camionesController.getAll));
+router.get('/:id', (0, asyncHandler_1.asyncHandler)(camionesController.getOne));
+router.post('/', (0, asyncHandler_1.asyncHandler)(camionesController.create));
+router.patch('/:id', (0, asyncHandler_1.asyncHandler)(camionesController.update));
+router.delete('/:id', (0, asyncHandler_1.asyncHandler)(camionesController.delete));
+exports.camionesRoutes = router;

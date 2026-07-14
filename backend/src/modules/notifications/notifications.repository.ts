@@ -34,4 +34,11 @@ export class NotificationRepository {
         }
         await NotificationModel.deleteMany(query);
     }
+
+    async deleteInactive(types: string[], activeResourceIds: string[]): Promise<void> {
+        await NotificationModel.deleteMany({
+            type: { $in: types },
+            resourceId: { $nin: activeResourceIds }
+        });
+    }
 }
