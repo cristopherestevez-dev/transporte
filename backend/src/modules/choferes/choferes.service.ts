@@ -1,6 +1,7 @@
 import { ChoferesRepository } from './choferes.repository';
 import { IChofer } from './choferes.model';
 import { AppError } from '../../shared/errors/AppError';
+import { CamionModel } from '../camiones/camiones.model';
 
 const choferesRepository = new ChoferesRepository();
 
@@ -18,10 +19,12 @@ export class ChoferesService {
     }
 
     async create(data: Partial<IChofer>): Promise<IChofer> {
+        if (data.camionId && !await CamionModel.exists({ _id: data.camionId })) throw new AppError('Camión no encontrado en tu empresa', 400);
         return choferesRepository.create(data);
     }
 
     async update(id: string, data: Partial<IChofer>): Promise<IChofer> {
+        if (data.camionId && !await CamionModel.exists({ _id: data.camionId })) throw new AppError('Camión no encontrado en tu empresa', 400);
         const chofer = await choferesRepository.update(id, data);
         if (!chofer) {
             throw new AppError('Chofer no encontrado', 404);

@@ -3,11 +3,12 @@ import { DashboardController } from './dashboard.controller';
 import { asyncHandler } from '../../shared/asyncHandler';
 
 import { requirePermission } from '../../shared/middleware/authMiddleware';
+import { paginationMiddleware } from '../../shared/pagination';
 
 const router = Router();
 const dashboardController = new DashboardController();
 
 router.get('/stats', asyncHandler(dashboardController.getStats));
-router.get('/recent-trips', requirePermission('viajes'), asyncHandler(dashboardController.getRecentTrips));
+router.get('/recent-trips', requirePermission('viajes'), paginationMiddleware, asyncHandler(dashboardController.getRecentTrips));
 
 export const dashboardRoutes = router;

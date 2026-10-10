@@ -17,7 +17,7 @@ import { Providers } from "./providers";
 import { ToastProvider } from "./components/ui/Toast/Toast";
 
 // Rutas públicas sin sidebar/navbar
-const publicRoutes = ["/landing", "/login", "/registro"];
+const publicRoutes = ["/landing", "/login", "/registro", "/servicio-suspendido"];
 
 export default function RootLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);

@@ -1,8 +1,9 @@
+import { paginateQuery } from '../../shared/pagination';
 import { ChoferModel, IChofer } from './choferes.model';
 
 export class ChoferesRepository {
     async findAll(): Promise<IChofer[]> {
-        return ChoferModel.find().sort({ createdAt: -1 });
+        return paginateQuery(ChoferModel, ChoferModel.find().sort({ createdAt: -1 }));
     }
 
     async findById(id: string): Promise<IChofer | null> {

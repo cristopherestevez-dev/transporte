@@ -90,8 +90,8 @@ const ViajesList = () => {
       try {
         setLoading(true);
         const [viajesNac, viajesInt] = await Promise.all([
-          api.getViajesNacionales(),
-          api.getViajesInternacionales()
+          api.getPage('/viajes/nacionales').then(result => result.data),
+          api.getPage('/viajes/internacionales').then(result => result.data)
         ]);
         setNacionales(viajesNac || []);
         setInternacionales(viajesInt || []);
@@ -385,6 +385,7 @@ const ViajesList = () => {
           data={rows.filter(belongs)}
           setData={(updated) => setter((previous) => [...previous.filter((row) => !belongs(row)), ...updated])}
           apiUrl={`/api/backend/viajes/${endpoint}`}
+          listFilters={{ direccion_facturacion: direccion }}
           columns={tableColumns}
           formFields={fields}
           defaultValues={{ direccion_facturacion: direccion }}

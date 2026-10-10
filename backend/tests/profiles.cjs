@@ -42,10 +42,12 @@ test('requests use only the selected assigned profile and reject unassigned or r
 });
 
 test('assignment validates profiles, ignores forged permissions, and supports removing all profiles', async () => {
-  const original = Usuario.findByIdAndUpdate;
+  const original = Usuario.findOneAndUpdate;
+  const originalFind = Usuario.findOne;
   let writes = 0;
   try {
-    Usuario.findByIdAndUpdate = async (id, update) => { writes++; return update.$set; };
+    Usuario.findOne = async () => ({ perfiles: [], perfil: null });
+    Usuario.findOneAndUpdate = async (id, update) => { writes++; return update.$set; };
     const service = new UsuariosService();
     for (const perfiles of ['operador_seguridad', ['invalid'], [null]]) {
       await assert.rejects(service.update('user-id', { perfiles }), error => error.statusCode === 400);
@@ -58,5 +60,5 @@ test('assignment validates profiles, ignores forged permissions, and supports re
     const cleared = await service.update('user-id', { perfiles: [], perfil: 'operador_seguridad' });
     assert.equal(cleared.perfil, null);
     assert.deepEqual(cleared.permisos, []);
-  } finally { Usuario.findByIdAndUpdate = original; }
+  } finally { Usuario.findOneAndUpdate = original; Usuario.findOne = originalFind; }
 });

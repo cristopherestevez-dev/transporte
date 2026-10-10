@@ -1,8 +1,9 @@
+import { paginateQuery } from '../../shared/pagination';
 import { CamionModel, ICamion } from './camiones.model';
 
 export class CamionesRepository {
     async findAll(): Promise<ICamion[]> {
-        return CamionModel.find().sort({ createdAt: -1 });
+        return paginateQuery(CamionModel, CamionModel.find().sort({ createdAt: -1 }));
     }
 
     async findById(id: string): Promise<ICamion | null> {

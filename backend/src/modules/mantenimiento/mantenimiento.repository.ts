@@ -1,3 +1,4 @@
+import { paginateQuery } from '../../shared/pagination';
 import { MantenimientoModel, IMantenimiento } from './mantenimiento.model';
 
 export interface SearchFilters {
@@ -8,7 +9,7 @@ export interface SearchFilters {
 
 export class MantenimientoRepository {
     async findByVehiculo(vehiculoId: string): Promise<IMantenimiento[]> {
-        return MantenimientoModel.find({ vehiculoId }).sort({ fecha: -1, km: -1 });
+        return paginateQuery(MantenimientoModel, MantenimientoModel.find({ vehiculoId }).sort({ fecha: -1, km: -1 }));
     }
 
     async findById(id: string): Promise<IMantenimiento | null> {
@@ -44,6 +45,6 @@ export class MantenimientoRepository {
             }
         }
 
-        return MantenimientoModel.find(query).sort({ fecha: -1, km: -1 });
+        return paginateQuery(MantenimientoModel, MantenimientoModel.find(query).sort({ fecha: -1, km: -1 }));
     }
 }

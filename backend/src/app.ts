@@ -16,6 +16,7 @@ import { viajesRoutes } from './modules/viajes/viajes.routes';
 import { facturacionRoutes } from './modules/facturacion/facturacion.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
 import { usuariosRoutes } from './modules/usuarios/usuarios.routes';
+import { miOperacionRoutes } from './modules/usuarios/mi-operacion.routes';
 import { mantenimientoRoutes } from './modules/mantenimiento/mantenimiento.routes';
 import notificationsRoutes from './modules/notifications/notifications.routes';
 
@@ -31,9 +32,10 @@ app.use(morgan('dev'));
 
 // Routes
 app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/mi-operacion', miOperacionRoutes);
 app.use('/api/proveedores', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['empresas', 'viajes', 'cotizador', 'facturacion'] : ['empresas']))(req, res, next), proveedoresRoutes);
 app.use('/api/fleteros', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['empresas', 'viajes', 'cotizador'] : ['empresas']))(req, res, next), fleterosRoutes);
-app.use('/api/camiones', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['camiones', 'cotizador'] : ['camiones']))(req, res, next), camionesRoutes);
+app.use('/api/camiones', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['camiones', 'cotizador', 'choferes'] : ['camiones']))(req, res, next), camionesRoutes);
 app.use('/api/semirremolques', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['camiones', 'cotizador'] : ['camiones']))(req, res, next), semirremolquesRoutes);
 app.use('/api/choferes', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['choferes', 'viajes', 'cotizador'] : ['choferes']))(req, res, next), choferesRoutes);
 app.use('/api/viajes', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['viajes', 'cotizador'] : ['viajes', 'cotizador']))(req, res, next), viajesRoutes);

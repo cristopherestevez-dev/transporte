@@ -3,13 +3,16 @@ import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown } fro
 
 
 import { useState, useMemo } from "react";
+import AppSelect from '../AppSelect/AppSelect';
 import { Card, CardHeader, CardBody } from "@heroui/react";
 
 
 
-export default function DataTable({ title, columns, data }) {
+export default function DataTable({ title, columns, data, pagination, onPageChange, onPageSizeChange, onSearchChange, loading = false }) {
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 8;
+  const [localPageSize, setLocalPageSize] = useState(5);
+  const rowsPerPage = pagination?.pageSize || localPageSize;
+  const shownPage = pagination?.page || currentPage;
 
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,23 +43,24 @@ export default function DataTable({ title, columns, data }) {
 
   // Filtrar por búsqueda
   const filteredData = useMemo(() => {
-    if (!searchTerm) return sortedData;
+    if (pagination || !searchTerm) return sortedData;
     return sortedData.filter(row =>
       row.some(cell =>
         String(cell).toLowerCase().includes(searchTerm.toLowerCase())
       )
     );
-  }, [searchTerm, sortedData]);
+  }, [searchTerm, sortedData, pagination]);
 
   // Paginación
-  const pageCount = Math.ceil(filteredData.length / rowsPerPage);
-  const currentData = filteredData.slice(
+  const pageCount = Math.max(1, pagination?.totalPages ?? Math.ceil(filteredData.length / rowsPerPage));
+  const currentData = pagination ? filteredData : filteredData.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
 
   // Cambiar orden
   const requestSort = (colIndex) => {
+    if (pagination) return;
     let direction = "asc";
     if (sortConfig.key === colIndex && sortConfig.direction === "asc") {
       direction = "desc";
@@ -82,8 +86,17 @@ export default function DataTable({ title, columns, data }) {
           onChange={(e) => {
             setSearchTerm(e.target.value);
             setCurrentPage(1);
+            onSearchChange?.(e.target.value);
           }}
           className="w-full sm:w-64 px-3 py-2 border rounded-md border-divider bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-default-400"
+        />
+        <AppSelect
+          ariaLabel="Mostrar resultados"
+          value={String(rowsPerPage)}
+          options={[5, 15, 25].map(value => ({ value: String(value), label: `Mostrar ${value}` }))}
+          onChange={value => { setLocalPageSize(Number(value)); setCurrentPage(1); onPageSizeChange?.(Number(value)); }}
+          compact
+          className="w-36 shrink-0 self-end sm:self-auto"
         />
       </CardHeader>
 
@@ -130,21 +143,22 @@ export default function DataTable({ title, columns, data }) {
       </CardBody>
 
       <div className="flex justify-end items-center gap-2 p-4 border-t border-divider">
+        {loading && <span className="text-sm text-default-500">Cargando…</span>}
         <button
-          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-          disabled={currentPage === 1}
+          onClick={() => onPageChange ? onPageChange(Math.max(shownPage - 1, 1)) : setCurrentPage((p) => Math.max(p - 1, 1))}
+          disabled={shownPage === 1 || loading}
           className="px-3 py-1 rounded-md bg-blue-500 disabled:opacity-50 hover:bg-blue-300 transition"
         >
          <ChevronLeft size={20} className="text-white" />
         </button>
 
         <span className="text-foreground font-medium">
-          Página {currentPage} de {pageCount}
+          Página {shownPage} de {pageCount}{pagination ? ` · ${pagination.total} resultados` : ''}
         </span>
 
         <button
-          onClick={() => setCurrentPage((p) => Math.min(p + 1, pageCount))}
-          disabled={currentPage === pageCount}
+          onClick={() => onPageChange ? onPageChange(Math.min(shownPage + 1, pageCount)) : setCurrentPage((p) => Math.min(p + 1, pageCount))}
+          disabled={shownPage >= pageCount || loading}
           className="px-3 py-1 rounded-md bg-blue-500 disabled:opacity-50 hover:bg-blue-300 transition"
         >
          <ChevronRight size={20} className="text-white" />

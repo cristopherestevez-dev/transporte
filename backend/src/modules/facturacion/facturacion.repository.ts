@@ -1,3 +1,4 @@
+import { paginateQuery } from '../../shared/pagination';
 import {
     CobranzaNacionalModel,
     CobranzaInternacionalModel,
@@ -24,7 +25,7 @@ export class FacturacionRepository {
     }
 
     async findAll(): Promise<IFacturacion[]> {
-        return this.model.find().sort({ fecha: -1 });
+        return paginateQuery(this.model, this.model.find().sort({ fecha: -1 }));
     }
 
     async findById(id: string): Promise<IFacturacion | null> {

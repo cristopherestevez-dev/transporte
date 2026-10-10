@@ -1,8 +1,9 @@
+import { paginateQuery } from '../../shared/pagination';
 import { SemirremolqueModel, ISemirremolque } from './semirremolques.model';
 
 export class SemirremolquesRepository {
     async findAll(): Promise<ISemirremolque[]> {
-        return SemirremolqueModel.find().sort({ createdAt: -1 });
+        return paginateQuery(SemirremolqueModel, SemirremolqueModel.find().sort({ createdAt: -1 }));
     }
 
     async findById(id: string): Promise<ISemirremolque | null> {

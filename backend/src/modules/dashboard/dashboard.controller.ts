@@ -6,6 +6,7 @@ import { SemirremolquesService } from '../semirremolques/semirremolques.service'
 import { ChoferesService } from '../choferes/choferes.service';
 import { viajesNacionalesService, viajesInternacionalesService } from '../viajes/viajes.service';
 import { UsuariosService } from '../usuarios/usuarios.service';
+import { viajesPage } from '../viajes/viajes.page';
 
 const proveedoresService = new ProveedoresService();
 const fleterosService = new FleterosService();
@@ -53,21 +54,10 @@ export class DashboardController {
     };
 
     getRecentTrips = async (req: Request, res: Response, next: NextFunction) => {
-        const [nacionales, internacionales] = await Promise.all([
-            viajesNacionalesService.getAll(),
-            viajesInternacionalesService.getAll()
-        ]);
-
-        const allTrips = [
-            ...nacionales.map(v => ({ ...v.toObject(), type: 'nacional' })),
-            ...internacionales.map(v => ({ ...v.toObject(), type: 'internacional' }))
-        ]
-            .sort((a, b) => new Date(b.fecha_salida || 0).getTime() - new Date(a.fecha_salida || 0).getTime())
-            .slice(0, 5);
-
+        const result = await viajesPage();
         res.status(200).json({
             status: 'success',
-            data: allTrips
+            data: result.items
         });
     };
 }

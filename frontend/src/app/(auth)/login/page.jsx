@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
@@ -13,12 +13,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get('error');
+    const messages = { AccessDenied: 'No se pudo validar tu cuenta. El backend debe estar disponible para ingresar con Google. Intentá nuevamente.', BackendUnavailable: 'No se pudo conectar con el backend. Verificá que esté iniciado e intentá nuevamente.', AccountDisabled: 'Tu cuenta está inactiva o fue rechazada. Contactá al administrador de tu empresa.' };
+    if (code) setError(messages[code] || 'No se pudo iniciar sesión. Intentá nuevamente.');
+  }, []);
   const handlePasswordLogin = async (event) => {
     event.preventDefault(); setSaving(true); setError("");
     try {
       const result = await signIn("credentials", { email, password, redirect: false, callbackUrl: "/dashboard" });
       if (result?.ok) { setPassword(""); router.replace("/dashboard"); router.refresh(); }
-      else { setError(result?.error === "CredentialsSignin" ? "Email o contraseña incorrectos" : "No se pudo iniciar sesión. Intentá nuevamente en unos minutos."); setSaving(false); }
+      else { setError(result?.error === "CredentialsSignin" ? "Usuario o contraseña incorrectos" : "No se pudo iniciar sesión. Intentá nuevamente en unos minutos."); setSaving(false); }
     } catch { setError("No se pudo conectar con el servidor"); setSaving(false); }
   };
   const handleGoogleLogin = () => {
@@ -70,8 +75,8 @@ export default function LoginPage() {
           </motion.div>
 
           <form onSubmit={handlePasswordLogin} className="w-full space-y-4 mb-6">
-            <label className="grid gap-1 text-sm text-gray-200">Email
-              <input required type="email" autoComplete="username" value={email} onChange={(event) => setEmail(event.target.value)} className="rounded-[10px] bg-white/10 border border-white/10 text-white px-3 py-3 outline-none focus:ring-2 focus:ring-cyan-400/40" />
+            <label className="grid gap-1 text-sm text-gray-200">Usuario o email
+              <input required type="text" autoComplete="username" value={email} onChange={(event) => setEmail(event.target.value)} className="rounded-[10px] bg-white/10 border border-white/10 text-white px-3 py-3 outline-none focus:ring-2 focus:ring-cyan-400/40" />
             </label>
             <label className="grid gap-1 text-sm text-gray-200">Contraseña
               <input required type="password" autoComplete="current-password" maxLength={128} value={password} onChange={(event) => setPassword(event.target.value)} className="rounded-[10px] bg-white/10 border border-white/10 text-white px-3 py-3 outline-none focus:ring-2 focus:ring-cyan-400/40" />

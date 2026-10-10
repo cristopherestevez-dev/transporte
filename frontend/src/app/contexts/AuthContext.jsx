@@ -1,12 +1,23 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
+import { destinationForProfile } from "@/lib/access.mjs";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const { data: session, status, update } = useSession();
+  useEffect(() => {
+    let refreshing = false;
+    const suspended = async () => {
+      if (refreshing) return;
+      refreshing = true;
+      try { await update(); window.location.assign('/servicio-suspendido'); } finally { refreshing = false; }
+    };
+    window.addEventListener('service-suspended', suspended);
+    return () => window.removeEventListener('service-suspended', suspended);
+  }, [update]);
 
   const loading = status === "loading";
   const authenticated = status === "authenticated";
@@ -21,9 +32,7 @@ export function AuthProvider({ children }) {
     if (!perfiles.includes(selected)) throw new Error("Este perfil no está asignado a tu usuario");
     const refreshed = await update({ perfil: selected });
     if (refreshed?.user?.perfil !== selected || !refreshed.user.activo) throw new Error("No se pudo activar el perfil. Actualizá la sesión e intentá nuevamente.");
-    const section = window.location.pathname.split("/")[1];
-    const permission = section === "balance" ? "facturacion" : section;
-    const destination = refreshed.user.permisos.includes(permission) ? window.location.pathname + window.location.search : refreshed.user.permisos[0] ? `/${refreshed.user.permisos[0]}` : "/dashboard";
+    const destination = destinationForProfile(refreshed.user.permisos, window.location.pathname + window.location.search);
     window.location.assign(destination);
   };
 

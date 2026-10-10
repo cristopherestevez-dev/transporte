@@ -7,8 +7,8 @@ import { backendUrl, backendHeaders } from "@/lib/backend";
 export const authOptions = {
   providers: [
     CredentialsProvider({
-      name: "Email y contraseña",
-      credentials: { email: { label: "Email", type: "email" }, password: { label: "Contraseña", type: "password" } },
+      name: "Usuario y contraseña",
+      credentials: { email: { label: "Usuario o email", type: "text" }, password: { label: "Contraseña", type: "password" } },
       async authorize(credentials) {
         const email = credentials?.email?.trim().toLowerCase();
         const password = credentials?.password;
@@ -43,11 +43,13 @@ export const authOptions = {
           }),
         });
         if (!res.ok) {
-          return false;
+          const failure = await res.json().catch(() => ({}));
+          console.error("Google sync rejected:", res.status, failure.message || "Sin detalle");
+          return `/login?error=${res.status >= 500 ? 'BackendUnavailable' : 'AccountDisabled'}`;
         }
       } catch (error) {
         console.error("Error syncing user:", error.message);
-        return false;
+        return "/login?error=BackendUnavailable";
       }
       return true;
     },
@@ -68,11 +70,13 @@ export const authOptions = {
             const data = await res.json();
             token.empresaId = data.data?.empresaId || null;
             token.empresaNombre = data.data?.empresaNombre || null;
+            token.empresaActiva = data.data?.empresaActiva;
+            token.empresaEstado = data.data?.empresaEstado;
             token.estado = data.data?.estado || "aprobado";
             token.perfilLabels = data.data?.perfilLabels || {};
             token.perfiles = data.data?.perfiles || [];
             const requested = trigger === "update" && typeof session?.perfil === "string" ? session.perfil : token.perfil;
-            token.perfil = token.perfiles.includes(requested) ? requested : token.perfiles.includes(token.perfil) ? token.perfil : token.perfiles[0] || null;
+            token.perfil = token.perfiles.includes(requested) ? requested : token.perfiles.includes(token.perfil) ? token.perfil : token.perfiles.includes(data.data?.perfil) ? data.data.perfil : token.perfiles[0] || null;
             token.permisos = data.data?.permisosPorPerfil?.[token.perfil] || [];
             token.activo = data.data?.activo === true;
           } else { token.activo = false; token.permisos = []; token.perfiles = []; token.perfil = null; }
@@ -89,6 +93,8 @@ export const authOptions = {
       session.user.image = token.picture;
       session.user.empresaId = token.empresaId;
       session.user.empresaNombre = token.empresaNombre;
+      session.user.empresaActiva = token.empresaActiva;
+      session.user.empresaEstado = token.empresaEstado;
       session.user.estado = token.estado;
       session.user.perfilLabels = token.perfilLabels || {};
       session.user.perfil = token.perfil;

@@ -16,8 +16,8 @@ export default function EmpresasYFleteros() {
       try {
         setLoading(true);
         const [proveedoresData, fleterosData] = await Promise.all([
-          api.getProveedores(),
-          api.getFleteros(),
+          api.getPage('/proveedores').then(result => result.data),
+          api.getPage('/fleteros').then(result => result.data),
         ]);
         setProveedores(proveedoresData || []);
         setFleteros(fleterosData || []);

@@ -1,8 +1,9 @@
+import { paginateQuery } from '../../shared/pagination';
 import { ProveedorModel, IProveedor } from './proveedores.model';
 
 export class ProveedoresRepository {
     async findAll(): Promise<IProveedor[]> {
-        return ProveedorModel.find().sort({ createdAt: -1 });
+        return paginateQuery(ProveedorModel, ProveedorModel.find().sort({ createdAt: -1 }));
     }
 
     async findById(id: string): Promise<IProveedor | null> {

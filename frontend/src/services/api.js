@@ -3,15 +3,35 @@ const API_URL = "/api/backend";
 async function checkResponse(res) {
   if (!res.ok) {
     const error = await res.json().catch(() => ({}));
+    if (error.code === 'SERVICE_SUSPENDED' && typeof window !== 'undefined') window.dispatchEvent(new Event('service-suspended'));
     throw new Error(error.message || `Error HTTP: ${res.status}`);
   }
 }
 
 class ApiService {
+  async getPage(endpoint, { page = 1, pageSize = 5, search = '', ...filters } = {}) {
+    const url = new URL(`${API_URL}${endpoint}`, window.location.origin);
+    Object.entries({ page, pageSize, search, ...filters }).forEach(([key, value]) => { if (value !== undefined && value !== '') url.searchParams.set(key, String(value)); });
+    const res = await fetch(url.pathname + url.search);
+    await checkResponse(res);
+    return res.json();
+  }
   async get(endpoint) {
     const res = await fetch(`${API_URL}${endpoint}`);
     await checkResponse(res);
     const json = await res.json();
+    // Full datasets are needed by lookups and financial summaries. Each request
+    // still follows the server pagination contract; tables use getPage directly.
+    if (Array.isArray(json.data) && json.pagination) {
+      const items = [...json.data];
+      const url = new URL(`${API_URL}${endpoint}`, window.location.origin);
+      for (let page = 2; page <= json.pagination.totalPages; page++) {
+        url.searchParams.set('page', String(page)); url.searchParams.set('pageSize', String(json.pagination.pageSize));
+        const result = await fetch(url.pathname + url.search); await checkResponse(result);
+        items.push(...(await result.json()).data);
+      }
+      return items;
+    }
     return json.data;
   }
 
@@ -63,8 +83,8 @@ class ApiService {
     return this.get("/dashboard/stats");
   }
 
-  async getRecentTrips() {
-    return this.get("/dashboard/recent-trips");
+  async getRecentTrips(options = {}) {
+    return this.getPage("/dashboard/recent-trips", options);
   }
 
   // Notifications

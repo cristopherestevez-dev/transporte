@@ -1,3 +1,4 @@
+import { paginationMiddleware } from '../../shared/pagination';
 import { Router } from 'express';
 import { UsuariosController } from './usuarios.controller';
 import { asyncHandler } from '../../shared/asyncHandler';
@@ -14,15 +15,18 @@ const usuariosController = new UsuariosController();
 router.get('/permisos/:email', authMiddleware, asyncHandler(usuariosController.getPermisosByEmail));
 router.post('/login', loginAuthMiddleware, validateBody(LoginUsuarioSchema), asyncHandler(usuariosController.login));
 router.post('/mi-solicitud', authMiddleware, asyncHandler(usuariosController.solicitarEmpresa));
+router.post('/mi-empresa', authMiddleware, asyncHandler(usuariosController.solicitarNuevaEmpresa));
 router.post('/sync', syncAuthMiddleware, asyncHandler(usuariosController.sync));
 
 router.use(authMiddleware, requirePermission('configuracion'), requireSecurityProfile);
 
 // Rutas protegidas (solo para operador_seguridad)
 router.post('/', validateBody(CreateUsuarioSchema), asyncHandler(usuariosController.create));
-router.get('/', asyncHandler(usuariosController.getAll));
+router.get('/', paginationMiddleware, asyncHandler(usuariosController.getAll));
+router.get('/choferes-empresa', asyncHandler(usuariosController.getChoferesEmpresa));
 router.get('/empresas-operadoras', asyncHandler(usuariosController.getEmpresas));
 router.post('/empresas-operadoras', asyncHandler(usuariosController.createEmpresa));
+router.patch('/empresas-operadoras/:empresaId', asyncHandler(usuariosController.updateEmpresa));
 router.get('/empresas-operadoras/:empresaId/datos-anteriores', asyncHandler(usuariosController.legacyData));
 router.post('/empresas-operadoras/:empresaId/datos-anteriores', asyncHandler(usuariosController.legacyData));
 router.post('/perfiles', asyncHandler(usuariosController.createPerfil));

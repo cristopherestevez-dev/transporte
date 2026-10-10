@@ -49,18 +49,21 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
         const payload = readToken(req);
         if (payload.purpose !== 'session') throw new AppError('Operación no permitida', 403);
         const user = await Usuario.findOne({ email: payload.email.toLowerCase() });
-        const identityRequest = req.path?.startsWith('/permisos/') || req.path === '/mi-solicitud' || req.path === '/empresas-disponibles';
+        const identityRequest = req.path?.startsWith('/permisos/') || req.path === '/mi-solicitud' || req.path === '/mi-empresa';
         if (!user || (!identityRequest && (!user.activo || user.estado === 'pendiente' || user.estado === 'rechazado'))) throw new AppError('Usuario pendiente, inactivo o inexistente', 403);
         const perfiles = perfilesAsignados(user);
-        if (payload.perfil !== undefined && !perfiles.includes(payload.perfil as any)) {
+        if (!identityRequest && payload.perfil !== undefined && !perfiles.includes(payload.perfil as any)) {
             throw new AppError('El perfil seleccionado no está asignado a tu usuario', 403);
         }
-        const perfil = payload.perfil || perfiles[0];
         const permissions = await permisosPorPerfil(user.empresaId);
+        const preferred = payload.perfil || user.perfil || perfiles[0];
+        const perfil = identityRequest ? (preferred && perfiles.includes(preferred) && permissions[preferred] ? preferred : perfiles.find(value => permissions[value])) : preferred;
         const permisos = perfil ? permissions[perfil] || [] : [];
         const empresaId = user.empresaId;
-        const superAdmin = !empresaId && perfiles.includes('operador_seguridad') && user.estado !== 'pendiente';
-        if (empresaId && !identityRequest && !await EmpresaOperadora.exists({ _id: empresaId, activo: true })) throw new AppError('Empresa inactiva o inexistente', 403);
+        // Platform administration is reserved to the configured owner, independently of company security.
+        const superAdmin = perfil === 'superadmin' && !!env.SUPERADMIN_EMAIL && user.email.toLowerCase() === env.SUPERADMIN_EMAIL;
+        if (!identityRequest && perfil === 'superadmin' && !superAdmin) throw new AppError('Superadmin está reservado al dueño de la plataforma', 403);
+        if (empresaId && !identityRequest && !await EmpresaOperadora.exists({ _id: empresaId, activo: true })) throw new AppError('Servicio suspendido. Contactá al administrador de tu empresa para regularizar el servicio', 403, 'SERVICE_SUSPENDED');
         req.user = { ...payload, userId: user._id.toString(), empresaId, role: perfil, permisos };
         tenantContext.run({ empresaId, userId: user._id.toString(), superAdmin }, () => next());
     } catch (error) { next(error); }
@@ -74,7 +77,8 @@ export const requirePermission = (...permissions: string[]) => (req: AuthRequest
 };
 
 export const requireSecurityProfile = (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (req.user?.role !== 'operador_seguridad') return next(new AppError('Seleccioná el perfil de seguridad para administrar permisos', 403));
+    if (req.user?.role === 'superadmin' && tenantContext.getStore()?.superAdmin) return next();
+    if (req.user?.role !== 'operador_seguridad' || !req.user.empresaId) return next(new AppError('Seleccioná Seguridad de tu empresa para administrar sus usuarios', 403));
     next();
 };
 

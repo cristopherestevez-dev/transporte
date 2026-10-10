@@ -26,7 +26,7 @@ const NotificationSchema = new Schema<INotification>({
     readBy: { type: [String], default: [] },
     severity: { type: String, default: 'info' },
     createdAt: { type: Date, default: Date.now }
-});
+}, { collection: 'notifications' });
 
 // Index for efficient querying by user/role and read status
 NotificationSchema.index({ userId: 1, isRead: 1 });

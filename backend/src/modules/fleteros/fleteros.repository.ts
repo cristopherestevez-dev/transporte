@@ -1,8 +1,9 @@
+import { paginateQuery } from '../../shared/pagination';
 import { FleteroModel, IFletero } from './fleteros.model';
 
 export class FleterosRepository {
     async findAll(): Promise<IFletero[]> {
-        return FleteroModel.find().sort({ createdAt: -1 });
+        return paginateQuery(FleteroModel, FleteroModel.find().sort({ createdAt: -1 }));
     }
 
     async findById(id: string): Promise<IFletero | null> {

@@ -14,6 +14,7 @@ function callbacks(data) {
     require: (name) => {
       if (name === 'next-auth') return { default: () => () => {} };
       if (name === 'next-auth/providers/google') return { default: () => ({}) };
+      if (name === 'next-auth/providers/credentials') return { default: () => ({}) };
       if (name === '@/lib/backend') return { backendUrl: () => 'http://mock/api', backendHeaders: () => ({}) };
       throw new Error(`Unexpected dependency: ${name}`);
     },

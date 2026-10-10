@@ -29,16 +29,20 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [viajes, setViajes] = useState([]);
   const [page, setPage] = useState(0);
+  const [tripsPage, setTripsPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 5, total: 0, totalPages: 0 });
+  const [search, setSearch] = useState('');
+  const [tripsLoading, setTripsLoading] = useState(false);
+  const [tripsError, setTripsError] = useState('');
   const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const statsData = await api.getStats();
-        const recentTrips = canViewTrips ? await api.getRecentTrips() : [];
         
         setStats(statsData);
-        setViajes(recentTrips || []);
       } catch (error) {
         console.error("Error al cargar el dashboard:", error);
       }
@@ -46,6 +50,16 @@ export default function Dashboard() {
 
     fetchData();
   }, [canViewTrips]);
+  useEffect(() => {
+    if (!canViewTrips) return;
+    let current = true; setTripsLoading(true); setTripsError('');
+    api.getRecentTrips({ page: tripsPage, pageSize, search }).then(result => {
+      if (!current) return;
+      if (result.pagination.totalPages && tripsPage > result.pagination.totalPages) { setTripsPage(result.pagination.totalPages); return; }
+      setViajes(result.data); setPagination(result.pagination);
+    }).catch(error => { if (current) setTripsError(error.message); }).finally(() => { if (current) setTripsLoading(false); });
+    return () => { current = false; };
+  }, [canViewTrips, tripsPage, pageSize, search]);
 
   if (!stats) return <p className="p-6">Cargando...</p>;
 
@@ -121,9 +135,15 @@ export default function Dashboard() {
       </div>
 
       {/* 2. Tabla de últimos viajes */}
-      {canViewTrips && <div className="mb-8">
+        {canViewTrips && <div className="mb-8">
+        {tripsError && <p role="alert" className="text-danger mb-3">{tripsError}</p>}
         <DataTable
-            title="Últimos Viajes"
+              title="Últimos Viajes"
+              pagination={pagination}
+              onPageChange={setTripsPage}
+              onPageSizeChange={value => { setPageSize(value); setTripsPage(1); }}
+              onSearchChange={value => { setSearch(value); setTripsPage(1); }}
+              loading={tripsLoading}
             columns={columns}
             data={viajes.map((v) => [
             v.origen,

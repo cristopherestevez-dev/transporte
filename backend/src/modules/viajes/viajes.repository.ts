@@ -1,3 +1,4 @@
+import { paginateQuery } from '../../shared/pagination';
 import { ViajeNacionalModel, ViajeInternacionalModel, IViaje } from './viajes.model';
 import { Model } from 'mongoose';
 
@@ -9,7 +10,7 @@ export class ViajesRepository {
     }
 
     async findAll(): Promise<IViaje[]> {
-        return this.model.find().sort({ createdAt: -1 });
+        return paginateQuery(this.model, this.model.find().sort({ createdAt: -1 }));
     }
 
     async findById(id: string): Promise<IViaje | null> {

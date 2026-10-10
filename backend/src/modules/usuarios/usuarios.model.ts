@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IUsuario extends Document {
+    usuario?: string;
     email: string;
     nombre: string;
     imagen?: string;
@@ -18,6 +19,7 @@ export interface IUsuario extends Document {
 
 const UsuarioSchema = new Schema<IUsuario>(
     {
+        usuario: { type: String, trim: true, lowercase: true, unique: true, sparse: true },
         email: {
             type: String,
             required: true,
@@ -64,10 +66,11 @@ const UsuarioSchema = new Schema<IUsuario>(
 
 // Definir permisos por perfil
 export const PERMISOS_POR_PERFIL = {
+    superadmin: ['configuracion'],
     operador_logistico: ['dashboard', 'camiones', 'viajes', 'choferes', 'cotizador', 'empresas'],
     operador_administrativo: ['dashboard', 'cotizador', 'facturacion', 'empresas'],
     operador_seguridad: ['dashboard', 'configuracion'],
-    chofer: ['mis-viajes'],
+    chofer: ['mis-viajes', 'mi-camion'],
 };
 
 export const Usuario = mongoose.model<IUsuario>('Usuario', UsuarioSchema);

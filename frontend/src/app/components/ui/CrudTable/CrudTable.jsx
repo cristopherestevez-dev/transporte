@@ -1,7 +1,9 @@
 "use client";
 import { Check, ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import api from '@/services/api';
+import AppSelect from '../AppSelect/AppSelect';
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 
 import ModalWrapper from "../ModalWrapper/ModalWrapper";
@@ -22,10 +24,12 @@ export default function CrudTable({
   allowCreate = true,
   defaultValues = {},
   extraActions, // (item) => JSX — acciones adicionales en la columna Acciones
+  listFilters = {},
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [form, setForm] = useState({});
+  const [fieldErrors, setFieldErrors] = useState({});
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [successOpen, setSuccessOpen] = useState(false);
@@ -34,11 +38,28 @@ export default function CrudTable({
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(5);
+  const [pagination, setPagination] = useState(null);
+  const [pageError, setPageError] = useState('');
+  const [pageLoading, setPageLoading] = useState(false);
+  const [revision, setRevision] = useState(0);
+  const filterKey = JSON.stringify(listFilters);
+  useEffect(() => {
+    if (!apiUrl) return;
+    let current = true;
+    setPageLoading(true); setPageError('');
+    api.getPage(apiUrl.replace('/api/backend', ''), { page: currentPage, pageSize, search: searchTerm, ...JSON.parse(filterKey) }).then(result => {
+      if (!current) return;
+      if (result.pagination?.totalPages && currentPage > result.pagination.totalPages) { setCurrentPage(result.pagination.totalPages); return; }
+      setData(result.data); setPagination(result.pagination);
+    }).catch(error => { if (current) setPageError(error.message); }).finally(() => { if (current) setPageLoading(false); });
+    return () => { current = false; };
+  }, [apiUrl, currentPage, pageSize, searchTerm, filterKey, revision]);
   const toast = useToast();
 
   // Filtrar datos por búsqueda
   const filteredData = useMemo(() => {
+    if (apiUrl) return data;
     if (!searchTerm.trim()) return data;
     const term = searchTerm.toLowerCase();
     return data.filter((item) =>
@@ -47,14 +68,16 @@ export default function CrudTable({
         return value && String(value).toLowerCase().includes(term);
       }),
     );
-  }, [data, searchTerm, columns]);
+  }, [data, searchTerm, columns, apiUrl]);
 
   // Calcular paginación
-  const totalPages = Math.ceil(filteredData.length / pageSize);
+  const totalResults = pagination?.total ?? filteredData.length;
+  const totalPages = Math.max(1, pagination?.totalPages ?? Math.ceil(filteredData.length / pageSize));
   const paginatedData = useMemo(() => {
+    if (apiUrl) return data;
     const start = (currentPage - 1) * pageSize;
     return filteredData.slice(start, start + pageSize);
-  }, [filteredData, currentPage, pageSize]);
+  }, [filteredData, currentPage, pageSize, apiUrl, data]);
 
   // Reset página cuando cambia búsqueda
   const handleSearch = (value) => {
@@ -70,6 +93,7 @@ export default function CrudTable({
   ];
 
   function openModal(item = null) {
+    setFieldErrors({});
     setEditingItem(item);
     const initialForm = { ...defaultValues };
     formFields.forEach((f) => {
@@ -81,7 +105,7 @@ export default function CrudTable({
         initialForm[f.key] =
           item && item[f.key] !== undefined && item[f.key] !== null
             ? item[f.key]
-            : "";
+            : defaultValues[f.key] ?? "";
       }
     });
     // Si editamos, preservamos todo el objeto original en el form para no perder datos extras
@@ -121,6 +145,14 @@ export default function CrudTable({
     }
 
     setSaving(true);
+    setFieldErrors({});
+    const responseError = async (response, fallback) => {
+      const payload = await response.json().catch(() => ({}));
+      if (payload.code === 'SERVICE_SUSPENDED') window.dispatchEvent(new Event('service-suspended'));
+      const errors = Array.isArray(payload.errors) ? payload.errors : [];
+      setFieldErrors(Object.fromEntries(errors.map(error => [error.field.split('.')[0], error.message])));
+      return new Error(errors.length ? errors.map(error => `${formFields.find(field => field.key === error.field)?.label || error.field}: ${error.message}`).join('; ') : payload.message || fallback);
+    };
     try {
       let savedItem;
       if (editingItem) {
@@ -131,7 +163,7 @@ export default function CrudTable({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
         });
-        if (!response.ok) throw new Error("Error al actualizar");
+        if (!response.ok) throw await responseError(response, "Error al actualizar");
         const json = await response.json();
         savedItem = json.data;
         // Actualizar en el estado local
@@ -156,7 +188,7 @@ export default function CrudTable({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
         });
-        if (!response.ok) throw new Error("Error al crear");
+        if (!response.ok) throw await responseError(response, "Error al crear");
         const json = await response.json();
         savedItem = json.data;
         // Agregar al estado local
@@ -167,6 +199,7 @@ export default function CrudTable({
       setModalOpen(false);
       setSuccessAddOpen(false);
       setEditingItem(null);
+      setRevision(value => value + 1);
     } catch (error) {
       console.error("Error guardando:", error);
       toast.error("Error al guardar: " + error.message);
@@ -196,6 +229,7 @@ export default function CrudTable({
         setConfirmOpen(false);
         setSuccessOpen(false);
         setItemToDelete(null);
+        setRevision(value => value + 1);
         toast.success("Registro eliminado correctamente");
       } catch (error) {
         console.error("Error eliminando:", error);
@@ -237,6 +271,9 @@ export default function CrudTable({
         </div>
       </div>
 
+      <div className="flex justify-end mb-3">
+        <AppSelect ariaLabel="Mostrar resultados" value={String(pageSize)} onChange={value => { setPageSize(Number(value)); setCurrentPage(1); }} options={[5, 15, 25].map(value => ({ value: String(value), label: `Mostrar ${value}` }))} compact className="w-36" />
+      </div>
       {/* Tabla */}
       <table className="w-full border-collapse rounded-lg overflow-visible shadow-sm">
         <thead className="bg-brand-navy border-b border-brand-navy">
@@ -347,18 +384,20 @@ export default function CrudTable({
         </tbody>
       </table>
 
+      {pageError && <p role="alert" className="text-danger mt-3">{pageError} <button onClick={() => setRevision(value => value + 1)} className="underline">Reintentar</button></p>}
+      {pageLoading && <p className="text-sm text-default-500 mt-3">Cargando resultados…</p>}
       {/* Paginación */}
-      {filteredData.length > pageSize && (
+      {(
         <div className="flex items-center justify-between mt-4 px-2">
           <span className="text-sm text-foreground/60">
-            Mostrando {(currentPage - 1) * pageSize + 1}-
-            {Math.min(currentPage * pageSize, filteredData.length)} de{" "}
-            {filteredData.length}
+            Mostrando {totalResults ? (currentPage - 1) * pageSize + 1 : 0}-
+            {Math.min(currentPage * pageSize, totalResults)} de{" "}
+            {totalResults}
           </span>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
+              disabled={currentPage === 1 || pageLoading}
               className="p-2 rounded-md border border-divider hover:bg-content2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft size={18} />
@@ -368,7 +407,7 @@ export default function CrudTable({
             </span>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
+              disabled={currentPage >= totalPages || pageLoading}
               className="p-2 rounded-md border border-divider hover:bg-content2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight size={18} />
@@ -472,6 +511,7 @@ export default function CrudTable({
                     )}
                   </>
                 )}
+                {fieldErrors[f.key] && <p role="alert" className="mt-1 text-sm text-danger">{fieldErrors[f.key]}</p>}
               </div>
             ))}
             <div className="flex justify-end gap-3">

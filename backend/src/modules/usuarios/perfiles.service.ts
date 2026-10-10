@@ -4,7 +4,7 @@ import { AppError } from '../../shared/errors/AppError';
 import { tenantContext } from '../../shared/tenant';
 
 export const PERMISOS_DISPONIBLES = ['dashboard', 'camiones', 'viajes', 'choferes', 'cotizador', 'empresas', 'facturacion', 'configuracion', 'mis-viajes', 'mi-camion'] as const;
-const labels: Record<string, string> = { operador_logistico: 'Operador Logístico', operador_administrativo: 'Operador Administrativo', operador_seguridad: 'Operador de Seguridad', chofer: 'Chofer' };
+const labels: Record<string, string> = { superadmin: 'Superadmin', operador_logistico: 'Operador Logístico', operador_administrativo: 'Operador Administrativo', operador_seguridad: 'Seguridad de empresa', chofer: 'Chofer' };
 const profileSchema = new Schema({
     perfil: { type: String, required: true, unique: true },
     codigo: String,
@@ -20,12 +20,13 @@ const storageKey = (perfil: string) => `${scope() || 'global'}:${perfil}`;
 
 export async function definicionesPerfiles(empresaId?: string) {
     const empresa = scope(empresaId);
-    const records = await PerfilModel.find({ empresaId: empresa || { $exists: false } });
+    const records = empresa ? [...await PerfilModel.find({ empresaId: { $exists: false } }), ...await PerfilModel.find({ empresaId: empresa })] : await PerfilModel.find({ empresaId: { $exists: false } });
     const map = Object.fromEntries(Object.entries(PERMISOS_POR_PERFIL).map(([perfil, permisos]) => [perfil, { perfil, nombre: labels[perfil], permisos: [...permisos], activo: true }]));
     for (const record of records) {
         const key = record.codigo || record.perfil;
         map[key] = { perfil: key, nombre: record.nombre || labels[key] || key, permisos: [...record.permisos], activo: record.activo !== false };
     }
+    if (empresa) delete map.superadmin;
     return Object.values(map);
 }
 export async function permisosPorPerfil(empresaId?: string): Promise<Record<Perfil, string[]>> {
@@ -33,10 +34,12 @@ export async function permisosPorPerfil(empresaId?: string): Promise<Record<Perf
     const map = Object.fromEntries(definitions.filter(profile => profile.activo).map(profile => [profile.perfil, profile.permisos]));
     if (!map.operador_seguridad) map.operador_seguridad = ['configuracion'];
     if (!map.operador_seguridad.includes('configuracion')) map.operador_seguridad.push('configuracion');
+    if (!scope(empresaId)) map.operador_seguridad = ['configuracion'];
     if (map.chofer) map.chofer = map.chofer.filter(permission => ['mis-viajes', 'mi-camion'].includes(permission));
     return map;
 }
 function validate(perfil: string, permisos: unknown) {
+    if (perfil === 'superadmin') throw new AppError('Superadmin está reservado al dueño de la plataforma', 403);
     if (!/^[a-z][a-z0-9_]{1,63}$/.test(perfil)) throw new AppError('Código de perfil inválido', 400);
     if (!Array.isArray(permisos) || permisos.length > 10 || permisos.some(value => typeof value !== 'string' || !PERMISOS_DISPONIBLES.includes(value as any))) throw new AppError('Permisos inválidos', 400);
     if (perfil === 'operador_seguridad' && !permisos.includes('configuracion')) throw new AppError('Seguridad debe conservar Configuración', 400);
@@ -57,6 +60,7 @@ export async function crearPerfil(perfil: string, nombre: string, permisos: unkn
     return PerfilModel.create({ perfil: storageKey(perfil), codigo: perfil, empresaId: scope(), nombre: nombre.trim(), permisos: values, actualizadoPor: email });
 }
 export async function eliminarPerfil(perfil: string, email: string) {
+    if (perfil === 'superadmin') throw new AppError('Superadmin está reservado al dueño de la plataforma', 403);
     if (perfil === 'operador_seguridad') throw new AppError('No se puede dar de baja el perfil de seguridad', 400);
     const filter = scope() ? { empresaId: scope() } : {};
     if (await Usuario.exists({ ...filter, $or: [{ perfiles: perfil }, { perfil }] })) throw new AppError('Quitá este perfil de los usuarios antes de darlo de baja', 409);

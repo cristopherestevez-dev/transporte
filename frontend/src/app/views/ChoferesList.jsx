@@ -35,6 +35,7 @@ const LicenseBadge = ({ date }) => {
 
 export default function ChoferesList() {
   const [choferes, setChoferes] = useState([]);
+  const [camiones, setCamiones] = useState([]);
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -61,12 +62,14 @@ export default function ChoferesList() {
     async function fetchData() {
       try {
         setLoading(true);
-        const [choferesData, viajesNac, viajesInt] = await Promise.all([
-          api.getChoferes(),
+        const [choferesData, viajesNac, viajesInt, camionesData] = await Promise.all([
+          api.getPage('/choferes').then(result => result.data),
           api.getViajesNacionales(),
-          api.getViajesInternacionales()
+          api.getViajesInternacionales(),
+          api.getCamiones()
         ]);
         setChoferes(choferesData || []);
+        setCamiones(camionesData || []);
         setTrips([...(viajesNac || []), ...(viajesInt || [])]);
       } catch (err) {
         setError(err.message);
@@ -157,6 +160,7 @@ export default function ChoferesList() {
                   },
                   { label: "DNI", key: "dni" },    
                   { label: "Teléfono", key: "telefono" },
+                  { label: "Camión", key: "camionId", render: value => camiones.find(camion => camion._id === value)?.patente || "Sin asignar" },
                   { 
                     label: "Vencimiento Licencia", 
                     key: "licencia",
@@ -178,6 +182,7 @@ export default function ChoferesList() {
                   { label: "Nombre", key: "nombre", required: true },
                   { label: "DNI", key: "dni", required: true },
                   { label: "Teléfono", key: "telefono" },
+                  { label: "Camión asignado", key: "camionId", type: "select", options: [{ value: "", label: "Sin asignar" }, ...camiones.map(camion => ({ value: camion._id, label: `${camion.patente} · ${camion.marca} ${camion.modelo}` }))] },
                   {label: "Vencimiento Licencia", key: "licencia", type: "date" , required: true},
                  
                 ]}

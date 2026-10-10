@@ -45,8 +45,8 @@ const CamionesList = () => {
         try {
           setLoading(true);
           const [camionesData, semirremolquesData] = await Promise.all([
-            api.getCamiones(),
-            api.getSemirremolques()
+            api.getPage('/camiones').then(result => result.data),
+            api.getPage('/semirremolques').then(result => result.data)
           ]);
           setCamiones(camionesData || []);
           setSemirremolques(semirremolquesData || []);

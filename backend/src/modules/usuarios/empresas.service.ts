@@ -17,10 +17,36 @@ export async function crearEmpresa(data: unknown, email: string) {
     if (await EmpresaOperadora.exists({ codigo: result.data.codigo })) throw new AppError('El código de empresa ya existe', 409);
     return EmpresaOperadora.create({ ...result.data, creadaPor: email });
 }
+export async function actualizarEmpresa(id: string, data: unknown) {
+    if (!tenantContext.getStore()?.superAdmin) throw new AppError('Solo el dueño de la plataforma puede habilitar o suspender empresas', 403);
+    const schema = companySchema.partial().extend({ estado: z.enum(['pendiente', 'aprobada', 'rechazada']).optional() });
+    const result = schema.safeParse(data);
+    if (!result.success || !mongoose.isValidObjectId(id)) throw new AppError('Datos de empresa inválidos', 400);
+    const update = result.data;
+    if (update.estado === 'pendiente' || update.estado === 'rechazada') update.activo = false;
+    if (update.activo === true) update.estado = 'aprobada';
+    const previous = await EmpresaOperadora.findById(id);
+    const empresa = await EmpresaOperadora.findByIdAndUpdate(id, { $set: update }, { new: true, runValidators: true });
+    if (!empresa) throw new AppError('Empresa no encontrada', 404);
+    if (previous?.estado === 'pendiente' && empresa.activo && empresa.administradorId) await Usuario.findOneAndUpdate({ _id: empresa.administradorId, empresaId: id, estado: 'pendiente' }, { $set: { activo: true, estado: 'aprobado', perfil: 'operador_seguridad', perfiles: ['operador_seguridad'], permisos: ['configuracion'] } });
+    return empresa;
+}
+export async function solicitarNuevaEmpresa(userId: string, data: unknown) {
+    const result = companySchema.omit({ activo: true }).safeParse(data);
+    if (!result.success) throw new AppError('Nombre o código de empresa inválido', 400);
+    const user = await Usuario.findById(userId);
+    if (!user || user.empresaId || user.perfil === 'superadmin' || user.perfiles.includes('superadmin')) throw new AppError('Tu cuenta ya tiene una empresa asignada', 409);
+    if (await EmpresaOperadora.exists({ codigo: result.data.codigo })) throw new AppError('El código de empresa ya existe', 409);
+    const empresa = await EmpresaOperadora.create({ ...result.data, activo: false, estado: 'pendiente', creadaPor: user.email, administradorId: user._id.toString() });
+    try {
+        await Usuario.findByIdAndUpdate(userId, { $set: { empresaId: empresa._id.toString(), activo: false, estado: 'pendiente', perfil: 'operador_seguridad', perfiles: ['operador_seguridad'], permisos: [] } });
+    } catch (error) { await EmpresaOperadora.deleteOne({ _id: empresa._id }); throw error; }
+    return empresa;
+}
 export async function solicitarEmpresa(userId: string, codigo: unknown) {
     if (typeof codigo !== 'string') throw new AppError('Indicá el código de la empresa', 400);
     const user = await Usuario.findById(userId);
-    if (!user || user.empresaId || (user.perfiles || []).includes('operador_seguridad') || user.perfil === 'operador_seguridad') throw new AppError('Esta solicitud ya tiene una empresa asignada', 409);
+    if (!user || user.empresaId || (user.perfiles || []).includes('superadmin') || user.perfil === 'superadmin') throw new AppError('Esta solicitud ya tiene una empresa asignada', 409);
     const empresa = await EmpresaOperadora.findOne({ codigo: codigo.trim().toLowerCase(), activo: true });
     if (!empresa) throw new AppError('Empresa no encontrada. Pedí el código a su administrador', 404);
     return Usuario.findByIdAndUpdate(userId, { $set: { empresaId: empresa._id.toString(), activo: false, estado: 'pendiente', perfil: null, perfiles: [], permisos: [] } }, { new: true });
