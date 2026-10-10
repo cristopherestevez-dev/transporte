@@ -1,16 +1,10 @@
 "use client";
+import { FileText, House, LogOut, Moon, PanelLeft, SlidersHorizontal, Sun, Scale } from "lucide-react";
+
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import {
-  HiMenuAlt3,
-  HiOutlineHome,
-  HiOutlineLogout,
-  HiOutlineAdjustments,
-  HiOutlineDocumentText,
-  HiSun,
-  HiMoon,
-} from "react-icons/hi";
+
 import { usePathname } from "next/navigation";
 import {
   IconBuilding,
@@ -44,10 +38,12 @@ export default function Sidebar() {
   const allMenuItems = [
     {
       name: "Dashboard",
-      icon: <HiOutlineHome />,
+      icon: <House />,
       href: "/dashboard",
       permiso: "dashboard",
     },
+    { name: "Mis viajes", icon: <IconRoutes />, href: "/mis-viajes", permiso: "mis-viajes" },
+    { name: "Mi camión", icon: <IconTruck />, href: "/mi-camion", permiso: "mi-camion" },
     {
       name: "Empresas",
       icon: <IconBuilding />,
@@ -80,13 +76,19 @@ export default function Sidebar() {
     // },
     {
       name: "Facturación",
-      icon: <HiOutlineDocumentText />,
+      icon: <FileText />,
       href: "/facturacion",
       permiso: "facturacion",
     },
     {
+      name: "Balance",
+      icon: <Scale />,
+      href: "/balance",
+      permiso: "facturacion",
+    },
+    {
       name: "Configuración",
-      icon: <HiOutlineAdjustments />,
+      icon: <SlidersHorizontal />,
       href: "/configuracion",
       permiso: "configuracion",
     },
@@ -94,9 +96,7 @@ export default function Sidebar() {
 
   // Filtrar menú según permisos del usuario
   const menuItems =
-    permisos.length > 0
-      ? allMenuItems.filter((item) => permisos.includes(item.permiso))
-      : allMenuItems; // Si no hay permisos, mostrar todo (para desarrollo)
+    allMenuItems.filter((item) => permisos.includes(item.permiso));
 
   return (
     <div
@@ -112,7 +112,7 @@ export default function Sidebar() {
           aria-label="Toggle sidebar"
           className="text-foreground min-w-10 h-10 px-0"
         >
-          <HiMenuAlt3 size={collapsed ? 26 : 32} />
+          <PanelLeft size={collapsed ? 26 : 32} />
         </Button>
       </div>
 
@@ -196,9 +196,9 @@ export default function Sidebar() {
                   transition={{ duration: 0.5, type: "spring" }}
                 >
                   {theme === "dark" ? (
-                    <HiMoon size={24} className="text-secondary" />
+                    <Moon size={24} className="text-secondary" />
                   ) : (
-                    <HiSun size={24} className="text-orange-500" />
+                    <Sun size={24} className="text-orange-500" />
                   )}
                 </motion.div>
               ) : (
@@ -215,9 +215,9 @@ export default function Sidebar() {
                     }}
                   >
                     {theme === "dark" ? (
-                      <HiMoon size={14} className="text-secondary" />
+                      <Moon size={14} className="text-secondary" />
                     ) : (
-                      <HiSun size={14} className="text-orange-500" />
+                      <Sun size={14} className="text-orange-500" />
                     )}
                   </motion.div>
                 </>

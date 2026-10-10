@@ -1,3 +1,4 @@
+import './shared/tenant';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -18,26 +19,28 @@ import { usuariosRoutes } from './modules/usuarios/usuarios.routes';
 import { mantenimientoRoutes } from './modules/mantenimiento/mantenimiento.routes';
 import notificationsRoutes from './modules/notifications/notifications.routes';
 
+import { authMiddleware, requirePermission } from './shared/middleware/authMiddleware';
+
 const app = express();
 
 // Middlewares
 app.use(helmet());
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '8mb' }));
 app.use(morgan('dev'));
 
 // Routes
 app.use('/api/usuarios', usuariosRoutes);
-app.use('/api/proveedores', proveedoresRoutes);
-app.use('/api/fleteros', fleterosRoutes);
-app.use('/api/camiones', camionesRoutes);
-app.use('/api/semirremolques', semirremolquesRoutes);
-app.use('/api/choferes', choferesRoutes);
-app.use('/api/viajes', viajesRoutes);
-app.use('/api/facturacion', facturacionRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/mantenimiento', mantenimientoRoutes);
-app.use('/api/notifications', notificationsRoutes);
+app.use('/api/proveedores', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['empresas', 'viajes', 'cotizador', 'facturacion'] : ['empresas']))(req, res, next), proveedoresRoutes);
+app.use('/api/fleteros', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['empresas', 'viajes', 'cotizador'] : ['empresas']))(req, res, next), fleterosRoutes);
+app.use('/api/camiones', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['camiones', 'cotizador'] : ['camiones']))(req, res, next), camionesRoutes);
+app.use('/api/semirremolques', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['camiones', 'cotizador'] : ['camiones']))(req, res, next), semirremolquesRoutes);
+app.use('/api/choferes', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['choferes', 'viajes', 'cotizador'] : ['choferes']))(req, res, next), choferesRoutes);
+app.use('/api/viajes', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['viajes', 'cotizador'] : ['viajes', 'cotizador']))(req, res, next), viajesRoutes);
+app.use('/api/facturacion', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['facturacion'] : ['facturacion']))(req, res, next), facturacionRoutes);
+app.use('/api/dashboard', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['dashboard'] : ['dashboard']))(req, res, next), dashboardRoutes);
+app.use('/api/mantenimiento', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['camiones'] : ['camiones']))(req, res, next), mantenimientoRoutes);
+app.use('/api/notifications', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['dashboard'] : ['dashboard']))(req, res, next), notificationsRoutes);
 
 app.get('/', (req, res) => {
     res.send('API is running...');

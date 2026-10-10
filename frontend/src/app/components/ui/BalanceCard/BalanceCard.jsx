@@ -1,14 +1,9 @@
 "use client";
+import { Banknote, CircleAlert, CircleCheck, Clock, TrendingDown, TrendingUp } from "lucide-react";
+
 
 import { useMemo } from "react";
-import {
-  HiTrendingUp,
-  HiTrendingDown,
-  HiCash,
-  HiClock,
-  HiExclamationCircle,
-  HiCheckCircle,
-} from "react-icons/hi";
+
 
 export default function BalanceCard({
   cobranzas = { nacionales: [], internacionales: [] },
@@ -25,8 +20,8 @@ export default function BalanceCard({
         .filter((i) => i.estado === "cobrado")
         .reduce((acc, i) => acc + i.monto, 0),
       pendiente: all
-        .filter((i) => i.estado === "pendiente")
-        .reduce((acc, i) => acc + i.monto, 0),
+        .filter((i) => i.estado === "pendiente" || i.estado === "pago_parcial")
+        .reduce((acc, i) => acc + (i.monto_restante ?? i.monto), 0),
       vencido: all
         .filter((i) => i.estado === "vencido")
         .reduce((acc, i) => acc + i.monto, 0),
@@ -39,11 +34,10 @@ export default function BalanceCard({
     const all = [...(pagos.nacionales || []), ...(pagos.internacionales || [])];
     return {
       pagado: all
-        .filter((i) => i.estado === "pagado")
-        .reduce((acc, i) => acc + i.monto, 0),
+        .reduce((acc, i) => acc + (i.estado === "pagado" ? i.monto : i.monto_pagado || 0), 0),
       pendiente: all
-        .filter((i) => i.estado === "pendiente")
-        .reduce((acc, i) => acc + i.monto, 0),
+        .filter((i) => i.estado === "pendiente" || i.estado === "pago_parcial")
+        .reduce((acc, i) => acc + (i.monto_restante ?? i.monto), 0),
       vencido: all
         .filter((i) => i.estado === "vencido")
         .reduce((acc, i) => acc + i.monto, 0),
@@ -67,7 +61,7 @@ export default function BalanceCard({
       {/* Balance Principal */}
       <div className="bg-content1 rounded-xl shadow-lg border border-divider p-6">
         <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-          <HiCash className="text-secondary" size={24} />
+          <Banknote className="text-secondary" size={24} />
           Balance General
         </h2>
 
@@ -78,9 +72,9 @@ export default function BalanceCard({
           >
             <div className="flex items-center justify-center gap-2 mb-2">
               {isPositiveBalance ? (
-                <HiTrendingUp className="text-green-500" size={28} />
+                <TrendingUp className="text-green-500" size={28} />
               ) : (
-                <HiTrendingDown className="text-red-500" size={28} />
+                <TrendingDown className="text-red-500" size={28} />
               )}
               <span className="text-sm font-medium text-default-500">
                 Balance Neto
@@ -97,7 +91,7 @@ export default function BalanceCard({
           {/* Por Cobrar */}
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 text-center border border-blue-200 dark:border-blue-800">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <HiTrendingUp className="text-blue-500" size={24} />
+              <TrendingUp className="text-blue-500" size={24} />
               <span className="text-sm font-medium text-default-500">
                 Por Cobrar
               </span>
@@ -111,7 +105,7 @@ export default function BalanceCard({
           {/* Por Pagar */}
           <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-6 text-center border border-orange-200 dark:border-orange-800">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <HiTrendingDown className="text-orange-500" size={24} />
+              <TrendingDown className="text-orange-500" size={24} />
               <span className="text-sm font-medium text-default-500">
                 Por Pagar
               </span>
@@ -132,7 +126,7 @@ export default function BalanceCard({
           <div className="space-y-3">
             <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
               <div className="flex items-center gap-2">
-                <HiCheckCircle className="text-green-500" size={20} />
+                <CircleCheck className="text-green-500" size={20} />
                 <span className="text-sm text-foreground">Cobrado</span>
               </div>
               <span className="font-bold text-green-600">
@@ -141,7 +135,7 @@ export default function BalanceCard({
             </div>
             <div className="flex justify-between items-center p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
               <div className="flex items-center gap-2">
-                <HiClock className="text-yellow-500" size={20} />
+                <Clock className="text-yellow-500" size={20} />
                 <span className="text-sm text-foreground">Pendiente</span>
               </div>
               <span className="font-bold text-yellow-600">
@@ -150,7 +144,7 @@ export default function BalanceCard({
             </div>
             <div className="flex justify-between items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
               <div className="flex items-center gap-2">
-                <HiExclamationCircle className="text-red-500" size={20} />
+                <CircleAlert className="text-red-500" size={20} />
                 <span className="text-sm text-foreground">Vencido</span>
               </div>
               <span className="font-bold text-red-600">
@@ -174,7 +168,7 @@ export default function BalanceCard({
           <div className="space-y-3">
             <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
               <div className="flex items-center gap-2">
-                <HiCheckCircle className="text-green-500" size={20} />
+                <CircleCheck className="text-green-500" size={20} />
                 <span className="text-sm text-foreground">Pagado</span>
               </div>
               <span className="font-bold text-green-600">
@@ -183,7 +177,7 @@ export default function BalanceCard({
             </div>
             <div className="flex justify-between items-center p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
               <div className="flex items-center gap-2">
-                <HiClock className="text-yellow-500" size={20} />
+                <Clock className="text-yellow-500" size={20} />
                 <span className="text-sm text-foreground">Pendiente</span>
               </div>
               <span className="font-bold text-yellow-600">
@@ -192,7 +186,7 @@ export default function BalanceCard({
             </div>
             <div className="flex justify-between items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
               <div className="flex items-center gap-2">
-                <HiExclamationCircle className="text-red-500" size={20} />
+                <CircleAlert className="text-red-500" size={20} />
                 <span className="text-sm text-foreground">Vencido</span>
               </div>
               <span className="font-bold text-red-600">

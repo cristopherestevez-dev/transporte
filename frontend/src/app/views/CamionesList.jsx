@@ -69,7 +69,7 @@ const CamionesList = () => {
         data={camiones}
         setData={setCamiones}
         key="camiones-list"
-        apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/camiones`}
+        apiUrl={`/api/backend/camiones`}
         columns={[
             { 
               label: "Patente", 
@@ -112,7 +112,7 @@ const CamionesList = () => {
           key="semirremolques-list"
           data={semirremolques}
           setData={setSemirremolques}
-          apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/semirremolques`}
+          apiUrl={`/api/backend/semirremolques`}
           columns={[
               { label: "Patente", key: "patente" },
               { label: "Marca", key: "marca" },

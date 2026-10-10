@@ -7,7 +7,12 @@ export async function middleware(req) {
 
   // Rutas públicas que no requieren autenticación
   // Incluimos /landing y /login
-  const publicRoutes = ["/landing", "/login", "/api/auth"];
+  const publicRoutes = ["/landing", "/login", "/registro", "/api/auth"];
+  const isStatic = pathname.startsWith("/_next") || pathname.includes(".");
+  if (pathname === "/registro" && !token) return NextResponse.redirect(new URL("/login", req.url));
+  const needsCompany = token && !token.empresaId && !(token.perfiles || [token.perfil]).includes("operador_seguridad");
+  const pending = token && (token.estado === "pendiente" || token.estado === "rechazado" || token.activo === false || needsCompany);
+  if (pending && !["/registro", "/landing"].includes(pathname) && !pathname.startsWith("/api/") && !isStatic) return NextResponse.redirect(new URL("/registro", req.url));
 
   // Verificar si es ruta pública
   const isPublicRoute = publicRoutes.some((route) =>

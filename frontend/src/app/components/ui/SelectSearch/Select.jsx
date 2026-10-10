@@ -1,9 +1,8 @@
 "use client";
+import { ChevronDown, Search } from "lucide-react";
 
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
 
 /**
  * Componente combinado de Select + Input Search
@@ -93,10 +92,9 @@ const SelectSearch = ({
         <span className="text-[var(--font-size-caption)] text-gray-700 dark:text-foreground/80 font-medium flex-1 mr-3 whitespace-nowrap overflow-hidden text-ellipsis">
           {currentOption?.selectedLabel || currentOption?.label}
         </span>
-        <FontAwesomeIcon
-          icon={faChevronDown}
+        <ChevronDown
           className="text-black dark:text-foreground transition-transform duration-300"
-          size="sm"
+          size={16}
           style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}
         />
 
@@ -152,18 +150,7 @@ const SelectSearch = ({
             className="pr-5 pl-2 h-full flex items-center justify-center text-[var(--color-primary)] hover:text-blue-800 transition-colors focus:outline-none"
             onClick={() => onSearch && onSearch()}
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M19.6328 17.8672L14.6875 12.918C15.668 11.5742 16.25 9.91797 16.25 8.125C16.25 3.63672 12.6133 0 8.125 0C3.63672 0 0 3.63672 0 8.125C0 12.6133 3.63672 16.25 8.125 16.25C9.91797 16.25 11.5742 15.6719 12.918 14.6875L17.8672 19.6328C18.3555 20.1211 19.1484 20.1211 19.6367 19.6328C20.125 19.1445 20.125 18.3516 19.6367 17.8633L19.6328 17.8672ZM8.125 13.75C5.02344 13.75 2.5 11.2266 2.5 8.125C2.5 5.02344 5.02344 2.5 8.125 2.5C11.2266 2.5 13.75 5.02344 13.75 8.125C13.75 11.2266 11.2266 13.75 8.125 13.75Z"
-                fill="currentColor"
-              />
-            </svg>
+            <Search size={20} />
           </button>
         </>
       )}

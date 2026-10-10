@@ -1,15 +1,9 @@
 "use client";
+import { Banknote, CreditCard, FileDown, FileText, Search, Upload, X } from "lucide-react";
 
-import { useState, useMemo, useRef, useEffect } from "react";
-import {
-  HiSearch,
-  HiX,
-  HiUpload,
-  HiDocumentDownload,
-  HiDocument,
-  HiCash,
-  HiCreditCard,
-} from "react-icons/hi";
+
+import { useState, useMemo, useRef } from "react";
+
 import {
   Modal,
   ModalContent,
@@ -26,7 +20,29 @@ export default function FacturacionTable({
   setData,
   title,
   tipo = "cobranzas",
+  apiUrl,
 }) {
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const savingRef = useRef(false);
+  const persist = async (itemId, updates) => {
+    if (savingRef.current) throw new Error("Esperá a que termine el guardado");
+    savingRef.current = true;
+    setSaving(true);
+    setSaveError("");
+    try {
+      const response = await fetch(`${apiUrl}/${itemId}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(updates),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.message || "No se pudo guardar");
+      setData(data.map(item => (item._id || item.id) === itemId ? json.data : item));
+      return json.data;
+    } catch (error) {
+      setSaveError(error.message);
+      throw error;
+    } finally { savingRef.current = false; setSaving(false); }
+  };
   const [filters, setFilters] = useState({
     razon_social: "",
     cuit: "",
@@ -154,10 +170,11 @@ export default function FacturacionTable({
   const hasActiveFilters = Object.values(filters).some((v) => v !== "");
 
   // Cambiar estado de un item
-  const handleEstadoChange = (itemId, newEstado) => {
+  const handleEstadoChange = async (itemId, newEstado) => {
+    if (savingRef.current) return;
     if (!setData) return;
 
-    const currentItem = data.find((i) => i.id === itemId);
+    const currentItem = data.find((i) => (i._id || i.id) === itemId);
     if (!currentItem) return;
 
     // Si intenta cambiar de "Pagado" a otra cosa, no permitir (a menos que sea admin o similar, pero por ahora bloqueado)
@@ -180,47 +197,8 @@ export default function FacturacionTable({
       return;
     }
 
-    const updatedData = data.map((item) =>
-      item.id === itemId ? { ...item, estado: newEstado } : item,
-    );
-    setData(updatedData);
+    try { await persist(itemId, { estado: newEstado }); } catch { /* Error shown above the table. */ }
   };
-
-  // Auto-corregir estados vencidos visualmente
-  useEffect(() => {
-    if (!data || !setData) return;
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const updates = [];
-    data.forEach((item) => {
-      // Solo chequear si está pendiente
-      if (item.estado === "pendiente") {
-        const fechaEmision = new Date((item.fecha || "") + "T00:00:00");
-        const plazo = item.plazo || 30;
-        const vencimiento = new Date(fechaEmision);
-        vencimiento.setDate(fechaEmision.getDate() + plazo);
-
-        // Si vencimiento < hoy, ya venció
-        if (vencimiento < today) {
-          updates.push({ ...item, estado: "vencido" });
-        }
-      }
-    });
-
-    if (updates.length > 0) {
-      const updatedData = data.map((item) => {
-        const update = updates.find((u) => u.id === item.id);
-        return update ? update : item;
-      });
-      // Evitar loop infinito: solo actualizar si hay cambios reales
-      if (JSON.stringify(updatedData) !== JSON.stringify(data)) {
-        console.log("Auto-corrigiendo estados vencidos:", updates.length);
-        setData(updatedData);
-      }
-    }
-  }, [data, setData]);
 
   // Función auxiliar para abrir el modal de pago
   const openPaymentModal = (item) => {
@@ -234,10 +212,10 @@ export default function FacturacionTable({
     setPaymentModalOpen(true);
   };
 
-  const confirmStatusChange = () => {
+  const confirmStatusChange = async () => {
     if (!pendingStatusChange) return;
     const { itemId, newEstado } = pendingStatusChange;
-    const item = data.find((i) => i.id === itemId);
+    const item = data.find((i) => (i._id || i.id) === itemId);
 
     setConfirmModalOpen(false);
     setPendingStatusChange(null);
@@ -245,10 +223,7 @@ export default function FacturacionTable({
     if (newEstado === "pagado") {
       openPaymentModal(item);
     } else {
-      const updatedData = data.map((i) =>
-        i.id === itemId ? { ...i, estado: newEstado } : i,
-      );
-      setData(updatedData);
+      try { await persist(itemId, { estado: newEstado }); } catch { /* Error shown above. */ }
     }
   };
 
@@ -278,7 +253,7 @@ export default function FacturacionTable({
     if (metodosPago.cheque.enabled) {
       cheques.forEach((c) => (total += parseFloat(c.monto) || 0));
     }
-    return total;
+    return Math.round(total * 100) / 100;
   }, [metodosPago, cheques]);
 
   // Agregar cheque
@@ -299,7 +274,8 @@ export default function FacturacionTable({
   };
 
   // Confirmar pago y generar PDF
-  const confirmPayment = () => {
+  const confirmPayment = async () => {
+    if (savingRef.current) return;
     if (!paymentItem || !setData) return;
 
     // Verificar que al menos un método esté habilitado
@@ -311,11 +287,19 @@ export default function FacturacionTable({
       return;
     }
 
+    const remaining = paymentItem.monto_restante ?? paymentItem.monto;
+    if (!Number.isFinite(totalIngresado) || totalIngresado <= 0 || totalIngresado > remaining) {
+      setSaveError("El pago debe ser mayor que cero y no superar el saldo pendiente");
+      return;
+    }
+    const invalidMethod = ["efectivo", "transferencia"].some(name => metodosPago[name].enabled && !(Number(metodosPago[name].monto) > 0));
+    const invalidCheque = metodosPago.cheque.enabled && cheques.some(c => !c.numero.trim() || !(Number(c.monto) > 0));
+    if (invalidMethod || invalidCheque) { setSaveError("Completá los métodos de pago con montos positivos y los números de cheque"); return; }
     // Calcular si es pago parcial
     const esPagoParcial =
       totalIngresado < (paymentItem.monto_restante ?? paymentItem.monto);
     const nuevoEstado = esPagoParcial ? "pago_parcial" : "pagado";
-    const montoPagado = (paymentItem.monto_pagado || 0) + totalIngresado;
+    const montoPagado = Math.round(((paymentItem.monto_pagado || 0) + totalIngresado) * 100) / 100;
     const montoRestante = paymentItem.monto - montoPagado;
 
     // Crear registro de pago para el historial
@@ -339,28 +323,12 @@ export default function FacturacionTable({
       monto_restante: montoRestante > 0 ? montoRestante : 0,
     };
 
-    const pdfUrl = generatePaymentOrder(
-      itemActualizadoParaPDF,
-      metodosPago,
-      cheques,
-    );
-
-    // Actualizar estado con URL del PDF y montos
-    const updatedData = data.map((item) =>
-      item.id === paymentItem.id
-        ? {
-            ...item,
-            estado: montoRestante <= 0 ? "pagado" : nuevoEstado,
-            metodos_pago: metodosPago,
-            cheques: metodosPago.cheque.enabled ? cheques : null,
-            orden_pago_url: pdfUrl,
-            monto_pagado: montoPagado,
-            monto_restante: montoRestante > 0 ? montoRestante : 0,
-            historial_pagos: historialActualizado,
-          }
-        : item,
-    );
-    setData(updatedData);
+    try {
+      const saved = await persist(paymentItem._id || paymentItem.id, {
+        historial_pagos: historialActualizado,
+      });
+      generatePaymentOrder(saved, metodosPago, cheques);
+    } catch { return; }
 
     // Cerrar modal
     setPaymentModalOpen(false);
@@ -575,7 +543,7 @@ export default function FacturacionTable({
     generateCopy("DUPLICADO - RECEPTOR", 0);
 
     // Guardar archivo
-    doc.save(`orden_pago_${item.numero_comprobante || item.id}.pdf`);
+    doc.save(`orden_pago_${item.numero_comprobante || (item._id || item.id)}.pdf`);
 
     // Retornar blob URL para visualización posterior
     const pdfBlob = doc.output("blob");
@@ -588,20 +556,19 @@ export default function FacturacionTable({
     fileInputRef.current?.click();
   };
 
-  const onFileSelected = (e) => {
+  const onFileSelected = async (e) => {
     const file = e.target.files?.[0];
     if (file && uploadingItemId && setData) {
-      const updatedData = data.map((item) =>
-        item.id === uploadingItemId
-          ? {
-              ...item,
-              orden_pago_pdf: file.name,
-              orden_pago_url: URL.createObjectURL(file),
-            }
-          : item,
-      );
-      setData(updatedData);
-      alert(`PDF "${file.name}" subido correctamente`);
+      try {
+        if (file.size > 5 * 1024 * 1024 || file.type !== "application/pdf") throw new Error("Elegí un PDF de hasta 5 MB");
+        const contents = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error("No se pudo leer el archivo"));
+          reader.readAsDataURL(file);
+        });
+        await persist(uploadingItemId, { orden_pago_pdf: file.name, orden_pago_url: contents });
+      } catch (error) { setSaveError(error.message); }
     }
     setUploadingItemId(null);
     e.target.value = "";
@@ -840,6 +807,7 @@ export default function FacturacionTable({
 
   return (
     <div className="bg-content1 rounded-lg shadow border border-divider overflow-hidden">
+      {saveError && <p role="alert" className="p-3 text-danger">{saveError}</p>}
       {/* Hidden file input */}
       <input
         type="file"
@@ -889,7 +857,7 @@ export default function FacturacionTable({
                     onChange={() => toggleMetodo("efectivo")}
                     className="w-4 h-4 accent-brand-navy"
                   />
-                  <HiCash
+                  <Banknote
                     size={22}
                     className={
                       metodosPago.efectivo.enabled
@@ -962,7 +930,7 @@ export default function FacturacionTable({
                     onChange={() => toggleMetodo("transferencia")}
                     className="w-4 h-4 accent-brand-navy"
                   />
-                  <HiCreditCard
+                  <CreditCard
                     size={22}
                     className={
                       metodosPago.transferencia.enabled
@@ -1035,7 +1003,7 @@ export default function FacturacionTable({
                     onChange={() => toggleMetodo("cheque")}
                     className="w-4 h-4 accent-brand-navy"
                   />
-                  <HiDocument
+                  <FileText
                     size={22}
                     className={
                       metodosPago.cheque.enabled
@@ -1110,7 +1078,7 @@ export default function FacturacionTable({
                           onClick={() => removeCheque(index)}
                           className="p-1 text-red-500 hover:text-red-700 transition"
                         >
-                          <HiX size={18} />
+                          <X size={18} />
                         </button>
                       )}
                     </div>
@@ -1195,6 +1163,8 @@ export default function FacturacionTable({
             </Button>
             <Button
               className="bg-brand-navy text-white hover:bg-brand-navy/80"
+              isDisabled={saving}
+              isLoading={saving}
               onPress={confirmPayment}
             >
               Confirmar y Generar Orden
@@ -1211,7 +1181,7 @@ export default function FacturacionTable({
             onClick={clearFilters}
             className="flex items-center gap-1 text-sm text-secondary hover:text-secondary/80 transition"
           >
-            <HiX size={16} /> Limpiar filtros
+            <X size={16} /> Limpiar filtros
           </button>
         )}
       </div>
@@ -1219,7 +1189,7 @@ export default function FacturacionTable({
       {/* Filters */}
       <div className="px-4 py-3 bg-content2 border-b border-divider grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-3">
         <div className="relative">
-          <HiSearch
+          <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 text-default-400"
             size={16}
           />
@@ -1234,7 +1204,7 @@ export default function FacturacionTable({
           />
         </div>
         <div className="relative">
-          <HiSearch
+          <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 text-default-400"
             size={16}
           />
@@ -1270,7 +1240,7 @@ export default function FacturacionTable({
           );
         })()}
         <div className="relative">
-          <HiSearch
+          <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 text-default-400"
             size={16}
           />
@@ -1354,7 +1324,7 @@ export default function FacturacionTable({
             ) : (
               filteredData.map((item) => (
                 <tr
-                  key={item.id}
+                  key={(item._id || item.id)}
                   className="bg-content1 hover:bg-content2 transition-colors border-b border-divider"
                 >
                   <td className="px-4 py-3 text-sm text-foreground">
@@ -1393,13 +1363,13 @@ export default function FacturacionTable({
                       if (item.estado === "cobrado") options.push({ label: "Cobrado", value: "cobrado", color: "text-green-600" });
 
                       const selectedOption = options.find((opt) => opt.value === item.estado) || options[0];
-                      const disabled = !setData || item.estado === "pagado" || item.estado === "cobrado";
+                      const disabled = saving || !setData || item.estado === "pagado" || item.estado === "cobrado";
 
                       return (
                         <SelectSearch
                           options={options}
                           selectedOption={selectedOption}
-                          onOptionChange={(opt) => handleEstadoChange(item.id, opt.value)}
+                          onOptionChange={(opt) => { if (!disabled) handleEstadoChange((item._id || item.id), opt.value); }}
                           className={`h-8 font-bold border-0 bg-transparent text-xs ${getEstadoColor(item.estado)} ${disabled ? "cursor-not-allowed opacity-80" : "cursor-pointer"}`}
                           width="130px"
                         />
@@ -1462,11 +1432,11 @@ export default function FacturacionTable({
                       {tipo === "cobranzas" && item.estado === "cobrado" && (
                         <>
                           <button
-                            onClick={() => handleFileUpload(item.id)}
+                            onClick={() => handleFileUpload((item._id || item.id))}
                             className="p-1 text-blue-500 hover:text-blue-700 transition"
                             title="Subir orden de pago (PDF)"
                           >
-                            <HiUpload size={18} />
+                            <Upload size={18} />
                           </button>
                           {item.orden_pago_pdf && (
                             <a
@@ -1476,7 +1446,7 @@ export default function FacturacionTable({
                               className="p-1 text-green-500 hover:text-green-700 transition"
                               title={`Ver: ${item.orden_pago_pdf}`}
                             >
-                              <HiDocument size={18} />
+                              <FileText size={18} />
                             </a>
                           )}
                         </>
@@ -1491,14 +1461,14 @@ export default function FacturacionTable({
                               className="p-1 text-blue-500 hover:text-blue-700 transition"
                               title="Ver orden de pago"
                             >
-                              <HiDocument size={18} />
+                              <FileText size={18} />
                             </button>
                             <button
                               onClick={() => generatePaymentReceipt(item)}
                               className="p-1 text-green-500 hover:text-green-700 transition"
                               title="Descargar orden de pago (PDF)"
                             >
-                              <HiDocumentDownload size={18} />
+                              <FileDown size={18} />
                             </button>
                           </>
                         )}

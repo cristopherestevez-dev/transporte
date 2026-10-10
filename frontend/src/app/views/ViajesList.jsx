@@ -9,6 +9,14 @@ import SelectSearch from "../components/ui/SelectSearch/Select";
 import SearchableSelect from "../components/ui/SearchableSelect/SearchableSelect";
 
 
+const tiposFactura = [
+  { value: "", label: "Sin factura" },
+  { value: "factura_a", label: "Factura A" },
+  { value: "factura_b", label: "Factura B" },
+  { value: "factura_c", label: "Factura C" },
+  { value: "factura_e", label: "Factura E" },
+];
+
 // Definimos los estados y sus colores
 const estados = [
   { value: "pendiente", label: "Pendiente", color: "text-yellow-500" },
@@ -154,6 +162,12 @@ const ViajesList = () => {
         }
     },
     { label: "Carga / Contenedor", key: "carga" },
+    { label: "Número de factura", key: "numero_comprobante", render: (value) => value || "-" },
+    {
+      label: "Tipo de factura",
+      key: "tipo_comprobante",
+      render: (value) => tiposFactura.find((tipo) => tipo.value === value)?.label || value || "-",
+    },
     {
       label: "Estado",
       key: "estado",
@@ -174,6 +188,8 @@ const ViajesList = () => {
   const formFields = [
     { label: "Origen", key: "origen", required: true },
     { label: "Destino", key: "destino", required: true },
+    { label: "Número de factura", key: "numero_comprobante" },
+    { label: "Tipo de factura", key: "tipo_comprobante", type: "select", options: tiposFactura },
     { label: "Fecha Salida", key: "fecha_salida", type: "date" },
     { 
       label: "Fecha Llegada", 
@@ -331,44 +347,59 @@ const ViajesList = () => {
     },
   ];
 
+  const renderTripTabs = (direccion) => {
+    const received = direccion === "recibida";
+    const belongs = (row) => (row.direccion_facturacion || "emitida") === direccion;
+    const fields = received
+      ? formFields.filter((field) => field.key !== "asignacion").map((field) =>
+          field.key === "proveedor" ? { ...field, label: "Empresa / Fletero que factura", render: ({ form, setForm }) => (
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">Empresa / Fletero que factura</label>
+              <SearchableSelect
+                options={[
+                  ...proveedoresOptions.map((item) => ({ label: item.nombre, value: `empresa:${item._id}` })),
+                  ...fleterosOptions.map((item) => ({ label: item.nombre, value: `fletero:${item._id}` })),
+                ]}
+                value={form.tipoAsignacion === "fletero" ? `fletero:${form.asignadoId}` : form.proveedorId ? `empresa:${form.proveedorId}` : ""}
+                onChange={(value) => {
+                  const [kind, id] = value.split(":");
+                  const selected = (kind === "fletero" ? fleterosOptions : proveedoresOptions).find((item) => item._id === id);
+                  setForm({ ...form, proveedor: selected?.nombre || "", proveedorId: kind === "empresa" ? id : "", tipoAsignacion: kind === "fletero" ? "fletero" : "ninguno", asignadoId: kind === "fletero" ? id : "" });
+                }}
+                placeholder="Seleccionar empresa o fletero..."
+              />
+            </div>
+          ) } : field)
+      : formFields;
+    const tableColumns = received
+      ? columns.filter((column) => column.key !== "asignadoId").map((column) => column.key === "proveedor" ? { ...column, label: "Empresa / Fletero que factura" } : column)
+      : columns;
+    return (
+      <TabsWrapper key={direccion} tabs={[
+        { label: "Nacionales", rows: nacionales, setter: setNacionales, endpoint: "nacionales" },
+        { label: "Internacionales", rows: internacionales, setter: setInternacionales, endpoint: "internacionales" },
+      ].map(({ label, rows, setter, endpoint }) => ({
+        label,
+        content: <CrudTable
+          title={`Viajes ${label.toLowerCase()} — ${received ? "facturas recibidas" : "facturas emitidas"}`}
+          data={rows.filter(belongs)}
+          setData={(updated) => setter((previous) => [...previous.filter((row) => !belongs(row)), ...updated])}
+          apiUrl={`/api/backend/viajes/${endpoint}`}
+          columns={tableColumns}
+          formFields={fields}
+          defaultValues={{ direccion_facturacion: direccion }}
+          validate={validateDates}
+        />,
+      }))} />
+    );
+  };
+
   return (
     <>
       <TabsWrapper
         tabs={[
-          {
-            label: "Nacionales",
-            content: (
-              <CrudTable
-                title="Viajes Nacionales"
-                data={nacionales}
-                setData={setNacionales}
-                apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/viajes/nacionales`}
-                columns={columns}
-                formFields={formFields}
-                openProveedorModal={(row) =>
-                  openProveedorModal({ ...row, type: "nacional" })
-                }
-                validate={validateDates}
-              />
-            ),
-          },
-          {
-            label: "Internacionales",
-            content: (
-              <CrudTable
-                title="Viajes Internacionales"
-                data={internacionales}
-                setData={setInternacionales}
-                apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/viajes/internacionales`}
-                columns={columns}
-                formFields={formFields}
-                openProveedorModal={(row) =>
-                  openProveedorModal({ ...row, type: "internacional" })
-                }
-                validate={validateDates}
-              />
-            ),
-          },
+          { label: "Viajes que facturamos", content: renderTripTabs("emitida") },
+          { label: "Viajes que nos facturan", content: renderTripTabs("recibida") },
         ]}
       />
 

@@ -1,5 +1,6 @@
+import { CircleCheck } from "lucide-react";
 import React, { useEffect } from "react";
-import { HiOutlineCheckCircle } from "react-icons/hi";
+
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function SuccessModal({ isOpen, onClose, message }) {
@@ -36,7 +37,7 @@ export default function SuccessModal({ isOpen, onClose, message }) {
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring" }}
             >
-              <HiOutlineCheckCircle size={56} className="text-success mb-4" />
+              <CircleCheck size={56} className="text-success mb-4" />
             </motion.div>
             <p className="text-center font-semibold text-lg text-foreground">
               {message}

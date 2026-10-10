@@ -115,3 +115,26 @@ html {
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #71717a; /* zinc-500 */
 }
+
+/* Consistent outline icon style across AtlasOps. */
+.lucide {
+  stroke-width: 1.75;
+  flex-shrink: 0;
+}
+
+/* Shared selection behavior for custom and HeroUI tabs. */
+.app-tab {
+  transform: scale(1);
+  transform-origin: center;
+  transition: transform 180ms ease-out, background-color 180ms ease-out, color 180ms ease-out;
+}
+
+.app-tab[data-selected="true"] {
+  transform: scale(1.04);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-tab {
+    transition: none;
+  }
+}

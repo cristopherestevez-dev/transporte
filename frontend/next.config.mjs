@@ -1,13 +1,2 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  async rewrites() {
-    return [
-      {
-        source: "/api/:path((?!auth).*)",
-        destination: "http://localhost:3001/api/:path*",
-      },
-    ];
-  },
-};
-
+const nextConfig = { distDir: process.env.NEXT_BUILD_DIR || ".next" };
 export default nextConfig;

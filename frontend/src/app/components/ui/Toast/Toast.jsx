@@ -1,20 +1,16 @@
 "use client";
+import { CircleCheck, CircleX, Info, TriangleAlert, X } from "lucide-react";
+
 import { createContext, useContext, useState, useCallback } from "react";
-import {
-  HiCheckCircle,
-  HiXCircle,
-  HiExclamation,
-  HiInformationCircle,
-  HiX,
-} from "react-icons/hi";
+
 
 const ToastContext = createContext(null);
 
 const icons = {
-  success: <HiCheckCircle className="w-5 h-5 text-green-500" />,
-  error: <HiXCircle className="w-5 h-5 text-red-500" />,
-  warning: <HiExclamation className="w-5 h-5 text-yellow-500" />,
-  info: <HiInformationCircle className="w-5 h-5 text-blue-500" />,
+  success: <CircleCheck className="w-5 h-5 text-green-500" />,
+  error: <CircleX className="w-5 h-5 text-red-500" />,
+  warning: <TriangleAlert className="w-5 h-5 text-yellow-500" />,
+  info: <Info className="w-5 h-5 text-blue-500" />,
 };
 
 const bgColors = {
@@ -40,7 +36,7 @@ function Toast({ id, message, type = "info", onClose }) {
         onClick={() => onClose(id)}
         className="p-1 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
       >
-        <HiX className="w-4 h-4 text-foreground/60" />
+        <X className="w-4 h-4 text-foreground/60" />
       </button>
     </div>
   );

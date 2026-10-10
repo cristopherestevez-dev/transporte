@@ -1,44 +1,25 @@
 import { NotificationModel, INotification } from './notifications.model';
 
+function visible(userId: string, permissions: string[]) {
+    const types: string[] = [];
+    if (permissions.includes('choferes')) types.push('LICENCIA');
+    if (permissions.includes('camiones')) types.push('SEGURO');
+    if (permissions.includes('facturacion')) types.push('COBRANZA', 'PAGO');
+    return { $or: [{ userId }, { type: { $in: types } }] };
+}
 export class NotificationRepository {
-    async create(data: Partial<INotification>): Promise<INotification> {
-        return await NotificationModel.create(data);
+    async create(data: Partial<INotification>): Promise<INotification> { return NotificationModel.create(data); }
+    async findByUserOrRole(userId: string, permissions: string[]): Promise<INotification[]> {
+        return NotificationModel.find({ ...visible(userId, permissions), readBy: { $ne: userId } }).sort({ createdAt: -1 });
     }
-
-    async findByUserOrRole(userId: string, role?: string): Promise<INotification[]> {
-        const query: any = {
-            $or: [{ userId }]
-        };
-
-        if (role) {
-            query.$or.push({ role });
-        }
-
-        return await NotificationModel.find(query).sort({ createdAt: -1 });
+    async findExisting(type: string, resourceId: string): Promise<INotification | null> { return NotificationModel.findOne({ type, resourceId }); }
+    async markAsRead(id: string, userId: string, permissions: string[]): Promise<INotification | null> {
+        return NotificationModel.findOneAndUpdate({ _id: id, ...visible(userId, permissions) }, { $addToSet: { readBy: userId } }, { new: true });
     }
-
-    async findExisting(type: string, resourceId: string): Promise<INotification | null> {
-        return await NotificationModel.findOne({ type, resourceId });
+    async deleteForAll(userId: string, permissions: string[]): Promise<void> {
+        await NotificationModel.updateMany(visible(userId, permissions), { $addToSet: { readBy: userId } });
     }
-
-    async markAsRead(id: string): Promise<INotification | null> {
-        return await NotificationModel.findByIdAndUpdate(id, { isRead: true }, { new: true });
-    }
-
-    async deleteForAll(userId: string, role?: string): Promise<void> {
-        const query: any = {
-            $or: [{ userId }]
-        };
-        if (role) {
-            query.$or.push({ role });
-        }
-        await NotificationModel.deleteMany(query);
-    }
-
     async deleteInactive(types: string[], activeResourceIds: string[]): Promise<void> {
-        await NotificationModel.deleteMany({
-            type: { $in: types },
-            resourceId: { $nin: activeResourceIds }
-        });
+        await NotificationModel.deleteMany({ type: { $in: types }, resourceId: { $nin: activeResourceIds } });
     }
 }

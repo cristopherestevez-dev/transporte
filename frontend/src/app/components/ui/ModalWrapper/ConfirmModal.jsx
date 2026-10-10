@@ -1,6 +1,8 @@
 "use client";
+import { X } from "lucide-react";
+
 import React from "react";
-import { HiOutlineX } from "react-icons/hi";
+
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ConfirmModal({
@@ -46,7 +48,7 @@ export default function ConfirmModal({
               onClick={onClose}
               className="absolute top-4 right-4 text-default-400 hover:text-foreground transition-colors"
             >
-              <HiOutlineX size={20} />
+              <X size={20} />
             </button>
 
             <h2 className="text-xl font-bold mb-2 text-foreground">{title}</h2>

@@ -1,11 +1,15 @@
 "use client";
+import { ArrowLeft, Eye, Search, X } from "lucide-react";
+
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { FaArrowLeft, FaEye } from "react-icons/fa";
-import { HiSearch, HiX } from "react-icons/hi";
+
+
 import api from "@/services/api";
 import SelectSearch from "../components/ui/SelectSearch/Select";
+
+import { useAuth } from "../contexts/AuthContext";
 
 const PLAZO_OPTIONS = [15, 30, 45, 60, 90];
 
@@ -52,6 +56,8 @@ function getVencimientoBadge(fecha, plazo) {
 }
 
 export default function EmpresaDetail({ id }) {
+  const { tienePermiso } = useAuth();
+  const canViewBilling = tienePermiso("facturacion");
   const [empresa, setEmpresa] = useState(null);
   const [facturas, setFacturas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -67,7 +73,7 @@ export default function EmpresaDetail({ id }) {
         const found = proveedores.find((p) => (p._id || p.id) === id);
         setEmpresa(found);
 
-        if (found) {
+        if (found && canViewBilling) {
           // Fetch all facturacion data and filter by this empresa's razon_social/cuit
           const [cobranzasNac, cobranzasInt, pagosNac, pagosInt] =
             await Promise.all([
@@ -81,15 +87,18 @@ export default function EmpresaDetail({ id }) {
             ...(cobranzasNac || []).map((f) => ({
               ...f,
               origen: "Cobranza Nacional",
+              endpoint: "cobranzas/nacionales",
             })),
             ...(cobranzasInt || []).map((f) => ({
               ...f,
               origen: "Cobranza Internacional",
+              endpoint: "cobranzas/internacionales",
             })),
-            ...(pagosNac || []).map((f) => ({ ...f, origen: "Pago Nacional" })),
+            ...(pagosNac || []).map((f) => ({ ...f, origen: "Pago Nacional", endpoint: "pagos/nacionales" })),
             ...(pagosInt || []).map((f) => ({
               ...f,
               origen: "Pago Internacional",
+              endpoint: "pagos/internacionales",
             })),
           ];
 
@@ -115,15 +124,15 @@ export default function EmpresaDetail({ id }) {
       }
     }
     fetchData();
-  }, [id]);
+  }, [id, canViewBilling]);
 
   // Handle plazo change locally
-  const handlePlazoChange = (facturaId, newPlazo) => {
-    setFacturas((prev) =>
-      prev.map((f) =>
-        (f._id || f.id) === facturaId ? { ...f, plazo: Number(newPlazo) } : f,
-      ),
-    );
+  const handlePlazoChange = async (facturaId, newPlazo) => {
+    const item = facturas.find(f => (f._id || f.id) === facturaId);
+    try {
+      const saved = await api.patch(`/facturacion/${item.endpoint}/${facturaId}`, { plazo: Number(newPlazo) });
+      setFacturas(prev => prev.map(f => (f._id || f.id) === facturaId ? { ...f, ...saved } : f));
+    } catch (error) { alert("No se pudo guardar el plazo: " + error.message); }
   };
 
   // View factura PDF
@@ -183,7 +192,7 @@ export default function EmpresaDetail({ id }) {
               href="/empresas"
               className="p-2 -ml-2 rounded-full hover:bg-content2 transition-colors"
             >
-              <FaArrowLeft className="text-foreground/70" />
+              <ArrowLeft className="text-foreground/70" />
             </Link>
             <div>
               <h1 className="text-xl font-bold flex items-center gap-2">
@@ -216,7 +225,7 @@ export default function EmpresaDetail({ id }) {
         {/* Search bar */}
         <div className="mb-6 flex items-center gap-3">
           <div className="relative flex-1 max-w-sm">
-            <HiSearch
+            <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-default-400"
               size={18}
             />
@@ -233,7 +242,7 @@ export default function EmpresaDetail({ id }) {
               onClick={() => setSearchTerm("")}
               className="flex items-center gap-1 text-foreground/60 hover:text-danger text-sm"
             >
-              <HiX size={16} /> Limpiar
+              <X size={16} /> Limpiar
             </button>
           )}
           <span className="text-sm text-foreground/50 ml-auto">
@@ -366,7 +375,7 @@ export default function EmpresaDetail({ id }) {
                             className="p-2 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
                             title="Ver factura"
                           >
-                            <FaEye size={16} />
+                            <Eye size={16} />
                           </button>
                         </td>
                       </tr>

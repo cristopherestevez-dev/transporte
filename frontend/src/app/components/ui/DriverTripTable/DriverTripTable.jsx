@@ -6,7 +6,7 @@ import { useToast } from "../Toast/Toast";
 const InputCell = ({ row, field, bg = "bg-content1", onChange }) => (
   <input
     type="number"
-    className={`w-full h-full text-right px-1 focus:outline-none focus:ring-1 focus:ring-blue-500 ${bg}`}
+    className={`w-full min-h-8 h-full text-foreground text-right px-2 focus:outline-none focus:ring-2 focus:ring-focus ${bg}`}
     value={row[field] === 0 ? "" : row[field]}
     onChange={(e) => onChange(row.id, field, e.target.value)}
   />
@@ -274,7 +274,7 @@ export default function DriverTripTable({ trips = [] }) {
       await Promise.all(
         data.map(async (row) => {
           const endpoint = row.tipoViaje === "nacional" ? "nacionales" : "internacionales";
-          const url = `${process.env.NEXT_PUBLIC_API_URL}/viajes/${endpoint}/${row.id}`;
+          const url = `/api/backend/viajes/${endpoint}/${row.id}`;
           
           const payload = {
             tarifaTotalAr: row.tarifaTotalAr,
@@ -320,99 +320,91 @@ export default function DriverTripTable({ trips = [] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <button
-          onClick={handleSaveAll}
-          disabled={savingPlanilla}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition disabled:opacity-50 text-sm shadow flex items-center gap-2"
-        >
-          {savingPlanilla ? "Guardando..." : "Guardar Planilla en Servidor"}
-        </button>
-      </div>
 
-      <div className="overflow-x-auto border border-divider rounded shadow-lg">
-      <table className="min-w-full text-xs border-collapse">
+
+      <div className="overflow-x-auto bg-content1 text-foreground border border-divider rounded shadow-lg">
+      <table className="min-w-full text-xs border-collapse [&_th]:border-divider [&_td]:border-divider dark:[color-scheme:dark]">
         <thead>
           {/* Fila 1 */}
           <tr className="bg-content2 text-center font-bold border-b border-divider text-[10px] md:text-xs">
-            <th className="border p-1 bg-cyan-300" rowSpan={3}>
+            <th className="border p-1 bg-cyan-300 text-slate-900 dark:bg-cyan-950 dark:text-cyan-100" rowSpan={3}>
               N°
             </th>
-            <th className="border p-1 bg-cyan-300" rowSpan={3}>
+            <th className="border p-1 bg-cyan-300 text-slate-900 dark:bg-cyan-950 dark:text-cyan-100" rowSpan={3}>
               FECHA
             </th>
-            <th className="border p-1 bg-cyan-300" rowSpan={3}>
+            <th className="border p-1 bg-cyan-300 text-slate-900 dark:bg-cyan-950 dark:text-cyan-100" rowSpan={3}>
               VIAJE
             </th>
-            <th className="border p-1 bg-cyan-300" rowSpan={3}>
+            <th className="border p-1 bg-cyan-300 text-slate-900 dark:bg-cyan-950 dark:text-cyan-100" rowSpan={3}>
               CONTENEDOR N° O CARGA
             </th>
-            <th className="border p-1 bg-orange-400" colSpan={8}>
+            <th className="border p-1 bg-orange-400 text-slate-900 dark:bg-orange-950 dark:text-orange-100" colSpan={8}>
               TARIFA
             </th>
-            <th className="border p-1 bg-green-400" colSpan={8}>
+            <th className="border p-1 bg-green-400 text-slate-900 dark:bg-green-950 dark:text-green-100" colSpan={8}>
               VIATICOS
             </th>
-            <th className="border p-1 bg-purple-500 text-white" rowSpan={3}>
+            <th className="border p-1 bg-purple-600 text-white dark:bg-purple-950 dark:text-purple-100" rowSpan={3}>
               ADELANTOS
             </th>
-            <th className="border p-1 bg-emerald-500 text-white animate-pulse" rowSpan={3}>
+            <th className="border p-1 bg-emerald-600 text-white dark:bg-emerald-950 dark:text-emerald-100" rowSpan={3}>
               PAGO (ARS)
             </th>
-            <th className="border p-1 bg-yellow-300" rowSpan={3}>
+            <th className="border p-1 bg-yellow-300 text-slate-900 dark:bg-yellow-950 dark:text-yellow-100" rowSpan={3}>
               SUBTOTALES
             </th>
           </tr>
           {/* Fila 2 */}
           <tr className="bg-content2/50 text-center font-semibold border-b border-divider text-[10px] md:text-xs">
             {/* Tarifa Subheaders */}
-            <th className="border p-1 bg-orange-300">CHOFER</th>
-            <th className="border p-1 bg-orange-300">TOTAL(AR)</th>
-            <th className="border p-1 bg-orange-300">TOTAL(USD)</th>
-            <th className="border p-1 bg-orange-300">CHOFER(USD)</th>
-            <th className="border p-1 bg-orange-300">CHOFER(AR)</th>
-            <th className="border p-1 bg-orange-300" colSpan={2}>
+            <th className="border p-1 bg-orange-300 text-slate-900 dark:bg-orange-950 dark:text-orange-100">CHOFER</th>
+            <th className="border p-1 bg-orange-300 text-slate-900 dark:bg-orange-950 dark:text-orange-100">TOTAL(AR)</th>
+            <th className="border p-1 bg-orange-300 text-slate-900 dark:bg-orange-950 dark:text-orange-100">TOTAL(USD)</th>
+            <th className="border p-1 bg-orange-300 text-slate-900 dark:bg-orange-950 dark:text-orange-100">CHOFER(USD)</th>
+            <th className="border p-1 bg-orange-300 text-slate-900 dark:bg-orange-950 dark:text-orange-100">CHOFER(AR)</th>
+            <th className="border p-1 bg-orange-300 text-slate-900 dark:bg-orange-950 dark:text-orange-100" colSpan={2}>
               ESTADIA
             </th>
-            <th className="border border-divider p-1 bg-default-500 text-white">
+            <th className="border border-divider p-1 bg-slate-600 text-white dark:bg-slate-800 dark:text-slate-100">
               TOTAL CHOFER
             </th>
 
             {/* Viaticos Subheaders */}
-            <th className="border p-1 bg-green-300">CHILENO</th>
-            <th className="border p-1 bg-green-300">PEAJE CH</th>
-            <th className="border p-1 bg-green-300">DEVOL CH</th>
-            <th className="border border-divider p-1 bg-default-500 text-white">
+            <th className="border p-1 bg-green-300 text-slate-900 dark:bg-green-950 dark:text-green-100">CHILENO</th>
+            <th className="border p-1 bg-green-300 text-slate-900 dark:bg-green-950 dark:text-green-100">PEAJE CH</th>
+            <th className="border p-1 bg-green-300 text-slate-900 dark:bg-green-950 dark:text-green-100">DEVOL CH</th>
+            <th className="border border-divider p-1 bg-slate-600 text-white dark:bg-slate-800 dark:text-slate-100">
               RESTO CH
             </th>
-            <th className="border p-1 bg-green-300">ARGENTINO</th>
-            <th className="border p-1 bg-green-300">PEAJE AR</th>
-            <th className="border p-1 bg-green-300">DEVOL AR</th>
-            <th className="border border-divider p-1 bg-default-500 text-white">
+            <th className="border p-1 bg-green-300 text-slate-900 dark:bg-green-950 dark:text-green-100">ARGENTINO</th>
+            <th className="border p-1 bg-green-300 text-slate-900 dark:bg-green-950 dark:text-green-100">PEAJE AR</th>
+            <th className="border p-1 bg-green-300 text-slate-900 dark:bg-green-950 dark:text-green-100">DEVOL AR</th>
+            <th className="border border-divider p-1 bg-slate-600 text-white dark:bg-slate-800 dark:text-slate-100">
               RESTO AR
             </th>
           </tr>
           {/* Fila 3 */}
           <tr className="bg-content2/50 text-center font-semibold border-b border-divider text-[10px] md:text-xs">
-            <th className="border p-1 bg-orange-200">%</th>
+            <th className="border p-1 bg-orange-200 text-slate-900 dark:bg-orange-950 dark:text-orange-100">%</th>
             {/* Placeholder alignment */}
-            <th className="border p-1 bg-orange-200"></th>
-            <th className="border p-1 bg-orange-200"></th>
-            <th className="border p-1 bg-orange-200"></th>
-            <th className="border p-1 bg-orange-200"></th>
-            <th className="border p-1 bg-orange-200">CH</th>
-            <th className="border p-1 bg-orange-200">AR</th>
-            <th className="border border-divider p-1 bg-default-300"></th>
+            <th className="border p-1 bg-orange-200 text-slate-900 dark:bg-orange-950 dark:text-orange-100"></th>
+            <th className="border p-1 bg-orange-200 text-slate-900 dark:bg-orange-950 dark:text-orange-100"></th>
+            <th className="border p-1 bg-orange-200 text-slate-900 dark:bg-orange-950 dark:text-orange-100"></th>
+            <th className="border p-1 bg-orange-200 text-slate-900 dark:bg-orange-950 dark:text-orange-100"></th>
+            <th className="border p-1 bg-orange-200 text-slate-900 dark:bg-orange-950 dark:text-orange-100">CH</th>
+            <th className="border p-1 bg-orange-200 text-slate-900 dark:bg-orange-950 dark:text-orange-100">AR</th>
+            <th className="border border-divider p-1 bg-content2"></th>
 
             {/* Viaticos row 3 empty placeholders */}
-            <th className="border p-1 bg-green-200"></th>
-            <th className="border p-1 bg-green-200"></th>
-            <th className="border p-1 bg-green-200"></th>
-            <th className="border border-divider p-1 bg-default-300"></th>
-            <th className="border p-1 bg-green-200"></th>
-            <th className="border p-1 bg-green-200"></th>
-            <th className="border p-1 bg-green-200"></th>
-            <th className="border border-divider p-1 bg-default-300"></th>
+            <th className="border p-1 bg-green-200 text-slate-900 dark:bg-green-950 dark:text-green-100"></th>
+            <th className="border p-1 bg-green-200 text-slate-900 dark:bg-green-950 dark:text-green-100"></th>
+            <th className="border p-1 bg-green-200 text-slate-900 dark:bg-green-950 dark:text-green-100"></th>
+            <th className="border border-divider p-1 bg-content2"></th>
+            <th className="border p-1 bg-green-200 text-slate-900 dark:bg-green-950 dark:text-green-100"></th>
+            <th className="border p-1 bg-green-200 text-slate-900 dark:bg-green-950 dark:text-green-100"></th>
+            <th className="border p-1 bg-green-200 text-slate-900 dark:bg-green-950 dark:text-green-100"></th>
+            <th className="border border-divider p-1 bg-content2"></th>
           </tr>
         </thead>
         <tbody>
@@ -449,7 +441,7 @@ export default function DriverTripTable({ trips = [] }) {
               <td className="border p-0">
                 {renderInput(row, "estadiaAr")}
               </td>
-              <td className="border px-2 py-1 text-right font-bold bg-default-200">
+              <td className="border px-2 py-1 text-right font-bold bg-content2">
                 {row.totalChofer.toLocaleString()}
               </td>
 
@@ -463,7 +455,7 @@ export default function DriverTripTable({ trips = [] }) {
               <td className="border p-0">
                 {renderInput(row, "devolCh")}
               </td>
-              <td className="border px-2 py-1 text-right font-bold bg-default-200">
+              <td className="border px-2 py-1 text-right font-bold bg-content2">
                 {row.restoCh.toLocaleString()}
               </td>
 
@@ -477,7 +469,7 @@ export default function DriverTripTable({ trips = [] }) {
               <td className="border p-0">
                 {renderInput(row, "devolAr")}
               </td>
-              <td className="border px-2 py-1 text-right font-bold bg-default-200">
+              <td className="border px-2 py-1 text-right font-bold bg-content2">
                 {row.restoAr.toLocaleString()}
               </td>
 
@@ -515,7 +507,7 @@ export default function DriverTripTable({ trips = [] }) {
             </tr>
           ))}
           {/* TOTALES GENERALES */}
-          <tr className="font-bold bg-default-200 text-[10px] md:text-xs">
+          <tr className="font-bold bg-content2 text-[10px] md:text-xs">
             <td colSpan={4} className="border p-2 text-right">
               TOTALES
             </td>
@@ -553,7 +545,7 @@ export default function DriverTripTable({ trips = [] }) {
                 .reduce((a, b) => a + (b.estadiaAr || 0), 0)
                 .toLocaleString()}
             </td>
-            <td className="border p-1 text-right bg-default-300">
+            <td className="border p-1 text-right bg-content2">
               {data
                 .reduce((a, b) => a + (b.totalChofer || 0), 0)
                 .toLocaleString()}
@@ -571,7 +563,7 @@ export default function DriverTripTable({ trips = [] }) {
             <td className="border p-1 text-right">
               {data.reduce((a, b) => a + (b.devolCh || 0), 0).toLocaleString()}
             </td>
-            <td className="border p-1 text-right bg-default-300">
+            <td className="border p-1 text-right bg-content2">
               {data.reduce((a, b) => a + (b.restoCh || 0), 0).toLocaleString()}
             </td>
             <td className="border p-1 text-right">
@@ -585,7 +577,7 @@ export default function DriverTripTable({ trips = [] }) {
             <td className="border p-1 text-right">
               {data.reduce((a, b) => a + (b.devolAr || 0), 0).toLocaleString()}
             </td>
-            <td className="border p-1 text-right bg-default-300">
+            <td className="border p-1 text-right bg-content2">
               {data.reduce((a, b) => a + (b.restoAr || 0), 0).toLocaleString()}
             </td>
 
@@ -612,6 +604,15 @@ export default function DriverTripTable({ trips = [] }) {
           </tr>
         </tbody>
       </table>
+       <div className="flex justify-end m-4">
+        <button
+          onClick={handleSaveAll}
+          disabled={savingPlanilla}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition disabled:opacity-50 text-sm shadow flex items-center gap-2"
+        >
+          {savingPlanilla ? "Guardando..." : "Guardar Planilla"}
+        </button>
+      </div>
     </div>
   </div>
   );

@@ -1,11 +1,26 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
 import { Logo } from "@/app/components/ui/Logo";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const handlePasswordLogin = async (event) => {
+    event.preventDefault(); setSaving(true); setError("");
+    try {
+      const result = await signIn("credentials", { email, password, redirect: false, callbackUrl: "/dashboard" });
+      if (result?.ok) { setPassword(""); router.replace("/dashboard"); router.refresh(); }
+      else { setError(result?.error === "CredentialsSignin" ? "Email o contraseña incorrectos" : "No se pudo iniciar sesión. Intentá nuevamente en unos minutos."); setSaving(false); }
+    } catch { setError("No se pudo conectar con el servidor"); setSaving(false); }
+  };
   const handleGoogleLogin = () => {
     signIn("google", { callbackUrl: "/dashboard" });
   };
@@ -54,6 +69,17 @@ export default function LoginPage() {
             </p>
           </motion.div>
 
+          <form onSubmit={handlePasswordLogin} className="w-full space-y-4 mb-6">
+            <label className="grid gap-1 text-sm text-gray-200">Email
+              <input required type="email" autoComplete="username" value={email} onChange={(event) => setEmail(event.target.value)} className="rounded-[10px] bg-white/10 border border-white/10 text-white px-3 py-3 outline-none focus:ring-2 focus:ring-cyan-400/40" />
+            </label>
+            <label className="grid gap-1 text-sm text-gray-200">Contraseña
+              <input required type="password" autoComplete="current-password" maxLength={128} value={password} onChange={(event) => setPassword(event.target.value)} className="rounded-[10px] bg-white/10 border border-white/10 text-white px-3 py-3 outline-none focus:ring-2 focus:ring-cyan-400/40" />
+            </label>
+            {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
+            <button disabled={saving} className="w-full rounded-[10px] bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 disabled:opacity-60">{saving ? "Ingresando…" : "Ingresar"}</button>
+          </form>
+          <div className="flex items-center gap-3 w-full text-xs text-gray-400 mb-5"><span className="h-px bg-white/10 flex-1" />O continuá con<span className="h-px bg-white/10 flex-1" /></div>
           {/* Botón de Google */}
           <motion.button
             initial={{ opacity: 0, y: 20 }}

@@ -4,7 +4,12 @@ export interface IUsuario extends Document {
     email: string;
     nombre: string;
     imagen?: string;
-    perfil: 'operador_logistico' | 'operador_administrativo' | 'operador_seguridad' | null;
+    passwordHash?: string;
+    perfil: string | null;
+    empresaId?: string;
+    choferId?: string;
+    estado: 'pendiente' | 'aprobado' | 'rechazado';
+    perfiles: Perfil[];
     permisos: string[];
     activo: boolean;
     createdAt: Date;
@@ -25,14 +30,21 @@ const UsuarioSchema = new Schema<IUsuario>(
             required: true,
             trim: true,
         },
+        choferId: { type: String },
+        empresaId: { type: String, index: true },
+        estado: { type: String, enum: ['pendiente', 'aprobado', 'rechazado'], default: 'aprobado' },
+        passwordHash: { type: String, select: false },
         imagen: {
             type: String,
             default: null,
         },
         perfil: {
             type: String,
-            enum: ['operador_logistico', 'operador_administrativo', 'operador_seguridad', null],
             default: null,
+        },
+        perfiles: {
+            type: [String],
+            default: [],
         },
         permisos: {
             type: [String],
@@ -45,6 +57,8 @@ const UsuarioSchema = new Schema<IUsuario>(
     },
     {
         timestamps: true,
+        toJSON: { transform: (_doc, result) => { delete result.passwordHash; return result; } },
+        toObject: { transform: (_doc, result) => { delete result.passwordHash; return result; } },
     }
 );
 
@@ -53,6 +67,14 @@ export const PERMISOS_POR_PERFIL = {
     operador_logistico: ['dashboard', 'camiones', 'viajes', 'choferes', 'cotizador', 'empresas'],
     operador_administrativo: ['dashboard', 'cotizador', 'facturacion', 'empresas'],
     operador_seguridad: ['dashboard', 'configuracion'],
+    chofer: ['mis-viajes'],
 };
 
 export const Usuario = mongoose.model<IUsuario>('Usuario', UsuarioSchema);
+
+export type Perfil = string;
+
+export function perfilesAsignados(usuario: { perfiles?: string[]; perfil?: string | null }): Perfil[] {
+    const assigned = usuario.perfiles?.length ? usuario.perfiles : usuario.perfil ? [usuario.perfil] : [];
+    return [...new Set(assigned)].filter((perfil): perfil is Perfil => typeof perfil === 'string' && /^[a-z][a-z0-9_]{1,63}$/.test(perfil));
+}

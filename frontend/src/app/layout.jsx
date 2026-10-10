@@ -4,6 +4,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/ui/Navbar/Navbar";
 import Sidebar from "./components/ui/SideBar/Sidebar";
+import AccessGate from "./components/AccessGate";
 import { usePathname } from "next/navigation";
 
 const poppins = Poppins({
@@ -16,7 +17,7 @@ import { Providers } from "./providers";
 import { ToastProvider } from "./components/ui/Toast/Toast";
 
 // Rutas públicas sin sidebar/navbar
-const publicRoutes = ["/landing", "/login"];
+const publicRoutes = ["/landing", "/login", "/registro"];
 
 export default function RootLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -49,7 +50,7 @@ export default function RootLayout({ children }) {
                   <Navbar
                     onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
                   />
-                  <main className="p-6 overflow-auto">{children}</main>
+                  <main className="p-6 overflow-auto"><AccessGate>{children}</AccessGate></main>
                 </div>
               </div>
             )}

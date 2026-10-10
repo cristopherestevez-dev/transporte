@@ -1,19 +1,31 @@
 "use client";
+import { Bell, LogOut, Menu, UserRound } from "lucide-react";
+
 
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button, Dropdown } from "@heroui/react";
-import { HiOutlineUser, HiOutlineLogout, HiMenu, HiBell } from "react-icons/hi";
+
 import WeatherWidget from "@/app/components/ui/WeatherWidget/WeatherWidget";
 import { Logo } from "@/app/components/ui/Logo";
 import ConfirmModal from "@/app/components/ui/ModalWrapper/ConfirmModal";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import api from "@/services/api";
+import AppSelect from "@/app/components/ui/AppSelect/AppSelect";
+import { perfilOptions } from "@/lib/perfiles";
+import { useToast } from "@/app/components/ui/Toast/Toast";
 import { useAuth } from "@/app/contexts/AuthContext";
 
 export default function Navbar({ onToggleSidebar }) {
-  const { user, perfil, logout, authenticated } = useAuth();
+  const { user, perfil, perfiles, cambiarPerfil, logout, authenticated, tienePermiso } = useAuth();
+  const [switchingProfile, setSwitchingProfile] = useState(false);
+  const toast = useToast();
+  const handleProfileChange = async (value) => {
+    setSwitchingProfile(true);
+    try { await cambiarPerfil(value); }
+    catch (error) { toast.error(error.message); setSwitchingProfile(false); }
+  };
   const pathname = usePathname();
 
   // Estado para abrir/cerrar dropdown de usuario
@@ -35,10 +47,12 @@ export default function Navbar({ onToggleSidebar }) {
   };
 
   useEffect(() => {
+    setAlerts([]);
+    if (!tienePermiso("dashboard")) return;
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 60000); // Check every minute
     return () => clearInterval(interval);
-  }, []);
+  }, [perfil]);
 
   const handleNotificationClick = async (alert) => {
     try {
@@ -108,7 +122,7 @@ export default function Navbar({ onToggleSidebar }) {
   // ... existing code ...
 
   return (
-    <header className="w-full bg-content1 shadow-md px-6 py-4 flex justify-between items-center border-b border-divider transition-colors duration-300">
+    <header className="w-full bg-content1 shadow-md px-6 py-4 flex flex-wrap gap-3 justify-between items-center border-b border-divider transition-colors duration-300">
       {/* ... Logo ... */}
       <div className="flex items-center">
         <Link href="/dashboard">
@@ -116,7 +130,8 @@ export default function Navbar({ onToggleSidebar }) {
         </Link>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
+
         {pathname !== "/dashboard" && <WeatherWidget mode="navbar" />}
 
         {/* Notificaciones */}
@@ -125,7 +140,7 @@ export default function Navbar({ onToggleSidebar }) {
             onClick={toggleNotifications}
             className="relative p-2 text-foreground/60 hover:text-foreground focus:outline-none"
           >
-            <HiBell size={24} />
+            <Bell size={24} />
             {alerts.length > 0 && (
               <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full">
                 {alerts.length}
@@ -200,33 +215,41 @@ export default function Navbar({ onToggleSidebar }) {
 
         {/* Usuario y acciones */}
         <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={toggleDropdown}
-            className="flex items-center space-x-2 text-foreground/70 hover:text-foreground focus:outline-none"
-          >
-            {user?.image ? (
-              <img
-                src={user.image}
-                alt="Profile"
-                className="w-8 h-8 rounded-full border border-divider"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-brand-navy flex items-center justify-center text-white text-xs">
-                {user?.name?.charAt(0) || <HiOutlineUser size={16} />}
-              </div>
-            )}
-            <div className="hidden sm:flex flex-col items-start text-left ml-1">
-              <span className="font-medium text-sm leading-tight text-foreground">
-                {user?.name || "Invitado"}
-              </span>
-              {perfil && (
-                <span className="text-[10px] font-bold text-foreground/50 tracking-wide">
-                  {perfil.replace(/[_-]/g, " ").charAt(0).toUpperCase() +
-                    perfil.replace(/[_-]/g, " ").slice(1).toLowerCase()}
-                </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleDropdown}
+              aria-label="Abrir menú de usuario"
+              className="shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-focus/40"
+            >
+              {user?.image ? (
+                <img src={user.image} alt="Imagen de perfil" className="w-9 h-9 rounded-full" />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-brand-navy flex items-center justify-center text-white text-xs">
+                  {user?.name?.charAt(0) || <UserRound size={16} />}
+                </div>
               )}
+            </button>
+            <div className="flex min-w-0 flex-col items-start">
+              <button
+                type="button"
+                onClick={toggleDropdown}
+                className="px-2 text-left font-medium text-sm leading-tight text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-focus/40 rounded"
+              >
+                {user?.name || "Invitado"}
+              </button>
+              {authenticated && perfiles.length > 0 && <AppSelect
+                compact
+                ariaLabel="Perfil activo"
+                className="w-[195px] max-w-full"
+                value={perfil}
+                options={perfiles.map((value) => ({ value, label: user?.perfilLabels?.[value] || perfilOptions.find((option) => option.value === value)?.label || value }))}
+                disabled={switchingProfile}
+                onChange={handleProfileChange}
+              />}
+              {switchingProfile && <span role="status" className="px-2 text-[10px] text-default-500">Cambiando perfil…</span>}
             </div>
-          </button>
+          </div>
 
           {/* Dropdown */}
           <AnimatePresence>
@@ -269,7 +292,7 @@ export default function Navbar({ onToggleSidebar }) {
                     className="w-full flex items-center gap-2 px-3 py-2.5 text-sm rounded-xl hover:bg-red-500/10 text-foreground/70 hover:text-red-500 transition-colors group"
                   >
                     <div className="p-1.5 rounded-lg bg-content2 group-hover:bg-red-500/15 text-foreground/50 group-hover:text-red-500 transition-colors">
-                      <HiOutlineLogout size={16} />
+                      <LogOut size={16} />
                     </div>
                     <span>Cerrar sesión</span>
                   </button>

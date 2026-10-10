@@ -1,9 +1,16 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = "/api/backend";
+
+async function checkResponse(res) {
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || `Error HTTP: ${res.status}`);
+  }
+}
 
 class ApiService {
   async get(endpoint) {
     const res = await fetch(`${API_URL}${endpoint}`);
-    if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+    await checkResponse(res);
     const json = await res.json();
     return json.data;
   }
@@ -14,7 +21,7 @@ class ApiService {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+    await checkResponse(res);
     const json = await res.json();
     return json.data;
   }
@@ -25,7 +32,7 @@ class ApiService {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+    await checkResponse(res);
     const json = await res.json();
     return json.data;
   }
@@ -36,7 +43,7 @@ class ApiService {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+    await checkResponse(res);
     const json = await res.json();
     return json.data;
   }
@@ -230,10 +237,7 @@ class ApiService {
 
   // Users
   async getUsers() {
-    const res = await fetch(`${API_URL}/users`);
-    if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
-    const json = await res.json();
-    return json.data.users;
+    return this.get("/usuarios");
   }
 
   // Mantenimiento

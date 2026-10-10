@@ -1,9 +1,11 @@
 "use client";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown } from "lucide-react";
+
 
 import { useState, useMemo } from "react";
 import { Card, CardHeader, CardBody } from "@heroui/react";
-import { FaSortUp, FaSortDown, FaSort } from "react-icons/fa";
-import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
+
+
 
 export default function DataTable({ title, columns, data }) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -64,9 +66,9 @@ export default function DataTable({ title, columns, data }) {
 
   // Icono orden
   const SortIcon = ({ colIndex }) => {
-    if (sortConfig.key !== colIndex) return <FaSort className="inline-block ml-1 text-gray-400" />;
-    if (sortConfig.direction === "asc") return <FaSortUp className="inline-block ml-1 text-gray-600" />;
-    return <FaSortDown className="inline-block ml-1 text-gray-600" />;
+    if (sortConfig.key !== colIndex) return <ChevronsUpDown className="inline-block ml-1 text-gray-400" />;
+    if (sortConfig.direction === "asc") return <ChevronUp className="inline-block ml-1 text-gray-600" />;
+    return <ChevronDown className="inline-block ml-1 text-gray-600" />;
   };
 
   return (
@@ -133,7 +135,7 @@ export default function DataTable({ title, columns, data }) {
           disabled={currentPage === 1}
           className="px-3 py-1 rounded-md bg-blue-500 disabled:opacity-50 hover:bg-blue-300 transition"
         >
-         <HiChevronLeft size={20} className="text-white" />
+         <ChevronLeft size={20} className="text-white" />
         </button>
 
         <span className="text-foreground font-medium">
@@ -145,7 +147,7 @@ export default function DataTable({ title, columns, data }) {
           disabled={currentPage === pageCount}
           className="px-3 py-1 rounded-md bg-blue-500 disabled:opacity-50 hover:bg-blue-300 transition"
         >
-         <HiChevronRight size={20} className="text-white" />
+         <ChevronRight size={20} className="text-white" />
         </button>
       </div>
     </Card>

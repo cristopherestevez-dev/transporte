@@ -7,7 +7,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 
 export function Providers({ children }) {
   return (
-    <SessionProvider>
+    <SessionProvider refetchInterval={60} refetchOnWindowFocus>
       <AuthProvider>
         <HeroUIProvider>
           <NextThemesProvider attribute="class" defaultTheme="light">

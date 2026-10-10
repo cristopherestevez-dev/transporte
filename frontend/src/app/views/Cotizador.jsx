@@ -133,25 +133,23 @@ export default function Cotizador() {
               setCalculating(false);
             } else {
               console.warn("Google Maps API failed or returned explicit error:", status);
-              mockCalculation();
+              calculationFailed();
             }
           }
         );
       } catch (error) {
          console.error("Error initiating Google Maps service:", error);
-         mockCalculation();
+         calculationFailed();
       }
     } else {
-      mockCalculation();
+      calculationFailed();
     }
   };
 
-  const mockCalculation = () => {
-    setTimeout(() => {
-        const mockDist = Math.floor(Math.random() * 1500) + 100;
-        setDistance({ text: `${mockDist} km`, value: mockDist });
-        setCalculating(false);
-    }, 1000);
+  const calculationFailed = () => {
+    setDistance(null);
+    setCalculating(false);
+    toast.error("No se pudo calcular la distancia. Revisá la configuración de Maps y la ruta.");
   };
 
   const handleAddTrip = async () => {
@@ -196,7 +194,7 @@ export default function Cotizador() {
   const getResourceDetails = () => {
      if (!selectedResource) return null;
      const list = data[selectedType] || [];
-     return list.find( i => (i.id == selectedResource || i.patente == selectedResource));
+     return list.find( i => (i._id === selectedResource || i.id === selectedResource || i.patente === selectedResource));
   };
   const resourceDetails = getResourceDetails();
 
@@ -204,7 +202,7 @@ export default function Cotizador() {
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto min-h-screen bg-white">
       <Script 
-        src={`https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&loading=async`} 
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}&libraries=places&loading=async`}
         strategy="lazyOnload"
         onLoad={initAutocomplete}
       />
@@ -259,6 +257,7 @@ export default function Cotizador() {
                         selectedKey={selectedType}
                         onSelectionChange={(key) => { setSelectedType(key); setSelectedResource(""); }}
                         className="mb-6"
+                        classNames={{ tab: "app-tab" }}
                     >
                         <Tab key="camiones" title="Camiones" />
                         <Tab key="fleteros" title="Fleteros" />

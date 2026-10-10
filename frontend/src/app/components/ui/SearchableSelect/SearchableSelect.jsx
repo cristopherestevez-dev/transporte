@@ -1,7 +1,9 @@
 "use client";
+import { Check, ChevronsUpDown, Search } from "lucide-react";
+
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HiSelector, HiCheck, HiSearch } from "react-icons/hi";
+
 
 export default function SearchableSelect({
   options = [],
@@ -129,7 +131,7 @@ export default function SearchableSelect({
         >
           {selectedOption ? selectedOption.label : placeholder}
         </span>
-        <HiSelector className="w-5 h-5 text-default-400" />
+        <ChevronsUpDown className="w-5 h-5 text-default-400" />
       </button>
 
       {/* Dropdown */}
@@ -145,7 +147,7 @@ export default function SearchableSelect({
             {/* Search Input */}
             <div className="p-2 border-b border-divider bg-content2/30 sticky top-0">
               <div className="relative">
-                <HiSearch className="absolute left-2 top-2.5 text-default-400" />
+                <Search className="absolute left-2 top-2.5 text-default-400" />
                 <input
                   ref={inputRef}
                   type="text"
@@ -176,7 +178,7 @@ export default function SearchableSelect({
                     <span className="block truncate">{opt.label}</span>
                     {opt.value === value && (
                       <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-primary">
-                        <HiCheck className="w-5 h-5" />
+                        <Check className="w-5 h-5" />
                       </span>
                     )}
                   </li>

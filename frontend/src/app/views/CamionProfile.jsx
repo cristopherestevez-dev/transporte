@@ -1,21 +1,9 @@
 "use client";
+import { ArrowLeft, ChevronDown, ChevronUp, Droplets, Pencil, Plus, Save, Search, Settings, Trash2, Truck, Wrench, X } from "lucide-react";
+
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import {
-  FaArrowLeft,
-  FaPlus,
-  FaTrash,
-  FaChevronDown,
-  FaChevronUp,
-  FaOilCan,
-  FaCog,
-  FaTruckMonster,
-  FaWrench,
-  FaSave,
-  FaEdit,
-  FaSearch,
-  FaTimes,
-} from "react-icons/fa";
+
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/services/api";
 import ConfirmModal from "@/app/components/ui/ModalWrapper/ConfirmModal";
@@ -112,10 +100,12 @@ const MaintenanceCard = ({
   handleChange,
   requestDelete,
   previousRow,
+  onSave,
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
 
   // Auto-edit new rows
   useEffect(() => {
@@ -162,10 +152,12 @@ const MaintenanceCard = ({
     setExpanded(true);
   };
 
-  const handleSaveClick = (e) => {
+  const handleSaveClick = async (e) => {
+    if (saving) return;
     e.stopPropagation();
     const newErrors = {};
 
+    if (!row.fecha) newErrors.fecha = "La fecha es requerida";
     // Validation: Check vs Previous Row (Chronological order)
     if (previousRow) {
       const currentKm = parseFloat(row.km) || 0;
@@ -206,9 +198,14 @@ const MaintenanceCard = ({
       return;
     }
 
-    setErrors({});
-    setIsEditing(false);
-    setExpanded(false);
+    setSaving(true);
+    try {
+      await onSave(row);
+      setErrors({});
+      setIsEditing(false);
+      setExpanded(false);
+    } catch (error) { setErrors({ general: error.message }); }
+    finally { setSaving(false); }
   };
 
   // Generic Field Renderers
@@ -282,7 +279,7 @@ const MaintenanceCard = ({
                 : "bg-content2 text-foreground/50"
             }`}
           >
-            {expanded ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
+            {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </div>
           <div>
             <p className="text-xs text-foreground/50 font-bold uppercase tracking-wider">
@@ -377,11 +374,12 @@ const MaintenanceCard = ({
         <div className="ml-auto pl-4 border-l border-divider flex items-center gap-2">
           {isEditing ? (
             <button
+              disabled={saving}
               onClick={handleSaveClick}
               className="p-2 text-success hover:bg-success/10 rounded-lg transition-colors"
               title="Guardar cambios"
             >
-              <FaSave size={16} />
+              <Save size={16} />
             </button>
           ) : (
             <button
@@ -389,7 +387,7 @@ const MaintenanceCard = ({
               className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
               title="Editar registro"
             >
-              <FaEdit size={16} />
+              <Pencil size={16} />
             </button>
           )}
 
@@ -401,7 +399,7 @@ const MaintenanceCard = ({
             className="p-2 text-danger hover:bg-danger/10 rounded-lg transition-colors"
             title="Eliminar registro"
           >
-            <FaTrash size={14} />
+            <Trash2 size={14} />
           </button>
         </div>
       </div>
@@ -429,7 +427,7 @@ const MaintenanceCard = ({
 
               {/* 1. Aceite y Motor */}
               <div className="space-y-4">
-                <SectionHeader icon={FaOilCan} title="Lubricación y Motor" />
+                <SectionHeader icon={Droplets} title="Lubricación y Motor" />
 
                 {/* Aceite Block */}
                 <div className="bg-content1 p-4 rounded-xl border border-divider shadow-sm">
@@ -515,7 +513,7 @@ const MaintenanceCard = ({
 
               {/* 2. Aire y Refrigeración */}
               <div className="space-y-4">
-                <SectionHeader icon={FaWrench} title="Aire y Sistemas" />
+                <SectionHeader icon={Wrench} title="Aire y Sistemas" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {renderStandardInputs("filtro_aire", "Filtro Aire")}
                   {renderStandardInputs("secado_aire", "Secado de Aire")}
@@ -588,7 +586,7 @@ const MaintenanceCard = ({
 
               {/* 3. Rodado y Extras */}
               <div className="space-y-4">
-                <SectionHeader icon={FaTruckMonster} title="Rodado y Extras" />
+                <SectionHeader icon={Truck} title="Rodado y Extras" />
 
                 {/* Cubiertas */}
                 <div className="bg-content1 p-4 rounded-xl border border-divider shadow-sm">
@@ -767,9 +765,8 @@ export default function CamionProfile({ id }) {
         patente: truck?.patente || "",
         km: 0,
       };
-      const created = await api.createMantenimiento(id, newData);
-      // Mark as new for auto-edit
-      setMaintenanceLog([{ ...created, isNew: true }, ...maintenanceLog]);
+      // Drafts are persisted only after validation and explicit save.
+      setMaintenanceLog(prev => [{ ...newData, _id: `draft-${crypto.randomUUID()}`, isNew: true }, ...prev]);
     } catch (err) {
       console.error("Error creating maintenance record:", err);
     }
@@ -783,7 +780,7 @@ export default function CamionProfile({ id }) {
   const confirmDelete = async () => {
     if (rowToDelete) {
       try {
-        await api.deleteMantenimiento(rowToDelete);
+        if (!rowToDelete.startsWith("draft-")) await api.deleteMantenimiento(rowToDelete);
         setMaintenanceLog(maintenanceLog.filter((r) => r._id !== rowToDelete));
         setRowToDelete(null);
         setDeleteModalOpen(false);
@@ -810,14 +807,14 @@ export default function CamionProfile({ id }) {
     newLog[index] = updatedRow;
     setMaintenanceLog(newLog);
 
-    // Persist to backend (debounced by React batching)
-    if (updatedRow._id && field !== "isNew") {
-      api
-        .updateMantenimiento(updatedRow._id, { [field]: value })
-        .catch((err) =>
-          console.error("Error updating maintenance record:", err),
-        );
-    }
+  };
+
+  const saveRow = async (row) => {
+    const { _id, isNew, createdAt, updatedAt, ...payload } = row;
+    const saved = _id.startsWith("draft-")
+      ? await api.createMantenimiento(id, payload)
+      : await api.updateMantenimiento(_id, payload);
+    setMaintenanceLog(prev => prev.map(item => item._id === _id ? saved : item));
   };
 
   // Search
@@ -886,7 +883,7 @@ export default function CamionProfile({ id }) {
   if (!truck)
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background">
-        <FaTruckMonster className="text-6xl text-foreground/20" />
+        <Truck size={60} className=" text-foreground/20" />
         <p className="text-lg text-foreground/60">Vehículo no encontrado</p>
         <Link href="/dashboard" className="text-primary hover:underline">
           Volver al Dashboard
@@ -901,10 +898,10 @@ export default function CamionProfile({ id }) {
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Link
-              href="/dashboard/flota"
+              href="/camiones"
               className="p-2 -ml-2 rounded-full hover:bg-content2 transition-colors"
             >
-              <FaArrowLeft className="text-foreground/70" />
+              <ArrowLeft className="text-foreground/70" />
             </Link>
             <div>
               <h1 className="text-xl font-bold flex items-center gap-2">
@@ -932,7 +929,7 @@ export default function CamionProfile({ id }) {
               onClick={addRow}
               className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
             >
-              <FaPlus size={14} />
+              <Plus size={14} />
               <span>Nuevo Registro</span>
             </button>
           </div>
@@ -944,7 +941,7 @@ export default function CamionProfile({ id }) {
         {/* Search Bar */}
         <div className="mb-6 bg-content1 border border-divider rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
-            <FaSearch className="text-primary" size={14} />
+            <Search className="text-primary" size={14} />
             <span className="text-sm font-semibold text-foreground/70">
               Buscar Registros
             </span>
@@ -997,7 +994,7 @@ export default function CamionProfile({ id }) {
               }
               className="flex items-center gap-2 bg-primary text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <FaSearch size={11} />
+              <Search size={11} />
               {isSearching ? "Buscando..." : "Buscar"}
             </button>
             {isFiltered && (
@@ -1005,7 +1002,7 @@ export default function CamionProfile({ id }) {
                 onClick={clearFilters}
                 className="flex items-center gap-1 text-foreground/60 hover:text-danger px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-danger/10 transition-all"
               >
-                <FaTimes size={11} />
+                <X size={11} />
                 Limpiar filtros
               </button>
             )}
@@ -1014,7 +1011,7 @@ export default function CamionProfile({ id }) {
         {maintenanceLog.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-content1 rounded-2xl border border-dashed border-divider">
             <div className="w-16 h-16 bg-content2 rounded-full flex items-center justify-center mb-4">
-              <FaCog className="text-3xl text-foreground/20 animate-slow-spin" />
+              <Settings size={30} className=" text-foreground/20 animate-slow-spin" />
             </div>
             <h3 className="text-lg font-semibold text-foreground/70">
               Sin registros de mantenimiento
@@ -1041,6 +1038,7 @@ export default function CamionProfile({ id }) {
                   handleChange={handleChange}
                   requestDelete={() => requestDelete(row._id)}
                   previousRow={maintenanceLog[index + 1]}
+                  onSave={saveRow}
                 />
               ))}
             </AnimatePresence>

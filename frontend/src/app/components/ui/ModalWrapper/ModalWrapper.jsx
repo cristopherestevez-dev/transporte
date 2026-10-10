@@ -1,7 +1,8 @@
+import { X } from "lucide-react";
 // components/ModalWrapper.jsx
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HiOutlineX } from "react-icons/hi";
+
 
 export default function ModalWrapper({ isOpen, onClose, title, children }) {
   return (
@@ -31,7 +32,7 @@ export default function ModalWrapper({ isOpen, onClose, title, children }) {
                 onClick={onClose}
                 className="text-default-400 hover:text-foreground transition-colors"
               >
-                <HiOutlineX size={20} />
+                <X size={20} />
               </button>
             </div>
             <div className="text-foreground">{children}</div>

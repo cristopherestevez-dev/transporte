@@ -49,7 +49,7 @@ export default function EmpresasYFleteros() {
               key="fleteros-proveedores"
               data={proveedores}
               setData={setProveedores}
-              apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/proveedores`}
+              apiUrl={`/api/backend/proveedores`}
               columns={[
                 {
                   label: "Nombre",
@@ -97,7 +97,7 @@ export default function EmpresasYFleteros() {
               key="fleteros"
               data={fleteros}
               setData={setFleteros}
-              apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/fleteros`}
+              apiUrl={`/api/backend/fleteros`}
               columns={[
                 { label: "Nombre", key: "nombre" },
                 { label: "CUIL/CUIT", key: "cuil_cuit" },

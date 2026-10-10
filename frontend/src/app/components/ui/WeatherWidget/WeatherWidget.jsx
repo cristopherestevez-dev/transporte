@@ -1,12 +1,10 @@
 "use client";
+import { CircleAlert, CircleCheck, Radio } from "lucide-react";
+
 
 import React, { useEffect, useState } from "react";
 import { IconWeather } from "../Icons/Icons";
-import {
-  HiOutlineStatusOnline,
-  HiExclamationCircle,
-  HiCheckCircle,
-} from "react-icons/hi";
+
 
 const LAT = -32.8167;
 const LON = -70.0833;
@@ -23,28 +21,8 @@ function getWeatherDescription(code) {
   return "Variable";
 }
 
-function getPassStatus(code) {
-  // Logic to simulate pass status
-  // Snow (71-77) or Thunderstorm (95-99) or Freezing Drizzle (56-57) usually closes the pass
-  if (code >= 71 && code <= 77)
-    return {
-      status: "CERRADO",
-      color: "bg-red-500",
-      icon: <HiExclamationCircle />,
-    };
-  if (code >= 95 && code <= 99)
-    return {
-      status: "CERRADO",
-      color: "bg-red-500",
-      icon: <HiExclamationCircle />,
-    };
-  if (code >= 51 && code <= 67)
-    return {
-      status: "PRECAUCIÓN",
-      color: "bg-yellow-500",
-      icon: <HiExclamationCircle />,
-    };
-  return { status: "ABIERTO", color: "bg-green-500", icon: <HiCheckCircle /> };
+function getPassStatus() {
+  return { status: "SIN CONFIRMAR", color: "bg-slate-600", icon: <CircleAlert /> };
 }
 
 const RenderWeatherEffects = ({ code }) => {
@@ -177,7 +155,7 @@ export default function WeatherWidget({ mode = "card", className = "" }) {
         {/* Right: Pass Status */}
         <div className="flex flex-col items-center gap-3 bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20">
           <span className="text-white/80 text-sm font-medium uppercase tracking-widest">
-            Estado del Paso
+            Estado oficial del paso
           </span>
           <div
             className={`flex items-center gap-3 px-6 py-2 rounded-full shadow-lg ${passStatus.color} transition-transform hover:scale-105`}
@@ -187,6 +165,7 @@ export default function WeatherWidget({ mode = "card", className = "" }) {
               {passStatus.status}
             </span>
           </div>
+          <p className="text-xs text-center text-white/80">El clima no confirma si el paso está habilitado.</p>
         </div>
       </div>
     </div>

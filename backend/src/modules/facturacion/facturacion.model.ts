@@ -6,9 +6,17 @@ export interface IFacturacion extends Document {
     cuit: string;
     tipo_comprobante: string;
     numero_comprobante: string;
-    estado: 'pendiente' | 'cobrado' | 'pagado' | 'vencido';
+    estado: 'pendiente' | 'cobrado' | 'pagado' | 'vencido' | 'pago_parcial';
+    moneda?: 'ARS' | 'USD' | 'CLP';
     monto: number;
     plazo: number;
+    monto_pagado?: number;
+    monto_restante?: number;
+    historial_pagos?: any[];
+    metodos_pago?: any;
+    cheques?: any[];
+    orden_pago_pdf?: string;
+    orden_pago_url?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -19,9 +27,17 @@ const facturacionFields = {
     cuit: { type: String, required: true },
     tipo_comprobante: { type: String, required: true },
     numero_comprobante: { type: String, required: true },
-    estado: { type: String, enum: ['pendiente', 'cobrado', 'pagado', 'vencido'], default: 'pendiente' },
-    monto: { type: Number, required: true },
-    plazo: { type: Number, default: 30 },
+    estado: { type: String, enum: ['pendiente', 'cobrado', 'pagado', 'vencido', 'pago_parcial'], default: 'pendiente' },
+    moneda: { type: String, enum: ['ARS', 'USD', 'CLP'] },
+    monto: { type: Number, required: true, min: 0 },
+    plazo: { type: Number, default: 30, min: 0 },
+    monto_pagado: { type: Number, min: 0 },
+    monto_restante: { type: Number, min: 0 },
+    historial_pagos: { type: [Schema.Types.Mixed], default: [] },
+    metodos_pago: { type: Schema.Types.Mixed },
+    cheques: { type: [Schema.Types.Mixed], default: [] },
+    orden_pago_pdf: { type: String },
+    orden_pago_url: { type: String },
 };
 
 // Cobranzas - schemas separados para cada colección

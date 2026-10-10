@@ -1,7 +1,9 @@
 "use client";
+import { X } from "lucide-react";
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HiOutlineX } from "react-icons/hi";
+
 
 const ProveedorWrapper = ({ isOpen, onClose, proveedores = [], onSelect }) => {
   const [search, setSearch] = useState("");
@@ -45,7 +47,7 @@ const ProveedorWrapper = ({ isOpen, onClose, proveedores = [], onSelect }) => {
                 onClick={onClose}
                 className="text-default-400 hover:text-foreground transition-colors"
               >
-                <HiOutlineX size={20} />
+                <X size={20} />
               </button>
             </div>
 

@@ -1,4 +1,6 @@
 "use client";
+import { ArrowLeft } from "lucide-react";
+
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -7,7 +9,7 @@ import { Button } from "@heroui/react";
 import Link from "next/link";
 import api from "@/services/api";
 
-import { HiArrowLeft } from "react-icons/hi";
+
 
 // Helper para calcular dias restantes y color (Duplicado o mover a utils compartido)
 const LicenseBadge = ({ date }) => {
@@ -18,14 +20,14 @@ const LicenseBadge = ({ date }) => {
   const diffTime = expirationDate - today;
   const daysDiff = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
-  let colorClass = "bg-green-100 text-green-800";
+  let colorClass = "bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-300";
   
   if (daysDiff <= 60) {
-    colorClass = "bg-red-100 text-red-800";
+    colorClass = "bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300";
   } else if (daysDiff <= 90) {
-    colorClass = "bg-orange-100 text-orange-800";
+    colorClass = "bg-orange-100 text-orange-800 dark:bg-orange-500/15 dark:text-orange-300";
   } else if (daysDiff <= 120) {
-    colorClass = "bg-yellow-100 text-yellow-800";
+    colorClass = "bg-yellow-100 text-yellow-800 dark:bg-yellow-500/15 dark:text-yellow-300";
   }
 
   return (
@@ -93,12 +95,12 @@ export default function ChoferProfile() {
       <div className="flex items-center gap-4">
         <Link href="/choferes">
           <Button isIconOnly variant="light">
-            <HiArrowLeft size={24} />
+            <ArrowLeft size={24} />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">{driver.nombre}</h1>
-          <div className="flex gap-4 text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">{driver.nombre}</h1>
+          <div className="flex gap-4 text-sm text-default-500 mt-1">
             <span>DNI: {driver.dni}</span>
             <span>Tel: {driver.telefono}</span>
             <span className="flex items-center gap-2">
@@ -109,12 +111,12 @@ export default function ChoferProfile() {
       </div>
 
       {/* Spreadsheet Table */}
-      <div className="bg-white p-4 rounded-lg shadow">
+      <div className="bg-content1 text-foreground p-4 rounded-lg border border-divider shadow">
         <h2 className="text-lg font-semibold mb-4">Planilla de Viajes</h2>
         {trips.length > 0 ? (
            <DriverTripTable trips={trips} />
         ) : (
-            <p className="text-gray-500 italic">No hay viajes asignados a este chofer.</p>
+            <p className="text-default-500 italic">No hay viajes asignados a este chofer.</p>
         )}
       </div>
     </div>

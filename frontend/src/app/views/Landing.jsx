@@ -1,19 +1,11 @@
 "use client";
+import { Calculator, ChartColumn, ClipboardList, FileText, Globe, ShieldCheck, Truck, UsersRound, Zap } from "lucide-react";
+
 
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useEffect } from "react";
-import {
-  HiOutlineTruck,
-  HiOutlineClipboardList,
-  HiOutlineChartBar,
-  HiOutlineCalculator,
-  HiOutlineDocumentText,
-  HiOutlineUserGroup,
-  HiOutlineShieldCheck,
-  HiOutlineLightningBolt,
-  HiOutlineGlobe,
-} from "react-icons/hi";
+
 import { FcGoogle } from "react-icons/fc";
 import { Logo } from "@/app/components/ui/Logo";
 import "../globals.css";
@@ -34,32 +26,32 @@ const staggerContainer = {
 
 const features = [
   {
-    icon: HiOutlineTruck,
+    icon: Truck,
     title: "Gestión de Flota",
     description: "Control total de camiones, semirremolques y mantenimientos",
   },
   {
-    icon: HiOutlineClipboardList,
+    icon: ClipboardList,
     title: "Viajes en Tiempo Real",
     description: "Seguimiento de viajes nacionales e internacionales",
   },
   {
-    icon: HiOutlineChartBar,
+    icon: ChartColumn,
     title: "Dashboard Inteligente",
     description: "Métricas y KPIs de tu operación logística",
   },
   {
-    icon: HiOutlineCalculator,
+    icon: Calculator,
     title: "Cotizador Integrado",
     description: "Cotizaciones rápidas y precisas para tus clientes",
   },
   {
-    icon: HiOutlineDocumentText,
+    icon: FileText,
     title: "Facturación Automática",
     description: "Gestión de cobranzas y pagos simplificada",
   },
   {
-    icon: HiOutlineUserGroup,
+    icon: UsersRound,
     title: "Gestión de Equipo",
     description: "Choferes, fleteros y proveedores en un solo lugar",
   },
@@ -137,7 +129,7 @@ export default function LandingView() {
             variants={fadeInUp}
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-full text-blue-300 text-sm mb-8"
           >
-            <HiOutlineLightningBolt className="w-4 h-4" />
+            <Zap className="w-4 h-4" />
             Plataforma líder en gestión logística
           </motion.div>
 
@@ -317,7 +309,7 @@ export default function LandingView() {
           transition={{ duration: 0.6 }}
           className="max-w-4xl mx-auto text-center p-12 rounded-3xl bg-gradient-to-r from-blue-600/20 to-indigo-600/20 border border-blue-500/30"
         >
-          <HiOutlineGlobe className="w-16 h-16 mx-auto text-blue-400 mb-6" />
+          <Globe className="w-16 h-16 mx-auto text-blue-400 mb-6" />
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Comenzá a optimizar tu operación hoy
           </h2>

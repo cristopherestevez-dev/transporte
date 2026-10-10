@@ -1,4 +1,6 @@
 "use client";
+import { ChevronLeft, ChevronRight, Eye } from "lucide-react";
+
 
 import StatCard from "@/app/components/ui/CardWrapper/StatCard";
 import DataTable from "@/app/components/ui/TabWrapper/DataTable";
@@ -13,13 +15,17 @@ import {
 } from "@/app/components/ui/Icons/Icons";
 import WeatherWidget from "@/app/components/ui/WeatherWidget/WeatherWidget";
 
-import { HiOutlineChevronLeft, HiOutlineChevronRight, HiEye } from "react-icons/hi";
+
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/services/api";
 
+import { useAuth } from "../contexts/AuthContext";
+
 export default function Dashboard() {
+  const { tienePermiso } = useAuth();
+  const canViewTrips = tienePermiso("viajes");
   const [stats, setStats] = useState(null);
   const [viajes, setViajes] = useState([]);
   const [page, setPage] = useState(0);
@@ -29,7 +35,7 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const statsData = await api.getStats();
-        const recentTrips = await api.getRecentTrips();
+        const recentTrips = canViewTrips ? await api.getRecentTrips() : [];
         
         setStats(statsData);
         setViajes(recentTrips || []);
@@ -39,7 +45,7 @@ export default function Dashboard() {
     };
 
     fetchData();
-  }, []);
+  }, [canViewTrips]);
 
   if (!stats) return <p className="p-6">Cargando...</p>;
 
@@ -115,7 +121,7 @@ export default function Dashboard() {
       </div>
 
       {/* 2. Tabla de últimos viajes */}
-      <div className="mb-8">
+      {canViewTrips && <div className="mb-8">
         <DataTable
             title="Últimos Viajes"
             columns={columns}
@@ -136,12 +142,12 @@ export default function Dashboard() {
             v.fecha_salida, 
             <Link href={`/viajes/${v.type}/${v._id}`}>
                <div className="flex justify-center text-default-500 hover:text-primary transition cursor-pointer">
-                   <HiEye size={20} />
+                   <Eye size={20} />
                </div>
             </Link>
             ])}
         />
-      </div>
+      </div>}
 
       {/* 3. Carrusel de cards */}
       <h2 className="text-2xl font-bold text-foreground mb-4 px-2">Métricas Rápidas</h2>
@@ -150,7 +156,7 @@ export default function Dashboard() {
           onClick={scrollLeft}
           className="bg-content1 p-2 rounded-full shadow hover:bg-content2 text-foreground transition shrink-0"
         >
-          <HiOutlineChevronLeft size={24} />
+          <ChevronLeft size={24} />
         </button>
 
         <div className="flex-1 overflow-hidden relative" style={{ minHeight: "160px" }}> 
@@ -186,7 +192,7 @@ export default function Dashboard() {
           onClick={scrollRight}
           className="bg-content1 p-2 rounded-full shadow hover:bg-content2 text-foreground transition shrink-0"
         >
-          <HiOutlineChevronRight size={24} />
+          <ChevronRight size={24} />
         </button>
       </div>
     </div>

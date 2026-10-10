@@ -35,8 +35,8 @@ export class FacturacionRepository {
         return this.model.create(data);
     }
 
-    async update(id: string, data: Partial<IFacturacion>): Promise<IFacturacion | null> {
-        return this.model.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+    async update(id: string, data: Partial<IFacturacion>, updatedAt?: Date): Promise<IFacturacion | null> {
+        return this.model.findOneAndUpdate({ _id: id, ...(updatedAt ? { updatedAt } : {}) }, { $set: data }, { new: true, runValidators: true });
     }
 
     async delete(id: string): Promise<IFacturacion | null> {

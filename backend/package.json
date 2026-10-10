@@ -6,7 +6,9 @@
     "scripts": {
         "start": "node dist/server.js",
         "dev": "nodemon src/server.ts",
-        "build": "tsc"
+        "build": "tsc",
+        "test": "node -r ts-node/register --test tests/*.cjs",
+        "admin:grant": "node scripts/grant-security.cjs"
     },
     "dependencies": {
         "cors": "^2.8.5",

@@ -9,6 +9,7 @@ export interface INotification extends Document {
     resourceId?: string;
     link?: string;
     isRead: boolean;
+    readBy: string[];
     severity: 'info' | 'warning' | 'danger';
     createdAt: Date;
 }
@@ -22,6 +23,7 @@ const NotificationSchema = new Schema<INotification>({
     resourceId: { type: String },
     link: { type: String },
     isRead: { type: Boolean, default: false },
+    readBy: { type: [String], default: [] },
     severity: { type: String, default: 'info' },
     createdAt: { type: Date, default: Date.now }
 });

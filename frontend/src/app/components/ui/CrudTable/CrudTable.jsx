@@ -1,16 +1,9 @@
 "use client";
+import { Check, ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+
 import { useState, useMemo } from "react";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
-import {
-  HiOutlinePencil,
-  HiOutlineTrash,
-  HiOutlinePlus,
-  HiSearch,
-  HiChevronLeft,
-  HiChevronRight,
-  HiCheck,
-  HiOutlineX,
-} from "react-icons/hi";
+
 import ModalWrapper from "../ModalWrapper/ModalWrapper";
 import ConfirmModal from "../ModalWrapper/ConfirmModal";
 import SuccessModal from "../ModalWrapper/SuccessModal";
@@ -26,6 +19,8 @@ export default function CrudTable({
   apiUrl, // URL de la API para CRUD
   openProveedorModal, // Función para abrir modal de proveedor
   validate, // NEW: Función de validación opcional (formData) => errorString | null
+  allowCreate = true,
+  defaultValues = {},
   extraActions, // (item) => JSX — acciones adicionales en la columna Acciones
 }) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -76,7 +71,7 @@ export default function CrudTable({
 
   function openModal(item = null) {
     setEditingItem(item);
-    const initialForm = {};
+    const initialForm = { ...defaultValues };
     formFields.forEach((f) => {
       if (f.type === "date" && item && item[f.key]) {
         initialForm[f.key] = new Date(item[f.key]).toISOString().split("T")[0];
@@ -195,7 +190,7 @@ export default function CrudTable({
         // Eliminar del estado local
         const newData = data.filter(
           (item) =>
-            item._id !== itemToDelete._id && item.id !== itemToDelete.id,
+            (item._id || item.id) !== (itemToDelete._id || itemToDelete.id),
         );
         setData(newData);
         setConfirmOpen(false);
@@ -221,7 +216,7 @@ export default function CrudTable({
         <div className="flex items-center gap-3 w-full sm:w-auto">
           {/* Buscador */}
           <div className="relative flex-1 sm:flex-none">
-            <HiSearch
+            <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40"
               size={18}
             />
@@ -233,12 +228,12 @@ export default function CrudTable({
               className="pl-10 pr-4 py-2 border border-divider rounded-md bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-navy/50 w-full sm:w-64"
             />
           </div>
-          <button
+          {allowCreate && <button
             onClick={() => openModal()}
             className="flex items-center gap-1 px-3 py-2 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/80 hover:shadow-md transition-all whitespace-nowrap"
           >
-            <HiOutlinePlus size={16} /> Agregar
-          </button>
+            <Plus size={16} /> Agregar
+          </button>}
         </div>
       </div>
 
@@ -333,7 +328,7 @@ export default function CrudTable({
                       onClick={() => openModal(item)}
                       className="text-yellow-500 hover:text-yellow-600"
                     >
-                      <HiOutlinePencil size={20} />
+                      <Pencil size={20} />
                     </button>
                     <button
                       onClick={() => {
@@ -342,7 +337,7 @@ export default function CrudTable({
                       }}
                       className="text-red-600 hover:text-red-700"
                     >
-                      <HiOutlineTrash size={20} />
+                      <Trash2 size={20} />
                     </button>
                   </div>
                 </td>
@@ -366,7 +361,7 @@ export default function CrudTable({
               disabled={currentPage === 1}
               className="p-2 rounded-md border border-divider hover:bg-content2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              <HiChevronLeft size={18} />
+              <ChevronLeft size={18} />
             </button>
             <span className="text-sm font-medium px-3">
               {currentPage} / {totalPages}
@@ -376,7 +371,7 @@ export default function CrudTable({
               disabled={currentPage === totalPages}
               className="p-2 rounded-md border border-divider hover:bg-content2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              <HiChevronRight size={18} />
+              <ChevronRight size={18} />
             </button>
           </div>
         </div>
@@ -451,9 +446,9 @@ export default function CrudTable({
                             }}
                             thumbIcon={({ isSelected, className }) =>
                               isSelected ? (
-                                <HiCheck className={className} />
+                                <Check className={className} />
                               ) : (
-                                <HiOutlineX className={className} />
+                                <X className={className} />
                               )
                             }
                           />

@@ -1,11 +1,13 @@
 "use client";
+import { Banknote, TrendingDown, TrendingUp } from "lucide-react";
+
 
 import { useState, useEffect } from "react";
 import { Tabs, Tab } from "@heroui/react";
 import FacturacionTable from "@/app/components/ui/FacturacionTable/FacturacionTable";
 import BalanceCard from "@/app/components/ui/BalanceCard/BalanceCard";
 import TabsWrapper from "@/app/components/ui/TabsWrapper/TabsWrapper";
-import { HiCash, HiTrendingUp, HiTrendingDown } from "react-icons/hi";
+
 import api from "@/services/api";
 
 
@@ -92,7 +94,7 @@ export default function Facturacion() {
           }
           title="Cobranzas Nacionales"
           tipo="cobranzas"
-          apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/facturacion/cobranzas/nacionales`}
+          apiUrl={`/api/backend/facturacion/cobranzas/nacionales`}
         />
       ),
     },
@@ -109,7 +111,7 @@ export default function Facturacion() {
           }
           title="Cobranzas Internacionales"
           tipo="cobranzas"
-          apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/facturacion/cobranzas/internacionales`}
+          apiUrl={`/api/backend/facturacion/cobranzas/internacionales`}
         />
       ),
     },
@@ -130,7 +132,7 @@ export default function Facturacion() {
           }
           title="Pagos Nacionales"
           tipo="pagos"
-          apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/facturacion/pagos/nacionales`}
+          apiUrl={`/api/backend/facturacion/pagos/nacionales`}
         />
       ),
     },
@@ -147,7 +149,7 @@ export default function Facturacion() {
           }
           title="Pagos Internacionales"
           tipo="pagos"
-          apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/facturacion/pagos/internacionales`}
+          apiUrl={`/api/backend/facturacion/pagos/internacionales`}
         />
       ),
     },
@@ -174,7 +176,7 @@ export default function Facturacion() {
         classNames={{
           tabList: "gap-6 w-full border-b border-divider pb-0",
           cursor: "bg-secondary",
-          tab: "px-0 h-12",
+          tab: "app-tab px-0 h-12",
           tabContent: "group-data-[selected=true]:text-secondary font-semibold",
         }}
       >
@@ -183,7 +185,7 @@ export default function Facturacion() {
           key="balance"
           title={
             <div className="flex items-center gap-2">
-              <HiCash size={20} />
+              <Banknote size={20} />
               <span>Balance</span>
             </div>
           }
@@ -201,7 +203,7 @@ export default function Facturacion() {
           key="cobranzas"
           title={
             <div className="flex items-center gap-2">
-              <HiTrendingUp size={20} />
+              <TrendingUp size={20} />
               <span>Cobranzas</span>
             </div>
           }
@@ -216,7 +218,7 @@ export default function Facturacion() {
           key="pagos"
           title={
             <div className="flex items-center gap-2">
-              <HiTrendingDown size={20} />
+              <TrendingDown size={20} />
               <span>Pagos</span>
             </div>
           }

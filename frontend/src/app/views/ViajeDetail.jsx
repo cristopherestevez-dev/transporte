@@ -1,4 +1,6 @@
 "use client";
+import { ArrowLeft, DollarSign, Download } from "lucide-react";
+
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -6,7 +8,7 @@ import { Button } from "@heroui/react";
 import Link from "next/link";
 import api from "@/services/api";
 
-import { HiArrowLeft, HiDownload, HiCurrencyDollar } from "react-icons/hi";
+
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
@@ -62,7 +64,7 @@ export default function ViajeDetail() {
           const provider = proveedores?.find(
             (p) => p._id === foundTrip.proveedorId,
           );
-          const fletero = fleteros?.find((f) => f._id === foundTrip.fleteroId);
+          const fletero = fleteros?.find((f) => foundTrip.tipoAsignacion === "fletero" && f._id === foundTrip.asignadoId);
           // Driver logic matches ChoferProfile logic (asignadoId or choferId)
           let driver = null;
           if (foundTrip.tipoAsignacion === "chofer" && foundTrip.asignadoId) {
@@ -115,7 +117,7 @@ export default function ViajeDetail() {
         <div className="flex items-center gap-4">
           <Link href="/dashboard">
             <Button isIconOnly variant="light">
-              <HiArrowLeft size={24} />
+              <ArrowLeft size={24} />
             </Button>
           </Link>
           <div>
@@ -128,20 +130,10 @@ export default function ViajeDetail() {
           </div>
         </div>
         <div className="flex gap-2">
-          {perfil === "operador_administrativo" && (
-            <Button
-              color="success"
-              className="text-foreground"
-              variant="solid"
-              startContent={<HiCurrencyDollar />}
-            >
-              Facturar
-            </Button>
-          )}
           <Button
             color="primary"
             variant="solid"
-            startContent={<HiDownload />}
+            startContent={<Download />}
             onPress={handleDownloadPDF}
           >
             Descargar PDF
@@ -229,7 +221,7 @@ export default function ViajeDetail() {
             <div>
               <p className="text-sm text-foreground/50">Tarifa Acordada</p>
               <p className="font-bold">
-                $ {trip.tarifa ? trip.tarifa.toLocaleString() : "-"}
+                {type === "internacional" ? "USD" : "ARS"} {(type === "internacional" ? trip.tarifaTotalUsd : trip.tarifaTotalAr)?.toLocaleString() ?? "-"}
               </p>
             </div>
           </div>

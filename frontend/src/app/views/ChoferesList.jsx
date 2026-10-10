@@ -144,7 +144,7 @@ export default function ChoferesList() {
                 key="choferes"
                 data={choferes}
                 setData={setChoferes}
-                apiUrl={`${process.env.NEXT_PUBLIC_API_URL}/choferes`}
+                apiUrl={`/api/backend/choferes`}
                 columns={[
                   { 
                     label: "Nombre", 

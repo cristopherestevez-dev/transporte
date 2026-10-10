@@ -18,20 +18,20 @@ export class NotificationService {
     }
 
     // Main method to generate and retrieve notifications
-    async getNotifications(userId: string, role?: string) {
+    async getNotifications(userId: string, permissions: string[]) {
         // 1. Run checks to generate new notifications based on current data
         await this.checkExpirations();
 
         // 2. Return persistent notifications for the user
-        return await this.notificationRepo.findByUserOrRole(userId, role);
+        return await this.notificationRepo.findByUserOrRole(userId, permissions);
     }
 
-    async markAsRead(id: string) {
-        return await this.notificationRepo.markAsRead(id);
+    async markAsRead(id: string, userId: string, permissions: string[]) {
+        return await this.notificationRepo.markAsRead(id, userId, permissions);
     }
 
-    async clearAll(userId: string, role?: string) {
-        return await this.notificationRepo.deleteForAll(userId, role);
+    async clearAll(userId: string, permissions: string[]) {
+        return await this.notificationRepo.deleteForAll(userId, permissions);
     }
 
     // Logic to check all entities and create notifications if needed
@@ -94,25 +94,25 @@ export class NotificationService {
         // 1. Choferes (Licencias)
         const choferes = await ChoferModel.find();
         for (const c of choferes) {
-            await processEntity(c._id.toString(), c.licencia || '', c.nombre, 'LICENCIA', '/dashboard/choferes');
+            await processEntity(c._id.toString(), c.licencia || '', c.nombre, 'LICENCIA', '/choferes');
         }
 
         // 2. Camiones (Seguros)
         const camiones = await CamionModel.find();
         for (const c of camiones) {
-             await processEntity(c._id.toString(), c.vencimiento_seguro || '', `Camión ${c.patente}`, 'SEGURO', '/dashboard/flota');
+             await processEntity(c._id.toString(), c.vencimiento_seguro || '', `Camión ${c.patente}`, 'SEGURO', '/camiones');
         }
 
         // 3. Semis (Seguros)
         const semis = await SemirremolqueModel.find();
         for (const s of semis) {
-             await processEntity(s._id.toString(), s.vencimiento_seguro || '', `Semi ${s.patente}`, 'SEGURO', '/dashboard/flota');
+             await processEntity(s._id.toString(), s.vencimiento_seguro || '', `Semi ${s.patente}`, 'SEGURO', '/camiones');
         }
 
         // 4. Facturación (Cobranzas/Pagos)
         const processFactura = async (f: any, typeName: string, link: string) => {
              const fechaEmision = new Date(f.fecha);
-             const plazo = f.plazo || 30;
+             const plazo = f.plazo ?? 30;
              const fechaVencimiento = new Date(fechaEmision);
              fechaVencimiento.setDate(fechaEmision.getDate() + plazo);
 
@@ -164,16 +164,16 @@ export class NotificationService {
          };
 
         const cobNac = await CobranzaNacionalModel.find({ estado: { $nin: ['pagado', 'cobrado'] } });
-        for (const f of cobNac) await processFactura(f, 'Cobranza Nac.', '/dashboard/facturacion/cobranzas');
+        for (const f of cobNac) await processFactura(f, 'Cobranza Nac.', '/facturacion');
 
         const cobInt = await CobranzaInternacionalModel.find({ estado: { $nin: ['pagado', 'cobrado'] } });
-        for (const f of cobInt) await processFactura(f, 'Cobranza Int.', '/dashboard/facturacion/cobranzas');
+        for (const f of cobInt) await processFactura(f, 'Cobranza Int.', '/facturacion');
 
         const pagNac = await PagoNacionalModel.find({ estado: { $nin: ['pagado', 'cobrado'] } });
-        for (const f of pagNac) await processFactura(f, 'Pago Nac.', '/dashboard/facturacion/pagos');
+        for (const f of pagNac) await processFactura(f, 'Pago Nac.', '/facturacion');
 
         const pagInt = await PagoInternacionalModel.find({ estado: { $nin: ['pagado', 'cobrado'] } });
-        for (const f of pagInt) await processFactura(f, 'Pago Int.', '/dashboard/facturacion/pagos');
+        for (const f of pagInt) await processFactura(f, 'Pago Int.', '/facturacion');
 
         // 5. Borrar notificaciones que ya no expiran ni están vencidas (seguro renovado, factura cobrada, etc.)
         const types = ['LICENCIA', 'SEGURO', 'COBRANZA', 'PAGO'];

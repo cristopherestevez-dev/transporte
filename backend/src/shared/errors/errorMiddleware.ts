@@ -14,6 +14,9 @@ export const globalErrorHandler = (
     if (err instanceof AppError) {
         statusCode = err.statusCode;
         message = err.message;
+    } else if (err.name === 'ValidationError' || err.name === 'CastError') {
+        statusCode = 400;
+        message = 'Datos inválidos: ' + err.message;
     } else {
         console.error('=== UNEXPECTED ERROR ===');
         console.error(err);

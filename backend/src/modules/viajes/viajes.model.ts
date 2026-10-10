@@ -9,6 +9,9 @@ export interface IViaje extends Document {
     proveedor?: string;
     asignadoId?: string;
     tipoAsignacion?: 'chofer' | 'fletero';
+    direccion_facturacion?: 'emitida' | 'recibida';
+    numero_comprobante?: string;
+    tipo_comprobante?: string;
     carga?: string;
     tipoCarga?: 'contenedor' | 'byl';
     estado: 'pendiente' | 'en_transito' | 'finalizado' | 'cancelado';
@@ -47,6 +50,9 @@ const viajeFields = {
     proveedor: { type: String },
     asignadoId: { type: String },
     tipoAsignacion: { type: String, enum: ['chofer', 'fletero', 'ninguno', null] },
+    direccion_facturacion: { type: String, enum: ['emitida', 'recibida'], default: 'emitida' },
+    numero_comprobante: { type: String, trim: true, maxlength: 100 },
+    tipo_comprobante: { type: String, enum: ['', 'factura_a', 'factura_b', 'factura_c', 'factura_e'] },
     carga: { type: String },
     tipoCarga: { type: String, enum: ['contenedor', 'byl'] },
     estado: { type: String, enum: ['pendiente', 'en_transito', 'finalizado', 'cancelado'], default: 'pendiente' },
