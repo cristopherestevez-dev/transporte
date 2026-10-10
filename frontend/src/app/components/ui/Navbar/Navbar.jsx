@@ -16,9 +16,11 @@ import AppSelect from "@/app/components/ui/AppSelect/AppSelect";
 import { perfilOptions } from "@/lib/perfiles";
 import { useToast } from "@/app/components/ui/Toast/Toast";
 import { useAuth } from "@/app/contexts/AuthContext";
+import useCompanyProfile from "@/hooks/useCompanyProfile";
 
 export default function Navbar({ onToggleSidebar }) {
   const { user, perfil, perfiles, cambiarPerfil, logout, authenticated, tienePermiso } = useAuth();
+  const { profile: companyProfile } = useCompanyProfile();
   const [switchingProfile, setSwitchingProfile] = useState(false);
   const toast = useToast();
   const handleProfileChange = async (value) => {
@@ -286,6 +288,7 @@ export default function Navbar({ onToggleSidebar }) {
                   </div>
                 </div>
 
+                {companyProfile && <div className="px-5 py-3 border-b border-divider flex items-center gap-3">{companyProfile.logo && <img src={companyProfile.logo} alt={`Logo de ${companyProfile.nombre}`} className="w-10 h-10 object-contain rounded-[10px] bg-white p-1" />}<span className="text-sm font-medium truncate">{companyProfile.nombre}</span></div>}
                 <div className="p-2">
                   <button
                     onClick={handleLogoutClick}

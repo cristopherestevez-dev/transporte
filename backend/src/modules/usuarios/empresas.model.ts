@@ -7,6 +7,7 @@ const empresaSchema = new Schema({
     estado: { type: String, enum: ['pendiente', 'aprobada', 'rechazada'], default: 'aprobada' },
     creadaPor: { type: String, required: true },
     administradorId: { type: String, index: true },
+    logo: { type: String, select: false },
 }, { timestamps: true, collection: 'empresasOperadoras' });
 
 export const EmpresaOperadora = mongoose.model('EmpresaOperadora', empresaSchema);

@@ -7,9 +7,11 @@ import { authMiddleware, syncAuthMiddleware, requirePermission, requireSecurityP
 
 import { CreateUsuarioSchema, LoginUsuarioSchema } from './usuarios.dto';
 import { validateBody } from '../../shared/middleware/validationMiddleware';
+import { empresaPerfilRoutes } from './empresa-perfil.routes';
 
 const router = Router();
 const usuariosController = new UsuariosController();
+router.use(empresaPerfilRoutes);
 
 // Rutas públicas (para NextAuth)
 router.get('/permisos/:email', authMiddleware, asyncHandler(usuariosController.getPermisosByEmail));

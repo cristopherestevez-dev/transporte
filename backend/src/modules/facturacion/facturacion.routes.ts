@@ -10,8 +10,10 @@ import { asyncHandler } from '../../shared/asyncHandler';
 
 import { validateBody } from '../../shared/middleware/validationMiddleware';
 import { CreateFacturacionSchema, UpdateFacturacionSchema } from './facturacion.dto';
+import { archivosRoutes } from './facturacion.archivos';
 
 const router = Router();
+router.use(archivosRoutes);
 
 // Cobranzas Nacionales
 router.get('/cobranzas/nacionales', paginationMiddleware, asyncHandler(cobranzasNacionalesController.getAll));

@@ -75,15 +75,9 @@ export default function Sidebar() {
     //   permiso: "cotizador",
     // },
     {
-      name: "Facturación",
+      name: "Facturación y balance",
       icon: <FileText />,
       href: "/facturacion",
-      permiso: "facturacion",
-    },
-    {
-      name: "Balance",
-      icon: <Scale />,
-      href: "/balance",
       permiso: "facturacion",
     },
     {

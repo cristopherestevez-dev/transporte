@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const method = z.object({ enabled: z.boolean(), monto: z.union([z.string(), z.number()]) });
-const cheque = z.object({ numero: z.string().min(1), monto: z.union([z.string(), z.number()]) });
+const cheque = z.object({ numero: z.string().trim().min(1).max(100), monto: z.union([z.string(), z.number()]), vencimiento: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(value => !Number.isNaN(Date.parse(value)), 'Vencimiento inválido').optional() });
 const payment = z.object({
     fecha: z.string().min(1),
     monto: z.number().positive().finite(),

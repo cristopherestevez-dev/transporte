@@ -99,7 +99,7 @@ export default function EmpresasYFleteros() {
               setData={setFleteros}
               apiUrl={`/api/backend/fleteros`}
               columns={[
-                { label: "Nombre", key: "nombre" },
+                { label: "Nombre", key: "nombre", render: (value, row) => <Link href={`/empresas/fleteros/${row._id || row.id}`} className="text-blue-600 hover:underline font-bold">{value}</Link> },
                 { label: "CUIL/CUIT", key: "cuil_cuit" },
                 { label: "Tipo", key: "tipo" },
                 { label: "Dirección", key: "direccion" },

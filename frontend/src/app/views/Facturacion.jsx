@@ -5,7 +5,7 @@ import { Banknote, TrendingDown, TrendingUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Tabs, Tab } from "@heroui/react";
 import FacturacionTable from "@/app/components/ui/FacturacionTable/FacturacionTable";
-import BalanceCard from "@/app/components/ui/BalanceCard/BalanceCard";
+import Balance from "@/app/views/Balance";
 import TabsWrapper from "@/app/components/ui/TabsWrapper/TabsWrapper";
 
 import api from "@/services/api";
@@ -69,7 +69,7 @@ export default function Facturacion() {
       }
     };
     fetchData();
-  }, []);
+  }, [activeTab]);
 
   if (loading) {
     return (
@@ -160,7 +160,7 @@ export default function Facturacion() {
       {/* Header */}
       <div className="mb-6 flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Facturación</h1>
+          <h1 className="text-3xl font-bold text-foreground">Facturación y balance</h1>
           <p className="text-default-500 mt-1">
             Gestión de cobranzas, pagos y balance financiero
           </p>
@@ -191,10 +191,7 @@ export default function Facturacion() {
           }
         >
           <div className="pt-6">
-            <BalanceCard
-              cobranzas={facturacion?.cobranzas}
-              pagos={facturacion?.pagos}
-            />
+            <Balance embedded onManagePayments={() => setActiveTab('pagos')} />
           </div>
         </Tab>
 

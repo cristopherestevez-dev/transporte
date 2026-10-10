@@ -38,6 +38,18 @@ const facturacionFields = {
     cheques: { type: [Schema.Types.Mixed], default: [] },
     orden_pago_pdf: { type: String },
     orden_pago_url: { type: String },
+    archivoFactura: {
+        nombre: { type: String },
+        tipo: { type: String },
+        tamaño: { type: Number },
+        data: { type: Buffer, select: false },
+    },
+    archivoPago: {
+        nombre: { type: String },
+        tipo: { type: String },
+        tamaño: { type: Number },
+        data: { type: Buffer, select: false },
+    },
 };
 
 // Cobranzas - schemas separados para cada colección

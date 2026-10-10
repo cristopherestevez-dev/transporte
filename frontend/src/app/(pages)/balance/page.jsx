@@ -1,3 +1,3 @@
-import Balance from "@/app/views/Balance";
+import { redirect } from "next/navigation";
 
-export default function BalancePage() { return <Balance />; }
+export default function BalancePage() { redirect('/facturacion'); }

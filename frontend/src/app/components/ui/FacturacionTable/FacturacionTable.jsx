@@ -14,6 +14,8 @@ import {
 } from "@heroui/react";
 import SelectSearch from "../SelectSearch/Select";
 import jsPDF from "jspdf";
+import ComprobanteOperacion from "../ComprobanteOperacion/ComprobanteOperacion";
+import FacturaAdjunto from "../FacturaAdjunto/FacturaAdjunto";
 
 export default function FacturacionTable({
   data = [],
@@ -1366,13 +1368,7 @@ export default function FacturacionTable({
                       const disabled = saving || !setData || item.estado === "pagado" || item.estado === "cobrado";
 
                       return (
-                        <SelectSearch
-                          options={options}
-                          selectedOption={selectedOption}
-                          onOptionChange={(opt) => { if (!disabled) handleEstadoChange((item._id || item.id), opt.value); }}
-                          className={`h-8 font-bold border-0 bg-transparent text-xs ${getEstadoColor(item.estado)} ${disabled ? "cursor-not-allowed opacity-80" : "cursor-pointer"}`}
-                          width="130px"
-                        />
+                        <ComprobanteOperacion item={{ ...item, endpoint: apiUrl.split("/facturacion/")[1] }} onChange={saved => setData(data.map(row => (row._id || row.id) === (item._id || item.id) ? { ...row, ...saved } : row))} />
                       );
                     })()}
 
@@ -1428,50 +1424,8 @@ export default function FacturacionTable({
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      {/* Si es cobrado (cobranzas) - Subir PDF */}
-                      {tipo === "cobranzas" && item.estado === "cobrado" && (
-                        <>
-                          <button
-                            onClick={() => handleFileUpload((item._id || item.id))}
-                            className="p-1 text-blue-500 hover:text-blue-700 transition"
-                            title="Subir orden de pago (PDF)"
-                          >
-                            <Upload size={18} />
-                          </button>
-                          {item.orden_pago_pdf && (
-                            <a
-                              href={item.orden_pago_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-1 text-green-500 hover:text-green-700 transition"
-                              title={`Ver: ${item.orden_pago_pdf}`}
-                            >
-                              <FileText size={18} />
-                            </a>
-                          )}
-                        </>
-                      )}
-                      {/* Si es pagado o pago_parcial (pagos) - Ver/Descargar PDF */}
-                      {tipo === "pagos" &&
-                        (item.estado === "pagado" ||
-                          item.estado === "pago_parcial") && (
-                          <>
-                            <button
-                              onClick={() => viewPaymentOrder(item)}
-                              className="p-1 text-blue-500 hover:text-blue-700 transition"
-                              title="Ver orden de pago"
-                            >
-                              <FileText size={18} />
-                            </button>
-                            <button
-                              onClick={() => generatePaymentReceipt(item)}
-                              className="p-1 text-green-500 hover:text-green-700 transition"
-                              title="Descargar orden de pago (PDF)"
-                            >
-                              <FileDown size={18} />
-                            </button>
-                          </>
-                        )}
+                      <div><p className="text-[10px] text-default-500">Factura</p><FacturaAdjunto item={{ ...item, endpoint: apiUrl.split("/facturacion/")[1] }} onChange={archivoFactura => setData(data.map(row => (row._id || row.id) === (item._id || item.id) ? { ...row, archivoFactura } : row))} /></div>
+                      <div><p className="text-[10px] text-default-500">Comprobante</p><FacturaAdjunto tipo="comprobante" item={{ ...item, endpoint: apiUrl.split("/facturacion/")[1] }} onChange={archivoPago => setData(data.map(row => (row._id || row.id) === (item._id || item.id) ? { ...row, archivoPago } : row))} /></div>
                     </div>
                   </td>
                 </tr>

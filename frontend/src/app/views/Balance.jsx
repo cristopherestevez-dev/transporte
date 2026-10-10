@@ -1,16 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Scale, Plus, RefreshCw } from "lucide-react";
+import { Scale, Plus, RefreshCw, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import api from "@/services/api";
+import FacturaAdjunto from "@/app/components/ui/FacturaAdjunto/FacturaAdjunto";
+import ComprobanteOperacion from "@/app/components/ui/ComprobanteOperacion/ComprobanteOperacion";
+import BalanceCard from '@/app/components/ui/BalanceCard/BalanceCard';
 import { amounts, summarize } from "@/lib/balance.mjs";
 
 const types = { factura_a: "Factura A", factura_b: "Factura B", factura_c: "Factura C", factura_e: "Factura E", nota_credito: "Nota de crédito", nota_debito: "Nota de débito", recibo: "Recibo" };
 const inputClass = "rounded-lg border border-divider bg-content1 text-foreground px-3 py-2";
 const money = (cents) => (cents / 100).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-export default function Balance() {
+export default function Balance({ embedded = false, onManagePayments }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -52,7 +55,7 @@ export default function Balance() {
     } catch (err) { setError(err.message); }
     finally { setSaving(false); }
   };
-  return <div className="p-6 space-y-6 text-foreground">
+  return <div className={`${embedded ? '' : 'p-6'} space-y-6 text-foreground`}>
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h1 className="text-3xl font-bold flex items-center gap-3"><Scale />Balance</h1>
       <div className="flex gap-3">
@@ -85,16 +88,24 @@ export default function Balance() {
       const invoices = entries.filter((row) => row.tipo_comprobante !== 'recibo');
       const totals = summarize(invoices);
       const companies = [...new Set(invoices.map((row) => row.cuit || row.razon_social))];
-      return <section key={currency} className="bg-content1 rounded-xl border border-divider p-4 space-y-4">
-        <h2 className="text-xl font-semibold">{currency}</h2>
+      return <details key={currency} className="group bg-content1 rounded-xl border border-divider overflow-hidden">
+        <summary className="flex flex-wrap items-center gap-3 p-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden hover:bg-content2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary">
+          <h2 className="text-xl font-semibold">{currency}</h2>
+          <span className="text-sm text-default-500">{entries.length} comprobante(s)</span>
+          {currency !== 'Sin definir' && <span className="ml-auto text-sm text-default-500">Saldo pendiente neto <strong className={`ml-2 tabular-nums ${totals.pending < 0 ? 'text-danger' : 'text-primary'}`}>{money(totals.pending)}</strong></span>}
+          <ChevronDown aria-hidden="true" size={20} className="ml-auto sm:ml-2 shrink-0 text-default-500 transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="p-4 pt-0 space-y-4">
         {currency === 'Sin definir' && <p className="text-warning">Asigná la moneda en el detalle para incluir estos importes en su balance correspondiente.</p>}
+        {currency !== 'Sin definir' && <BalanceCard rows={invoices} currency={currency} />}
         {currency !== 'Sin definir' && <div className="grid gap-3 sm:grid-cols-3">{[['Facturación emitida', totals.emitted], ['Facturación recibida', totals.received], ['Diferencia facturada', totals.balance], ['Cobrado', totals.collected], ['Pagado', totals.paid], ['Flujo neto', totals.cash], ['Por cobrar', totals.receivable], ['Por pagar', totals.payable], ['Saldo pendiente neto', totals.pending]].map(([label, value]) => <div key={label} className="bg-content2 rounded-lg p-3"><p className="text-sm text-default-500">{label}</p><p className="text-lg font-semibold tabular-nums">{money(value)}</p></div>)}</div>}
         {currency !== 'Sin definir' && <><h3 className="font-semibold">Detalle por empresa</h3>
         <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="text-left border-b border-divider">{['Empresa / CUIT', 'Emitido', 'Recibido', 'Diferencia', 'Por cobrar', 'Por pagar'].map((label) => <th className="p-2" key={label}>{label}</th>)}</tr></thead><tbody>{companies.map((company) => { const items = invoices.filter((row) => (row.cuit || row.razon_social) === company); const summary = summarize(items); return <tr key={company} className="border-b border-divider"><td className="p-2">{items[0].razon_social}<br /><span className="text-default-500">{company}</span></td>{[summary.emitted, summary.received, summary.balance, summary.receivable, summary.payable].map((value, index) => <td key={index} className="p-2 tabular-nums">{money(value)}</td>)}</tr>; })}</tbody></table></div></>}
         <h3 className="font-semibold">Detalle de comprobantes ({entries.length})</h3>
-        <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="text-left border-b border-divider">{['Fecha', 'Dirección', 'Ámbito', 'Empresa', 'Tipo', 'Número', 'Moneda', 'Estado', 'Importe', 'Cobrado / Pagado', 'Pendiente'].map((label) => <th className="p-2 whitespace-nowrap" key={label}>{label}</th>)}</tr></thead><tbody>{entries.map((row) => { const value = amounts(row); return <tr key={`${row.endpoint}:${row._id}`} className="border-b border-divider hover:bg-content2"><td className="p-2 whitespace-nowrap">{row.fecha}</td><td className="p-2">{row.direction === 'emitida' ? 'Emitida' : 'Recibida'}</td><td className="p-2">{row.scope}</td><td className="p-2">{row.razon_social}</td><td className="p-2">{types[row.tipo_comprobante] || row.tipo_comprobante}</td><td className="p-2 whitespace-nowrap">{row.numero_comprobante}</td><td className="p-2"><select aria-label={`Moneda de ${row.numero_comprobante}`} disabled={saving} className={inputClass} value={row.moneda || ''} onChange={(e) => changeCurrency(row, e.target.value)}><option value="">Sin definir</option>{['ARS','USD','CLP'].map((item) => <option key={item}>{item}</option>)}</select></td><td className="p-2">{row.estado.replaceAll('_',' ')}</td>{[value.total, value.paid, value.pending].map((amount, index) => <td key={index} className="p-2 tabular-nums whitespace-nowrap">{money(amount)}</td>)}</tr>; })}</tbody></table></div>
-      </section>;
+        <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="text-left border-b border-divider">{['Fecha', 'Vencimiento', 'Dirección', 'Ámbito', 'Empresa', 'Tipo', 'Número', 'Moneda', 'Estado', 'Importe', 'Cobrado / Pagado', 'Pendiente', 'Factura adjunta', 'Comprobante de cobro / pago'].map((label) => <th className="p-2 whitespace-nowrap" key={label}>{label}</th>)}</tr></thead><tbody>{entries.map((row) => { const value = amounts(row); return <tr key={`${row.endpoint}:${row._id}`} className="border-b border-divider hover:bg-content2"><td className="p-2 whitespace-nowrap">{row.fecha}</td><td className="p-2 whitespace-nowrap">{(() => { const date = new Date(`${row.fecha}T00:00:00`); if (Number.isNaN(date.getTime())) return "—"; date.setDate(date.getDate() + (row.plazo ?? 30)); const today = new Date(); today.setHours(0, 0, 0, 0); const expired = date < today && !["cobrado", "pagado"].includes(row.estado); return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${expired ? "bg-danger/10 text-danger" : "bg-content2 text-foreground"}`} title={expired ? "Vencido" : "Fecha de vencimiento"}>{date.toLocaleDateString("es-AR")}</span>; })()}</td><td className="p-2">{row.direction === 'emitida' ? 'Emitida' : 'Recibida'}</td><td className="p-2">{row.scope}</td><td className="p-2">{row.razon_social}</td><td className="p-2">{types[row.tipo_comprobante] || row.tipo_comprobante}</td><td className="p-2 whitespace-nowrap">{row.numero_comprobante}</td><td className="p-2"><select aria-label={`Moneda de ${row.numero_comprobante}`} disabled={saving} className={inputClass} value={row.moneda || ''} onChange={(e) => changeCurrency(row, e.target.value)}><option value="">Sin definir</option>{['ARS','USD','CLP'].map((item) => <option key={item}>{item}</option>)}</select></td><td className="p-2"><ComprobanteOperacion item={row} onChange={saved => setRows(previous => previous.map(item => item._id === row._id && item.endpoint === row.endpoint ? { ...item, ...saved } : item))} /></td>{[value.total, value.paid, value.pending].map((amount, index) => <td key={index} className="p-2 tabular-nums whitespace-nowrap">{money(amount)}</td>)}<td className="p-2"><FacturaAdjunto item={row} onChange={archivoFactura => setRows(previous => previous.map(item => item._id === row._id && item.endpoint === row.endpoint ? { ...item, archivoFactura } : item))} /></td><td className="p-2"><FacturaAdjunto tipo="comprobante" item={row} onChange={archivoPago => setRows(previous => previous.map(item => item._id === row._id && item.endpoint === row.endpoint ? { ...item, archivoPago } : item))} /></td></tr>; })}</tbody></table></div>
+        </div>
+      </details>;
     })}
-    <Link href="/facturacion" className="text-primary underline">Administrar cobros y pagos</Link>
+    {onManagePayments ? <button type="button" onClick={onManagePayments} className="text-primary underline">Administrar cobros y pagos</button> : <Link href="/facturacion" className="text-primary underline">Administrar cobros y pagos</Link>}
   </div>;
 }

@@ -8,6 +8,10 @@ import Link from "next/link";
 
 import api from "@/services/api";
 import SelectSearch from "../components/ui/SelectSearch/Select";
+import Pagination, { PageSizeSelect } from '../components/ui/Pagination/Pagination';
+import { amounts, summarize } from '@/lib/balance.mjs';
+import FacturaAdjunto from '@/app/components/ui/FacturaAdjunto/FacturaAdjunto';
+import ComprobanteOperacion from '@/app/components/ui/ComprobanteOperacion/ComprobanteOperacion';
 
 import { useAuth } from "../contexts/AuthContext";
 
@@ -55,13 +59,16 @@ function getVencimientoBadge(fecha, plazo) {
   }
 }
 
-export default function EmpresaDetail({ id }) {
+export default function EmpresaDetail({ id, tipo = 'proveedor' }) {
   const { tienePermiso } = useAuth();
   const canViewBilling = tienePermiso("facturacion");
   const [empresa, setEmpresa] = useState(null);
   const [facturas, setFacturas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
 
   useEffect(() => {
     async function fetchData() {
@@ -69,8 +76,7 @@ export default function EmpresaDetail({ id }) {
         setLoading(true);
 
         // Fetch proveedor data
-        const proveedores = await api.getProveedores();
-        const found = proveedores.find((p) => (p._id || p.id) === id);
+        const found = await api.get(`/${tipo === 'fletero' ? 'fleteros' : 'proveedores'}/${id}`);
         setEmpresa(found);
 
         if (found && canViewBilling) {
@@ -109,22 +115,23 @@ export default function EmpresaDetail({ id }) {
           const filtered = allFacturas.filter((f) => {
             const fCuit = (f.cuit || "").trim().toLowerCase();
             const fRazon = (f.razon_social || "").trim().toLowerCase();
-            return (
-              (empresaCuit && fCuit === empresaCuit) ||
-              (empresaNombre && fRazon === empresaNombre)
-            );
+            const normalizedCuit = value => value.replace(/\D/g, '');
+            return empresaCuit && fCuit
+              ? normalizedCuit(fCuit) === normalizedCuit(empresaCuit)
+              : Boolean(empresaNombre && fRazon === empresaNombre);
           });
 
           setFacturas(filtered);
         }
       } catch (err) {
+        setError(err.message);
         console.error("Error loading empresa detail:", err);
       } finally {
         setLoading(false);
       }
     }
     fetchData();
-  }, [id, canViewBilling]);
+  }, [id, tipo, canViewBilling]);
 
   // Handle plazo change locally
   const handlePlazoChange = async (facturaId, newPlazo) => {
@@ -158,10 +165,20 @@ export default function EmpresaDetail({ id }) {
     );
   }, [facturas, searchTerm]);
 
-  // Grand total
-  const total = useMemo(() => {
-    return filteredFacturas.reduce((acc, f) => acc + (f.monto || 0), 0);
-  }, [filteredFacturas]);
+  const balances = useMemo(() => {
+    const groups = {};
+    for (const row of facturas) {
+      if (row.tipo_comprobante === 'recibo') continue;
+      const moneda = row.moneda || 'Sin definir';
+      (groups[moneda] ||= []).push({ ...row, direction: row.endpoint.startsWith('cobranzas') ? 'emitida' : 'recibida' });
+    }
+    return Object.entries(groups).map(([moneda, rows]) => ({ moneda, ...summarize(rows) }));
+  }, [facturas]);
+  const shownFacturas = filteredFacturas.slice((page - 1) * pageSize, page * pageSize);
+  const pageControls = { page, pageSize, total: filteredFacturas.length, totalPages: Math.ceil(filteredFacturas.length / pageSize), onPageChange: setPage, onPageSizeChange: value => { setPageSize(value); setPage(1); } };
+  const money = (cents, moneda) => ['ARS', 'USD', 'CLP'].includes(moneda) ? new Intl.NumberFormat('es-AR', { style: 'currency', currency: moneda }).format(cents / 100) : new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2 }).format(cents / 100) + ' (moneda sin definir)';
+  useEffect(() => { setPage(1); }, [searchTerm, id, tipo]);
+  useEffect(() => { setPage(current => Math.min(current, Math.max(1, Math.ceil(filteredFacturas.length / pageSize)))); }, [filteredFacturas.length, pageSize]);
 
   if (loading) {
     return (
@@ -171,6 +188,7 @@ export default function EmpresaDetail({ id }) {
     );
   }
 
+  if (error) return <div className="p-6"><p role="alert" className="text-danger">{error}</p><Link href="/empresas" className="text-primary">Volver a Empresas</Link></div>;
   if (!empresa) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background">
@@ -202,26 +220,18 @@ export default function EmpresaDetail({ id }) {
                 </span>
               </h1>
               <p className="text-xs text-foreground/50">
-                Historial de Facturación
+                {tipo === 'fletero' ? 'Fletero · Facturas y balance' : 'Proveedor · Facturas y balance'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="text-right hidden sm:block">
-              <p className="text-[10px] uppercase font-bold text-foreground/40">
-                Total Facturado
-              </p>
-              <p className="text-xl font-bold text-primary">
-                ${total.toLocaleString()}
-              </p>
-            </div>
-          </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
+        {!canViewBilling && <p className="text-default-500">Tu perfil no tiene permiso para consultar facturación.</p>}
+        {canViewBilling && balances.map(balance => <section key={balance.moneda} className="mb-6 p-4 rounded-xl border border-divider bg-content1"><h2 className="font-semibold mb-3">Balance · {balance.moneda}</h2><dl className="grid grid-cols-2 md:grid-cols-4 gap-4">{[['emitted', 'Facturado emitido'], ['received', 'Facturado recibido'], ['collected', 'Cobrado'], ['paid', 'Pagado'], ['receivable', 'Pendiente de cobrar'], ['payable', 'Pendiente de pagar'], ['balance', 'Balance de facturación'], ['pending', 'Saldo pendiente neto']].map(([key, label]) => <div key={key}><dt className="text-xs text-default-500">{label}</dt><dd className={`font-semibold mt-1 ${balance[key] < 0 ? 'text-danger' : 'text-foreground'}`}>{money(balance[key], balance.moneda)}</dd></div>)}</dl></section>)}
         {/* Search bar */}
         <div className="mb-6 flex items-center gap-3">
           <div className="relative flex-1 max-w-sm">
@@ -248,6 +258,7 @@ export default function EmpresaDetail({ id }) {
           <span className="text-sm text-foreground/50 ml-auto">
             {filteredFacturas.length} registro(s)
           </span>
+          <PageSizeSelect {...pageControls} />
         </div>
 
         {/* Table */}
@@ -280,26 +291,30 @@ export default function EmpresaDetail({ id }) {
                   <th className="px-4 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider">
                     Acciones
                   </th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-white uppercase">Pagado / Cobrado</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-white uppercase">Saldo pendiente</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase">Estado</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase">Comprobante de cobro / pago</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredFacturas.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={8}
+                      colSpan={12}
                       className="px-4 py-12 text-center text-foreground/50"
                     >
                       No se encontraron facturas para esta empresa.
                     </td>
                   </tr>
                 ) : (
-                  filteredFacturas.map((item) => {
+                  shownFacturas.map((item) => {
                     const plazo = item.plazo || 30;
                     const badge = getVencimientoBadge(item.fecha, plazo);
 
                     return (
                       <tr
-                        key={item._id || item.id}
+                        key={`${item.endpoint}/${item._id || item.id}`}
                         className="bg-content1 hover:bg-content2 transition-colors border-b border-divider"
                       >
                         {/* Fecha */}
@@ -365,19 +380,24 @@ export default function EmpresaDetail({ id }) {
 
                         {/* Monto */}
                         <td className="px-4 py-3 text-sm text-foreground text-right font-mono font-medium">
-                          ${(item.monto || 0).toLocaleString()}
+                          {money(amounts(item).total, item.moneda || 'Sin definir')}
                         </td>
 
                         {/* Acciones */}
                         <td className="px-4 py-3 text-center">
-                          <button
+                          <FacturaAdjunto item={item} onChange={archivoFactura => setFacturas(previous => previous.map(row => row._id === item._id && row.endpoint === item.endpoint ? { ...row, archivoFactura } : row))} />
+                          {item.orden_pago_url && <button
                             onClick={() => viewFactura(item)}
                             className="p-2 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
                             title="Ver factura"
                           >
                             <Eye size={16} />
-                          </button>
+                          </button>}
                         </td>
+                        <td className="px-4 py-3 text-sm text-right whitespace-nowrap">{money(amounts(item).paid, item.moneda || 'Sin definir')}</td>
+                        <td className="px-4 py-3 text-sm text-right whitespace-nowrap">{money(amounts(item).pending, item.moneda || 'Sin definir')}</td>
+                        <td className="px-4 py-3 text-sm"><ComprobanteOperacion item={item} onChange={saved => setFacturas(previous => previous.map(row => row._id === item._id && row.endpoint === item.endpoint ? { ...row, ...saved } : row))} /></td>
+                        <td className="px-4 py-3"><FacturaAdjunto tipo="comprobante" item={item} onChange={archivoPago => setFacturas(previous => previous.map(row => row._id === item._id && row.endpoint === item.endpoint ? { ...row, archivoPago } : row))} /></td>
                       </tr>
                     );
                   })
@@ -386,15 +406,7 @@ export default function EmpresaDetail({ id }) {
             </table>
           </div>
 
-          {/* Footer Total */}
-          <div className="px-4 py-4 bg-content2 border-t border-divider flex justify-end items-center gap-4">
-            <span className="text-sm font-medium text-foreground/50">
-              Total:
-            </span>
-            <span className="text-xl font-bold text-primary">
-              ${total.toLocaleString()}
-            </span>
-          </div>
+          <div className="px-4 border-t border-divider"><Pagination {...pageControls} /></div>
         </div>
       </div>
     </div>
