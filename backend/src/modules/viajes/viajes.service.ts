@@ -1,6 +1,8 @@
 import { ViajesRepository, viajesNacionalesRepository, viajesInternacionalesRepository } from './viajes.repository';
 import { IViaje } from './viajes.model';
 import { AppError } from '../../shared/errors/AppError';
+import { drainTripEvents } from '../notifications/notifications.events';
+import { logger } from '../../config/logger';
 
 export class ViajesService {
     private repository: ViajesRepository;
@@ -31,6 +33,10 @@ export class ViajesService {
         const viaje = await this.repository.update(id, data);
         if (!viaje) {
             throw new AppError(`Viaje ${this.tipo} no encontrado`, 404);
+        }
+        if (data.estado) {
+            try { await drainTripEvents(); }
+            catch (error) { logger.error('Entrega de notificación pendiente; se reintentará', error); }
         }
         return viaje;
     }

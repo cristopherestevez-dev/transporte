@@ -1,11 +1,9 @@
 import { NotificationModel, INotification } from './notifications.model';
+import { allowedNotificationTypes } from './notifications.preferences';
 
 function visible(userId: string, permissions: string[]) {
-    const types: string[] = [];
-    if (permissions.includes('choferes')) types.push('LICENCIA');
-    if (permissions.includes('camiones')) types.push('SEGURO');
-    if (permissions.includes('facturacion')) types.push('COBRANZA', 'PAGO');
-    return { $or: [{ userId }, { type: { $in: types } }] };
+    const types = allowedNotificationTypes(permissions);
+    return { type: { $in: types }, $or: [{ userId }, { userId: { $exists: false } }, { userId: null }] };
 }
 export class NotificationRepository {
     async create(data: Partial<INotification>): Promise<INotification> { return NotificationModel.create(data); }

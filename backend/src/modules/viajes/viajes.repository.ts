@@ -1,6 +1,8 @@
 import { paginateQuery } from '../../shared/pagination';
 import { ViajeNacionalModel, ViajeInternacionalModel, IViaje } from './viajes.model';
 import { Model } from 'mongoose';
+import mongoose from 'mongoose';
+import { AppError } from '../../shared/errors/AppError';
 
 export class ViajesRepository {
     private model: Model<IViaje>;
@@ -22,7 +24,15 @@ export class ViajesRepository {
     }
 
     async update(id: string, data: Partial<IViaje>): Promise<IViaje | null> {
-        return this.model.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+        if (!data.estado) return this.model.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+        const previous = await this.model.findById(id);
+        if (!previous) return null;
+        const event = previous.estado !== data.estado ? { eventId: new mongoose.Types.ObjectId().toString(), previous: previous.estado, current: data.estado, createdAt: new Date() } : null;
+        const result = await this.model.findOneAndUpdate({ _id: id, estado: previous.estado }, {
+            $set: data, ...(event ? { $push: { notificationEvents: event } } : {}),
+        }, { new: true, runValidators: true });
+        if (!result) throw new AppError('El viaje cambió mientras lo editabas. Recargá y volvé a intentar', 409);
+        return result;
     }
 
     async delete(id: string): Promise<IViaje | null> {

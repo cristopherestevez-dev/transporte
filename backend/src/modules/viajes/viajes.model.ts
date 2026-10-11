@@ -15,6 +15,7 @@ export interface IViaje extends Document {
     carga?: string;
     tipoCarga?: 'contenedor' | 'byl';
     estado: 'pendiente' | 'en_transito' | 'finalizado' | 'cancelado';
+    notificationEvents?: { eventId: string; previous: string; current: string; createdAt: Date }[];
     tarifaTotalAr?: number;
     tarifaChoferPorcentaje?: number;
     tarifaChoferAr?: number;
@@ -42,6 +43,7 @@ export interface IViaje extends Document {
 }
 
 const viajeFields = {
+    notificationEvents: { type: [{ eventId: String, previous: String, current: String, createdAt: Date }], default: [], select: false },
     origen: { type: String, required: true },
     destino: { type: String, required: true },
     fecha_salida: { type: String },

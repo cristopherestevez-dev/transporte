@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface INotification extends Document {
     userId?: string;
     role?: string;
-    type: 'LICENCIA' | 'SEGURO' | 'COBRANZA' | 'PAGO' | 'SYSTEM';
+    type: 'LICENCIA' | 'SEGURO' | 'COBRANZA' | 'PAGO' | 'SYSTEM' | 'VIAJE_ESTADO';
     title: string;
     message: string;
     resourceId?: string;

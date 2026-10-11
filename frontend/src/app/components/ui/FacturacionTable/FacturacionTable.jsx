@@ -1345,6 +1345,7 @@ export default function FacturacionTable({
                     {item.cuit}
                   </td>
                   <td className="px-4 py-3 text-center">
+                    <div className="mx-auto w-[264px]">
                     {(() => {
                       const options = [];
                       if (item.estado === "pendiente") options.push({ label: "Pendiente", value: "pendiente", color: "text-yellow-600" });
@@ -1395,7 +1396,7 @@ export default function FacturacionTable({
                       if (!isExpired && !isNear) return null;
 
                       return (
-                        <div className="flex flex-col items-center mt-1">
+                        <div className="flex flex-col items-center mt-1 w-36">
                           <span
                             className={`text-[9px] font-bold ${isExpired ? "text-red-600" : "text-orange-500"}`}
                           >
@@ -1407,6 +1408,7 @@ export default function FacturacionTable({
                         </div>
                       );
                     })()}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-sm text-foreground text-right font-mono">
                     {item.estado === "pago_parcial" && item.monto_restante ? (

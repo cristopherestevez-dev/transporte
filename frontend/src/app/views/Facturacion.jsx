@@ -11,10 +11,13 @@ import TabsWrapper from "@/app/components/ui/TabsWrapper/TabsWrapper";
 import api from "@/services/api";
 
 
-export default function Facturacion() {
+export default function Facturacion({ notificationTab, notificationScope }) {
   const [facturacion, setFacturacion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("balance");
+  useEffect(() => {
+    if (['cobranzas', 'pagos', 'balance'].includes(notificationTab)) setActiveTab(notificationTab);
+  }, [notificationTab, notificationScope]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -206,7 +209,7 @@ export default function Facturacion() {
           }
         >
           <div className="pt-6">
-            <TabsWrapper tabs={cobranzasTabs} />
+            <TabsWrapper key={notificationScope} tabs={cobranzasTabs} initialTab={notificationScope === 'internacional' ? 1 : 0} />
           </div>
         </Tab>
 
@@ -221,7 +224,7 @@ export default function Facturacion() {
           }
         >
           <div className="pt-6">
-            <TabsWrapper tabs={pagosTabs} />
+            <TabsWrapper key={notificationScope} tabs={pagosTabs} initialTab={notificationScope === 'internacional' ? 1 : 0} />
           </div>
         </Tab>
       </Tabs>

@@ -33,7 +33,7 @@ const ExpirationBadge = ({ date }) => {
   );
 };
 
-const CamionesList = () => {
+const CamionesList = ({ notificationTab }) => {
     const [camiones, setCamiones] = useState([]);
     const [semirremolques, setSemirremolques] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -62,6 +62,8 @@ const CamionesList = () => {
 
   return (
     <TabsWrapper
+    key={notificationTab}
+    initialTab={notificationTab === 'semirremolques' ? 1 : 0}
     tabs={[
       {label: "Camiones", content: (
         <CrudTable

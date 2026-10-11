@@ -42,7 +42,7 @@ app.use('/api/viajes', authMiddleware, (req, res, next) => requirePermission(...
 app.use('/api/facturacion', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['facturacion'] : ['facturacion']))(req, res, next), facturacionRoutes);
 app.use('/api/dashboard', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['dashboard'] : ['dashboard']))(req, res, next), dashboardRoutes);
 app.use('/api/mantenimiento', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['camiones'] : ['camiones']))(req, res, next), mantenimientoRoutes);
-app.use('/api/notifications', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['dashboard'] : ['dashboard']))(req, res, next), notificationsRoutes);
+app.use('/api/notifications', authMiddleware, notificationsRoutes);
 
 app.get('/', (req, res) => {
     res.send('API is running...');

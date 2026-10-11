@@ -1,5 +1,5 @@
 "use client";
-import { Bell, LogOut, Menu, UserRound } from "lucide-react";
+import { Bell, LogOut, Menu, UserRound, Settings, ArrowLeft } from "lucide-react";
 
 
 import Link from "next/link";
@@ -17,6 +17,7 @@ import { perfilOptions } from "@/lib/perfiles";
 import { useToast } from "@/app/components/ui/Toast/Toast";
 import { useAuth } from "@/app/contexts/AuthContext";
 import useCompanyProfile from "@/hooks/useCompanyProfile";
+import { permissionForPath } from "@/lib/access.mjs";
 
 export default function Navbar({ onToggleSidebar }) {
   const { user, perfil, perfiles, cambiarPerfil, logout, authenticated, tienePermiso } = useAuth();
@@ -36,11 +37,22 @@ export default function Navbar({ onToggleSidebar }) {
   // Estado para notificaciones
   const [alerts, setAlerts] = useState([]);
   const [openNotifications, setOpenNotifications] = useState(false);
+  const [notificationSettings, setNotificationSettings] = useState(false);
+  const [notificationOptions, setNotificationOptions] = useState([]);
+  const [savingNotifications, setSavingNotifications] = useState(false);
+  const [loadingNotificationOptions, setLoadingNotificationOptions] = useState(false);
+  const [notificationOptionsError, setNotificationOptionsError] = useState('');
+  const notificationsRequest = useRef(0);
+  const notificationOptionsRequest = useRef(0);
+  const notificationRef = useRef(null);
 
   // Fetch logic para notificaciones usando API
   const fetchNotifications = async () => {
+    const request = ++notificationsRequest.current;
     try {
       const data = await api.getNotifications();
+      if (request !== notificationsRequest.current) return;
+
       // Ensure data is array
       setAlerts(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -50,11 +62,39 @@ export default function Navbar({ onToggleSidebar }) {
 
   useEffect(() => {
     setAlerts([]);
-    if (!tienePermiso("dashboard")) return;
+    setNotificationOptions([]);
+    setNotificationSettings(false);
+    setOpenNotifications(false);
+    if (!authenticated || !user?.empresaId) return;
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 60000); // Check every minute
-    return () => clearInterval(interval);
-  }, [perfil]);
+    return () => { clearInterval(interval); ++notificationsRequest.current; ++notificationOptionsRequest.current; };
+  }, [perfil, authenticated, user?.empresaId, JSON.stringify(user?.permisos || [])]);
+
+  const loadNotificationOptions = async () => {
+    setLoadingNotificationOptions(true);
+    setNotificationOptionsError('');
+    const request = ++notificationOptionsRequest.current;
+    try {
+      const options = await api.get('/notifications/preferences');
+      if (request === notificationOptionsRequest.current) setNotificationOptions(options || []);
+    } catch (error) {
+      if (request === notificationOptionsRequest.current) setNotificationOptionsError(error.message);
+    } finally {
+      if (request === notificationOptionsRequest.current) setLoadingNotificationOptions(false);
+    }
+  };
+
+  const saveNotificationOptions = async () => {
+    setSavingNotifications(true);
+    try {
+      await api.put('/notifications/preferences', { enabledRuleIds: notificationOptions.filter(option => option.enabled).map(option => option.ruleId) });
+      await fetchNotifications();
+      setNotificationSettings(false);
+      toast.success('Preferencias de notificaciones guardadas');
+    } catch (error) { toast.error(error.message); }
+    finally { setSavingNotifications(false); }
+  };
 
   const handleNotificationClick = async (alert) => {
     try {
@@ -94,6 +134,7 @@ export default function Navbar({ onToggleSidebar }) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setOpenDropdown(false);
       }
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) setOpenNotifications(false);
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -137,9 +178,10 @@ export default function Navbar({ onToggleSidebar }) {
         {pathname !== "/dashboard" && <WeatherWidget mode="navbar" />}
 
         {/* Notificaciones */}
-        <div className="relative">
+        <div className="relative" ref={notificationRef}>
           <button
             onClick={toggleNotifications}
+            aria-label="Abrir notificaciones"
             className="relative p-2 text-foreground/60 hover:text-foreground focus:outline-none"
           >
             <Bell size={24} />
@@ -160,7 +202,7 @@ export default function Navbar({ onToggleSidebar }) {
                   <span className="text-xs text-foreground/50">
                     {alerts.length} alertas
                   </span>
-                  {alerts.length > 0 && (
+                  {!notificationSettings && alerts.length > 0 && (
                     <button
                       onClick={handleClearAll}
                       className="text-xs text-red-500 hover:text-red-700 font-medium"
@@ -171,12 +213,21 @@ export default function Navbar({ onToggleSidebar }) {
                 </div>
               </div>
               <div>
-                {alerts.length === 0 ? (
+                {notificationSettings ? (
+                  <div className="p-4 space-y-4">
+                    <p className="text-xs text-foreground/60">Elegí las alertas para tu perfil activo. Solo se muestran las permitidas.</p>
+                    {loadingNotificationOptions && <p role="status" className="text-sm">Cargando opciones…</p>}
+                    {notificationOptionsError && <p role="alert" className="text-sm text-danger">{notificationOptionsError}</p>}
+                    {!loadingNotificationOptions && !notificationOptionsError && notificationOptions.length === 0 && <p className="text-sm text-foreground/50">Este perfil no tiene tipos de notificación habilitados.</p>}
+                    {!loadingNotificationOptions && !notificationOptionsError && notificationOptions.map(option => <label key={option.ruleId || option.type} className="flex items-center gap-2 text-sm"><input type="checkbox" disabled={savingNotifications} checked={option.enabled} onChange={event => setNotificationOptions(previous => previous.map(item => item.ruleId === option.ruleId ? { ...item, enabled: event.target.checked } : item))} />{option.label}</label>)}
+                    {!loadingNotificationOptions && !notificationOptionsError && notificationOptions.length > 0 && <Button size="sm" color="primary" isLoading={savingNotifications} onPress={saveNotificationOptions}>Guardar preferencias</Button>}
+                  </div>
+                ) : alerts.length === 0 ? (
                   <div className="p-4 text-center text-foreground/50 text-sm">
                     Sin alertas pendientes
                   </div>
                 ) : (
-                  alerts.map((alert) => (
+                  alerts.filter(alert => alert.link?.startsWith('/') && !alert.link.startsWith('//') && tienePermiso(permissionForPath(alert.link))).map((alert) => (
                     <Link
                       href={alert.link || "#"}
                       key={alert._id}
@@ -210,6 +261,12 @@ export default function Navbar({ onToggleSidebar }) {
                     </Link>
                   ))
                 )}
+              </div>
+              <div className="sticky bottom-0 border-t border-divider bg-content1 px-4 py-2 flex justify-end">
+                <button type="button" disabled={savingNotifications} aria-label={notificationSettings ? 'Volver a notificaciones' : 'Configurar notificaciones'} onClick={() => { setNotificationSettings(!notificationSettings); if (!notificationSettings) loadNotificationOptions(); }} className="flex items-center gap-2 p-1 rounded text-xs text-foreground/60 hover:text-foreground">
+                  {notificationSettings ? <ArrowLeft size={17} /> : <Settings size={17} />}
+                  {notificationSettings ? 'Volver' : 'Configurar notificaciones'}
+                </button>
               </div>
             </div>
           )}
