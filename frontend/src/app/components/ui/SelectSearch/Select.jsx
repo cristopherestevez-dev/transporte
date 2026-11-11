@@ -1,4 +1,5 @@
 "use client";
+import Button from "@/app/components/ui/Button/button";
 import { ChevronDown, Search } from "lucide-react";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -145,13 +146,13 @@ const SelectSearch = ({
           />
 
           {/* Ícono de Búsqueda */}
-          <button
+          <Button native
             type="button"
             className="pr-5 pl-2 h-full flex items-center justify-center text-[var(--color-primary)] hover:text-blue-800 transition-colors focus:outline-none"
             onClick={() => onSearch && onSearch()}
           >
             <Search size={20} />
-          </button>
+          </Button>
         </>
       )}
     </div>

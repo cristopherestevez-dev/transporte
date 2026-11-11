@@ -1,5 +1,6 @@
 "use client";
 
+import Button from "@/app/components/ui/Button/button";
 import { useEffect, useMemo, useState } from "react";
 import { Scale, Plus, RefreshCw, ChevronDown } from "lucide-react";
 import Link from "next/link";
@@ -59,8 +60,8 @@ export default function Balance({ embedded = false, onManagePayments }) {
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h1 className="text-3xl font-bold flex items-center gap-3"><Scale />Balance</h1>
       <div className="flex gap-3">
-        <button disabled={loading || saving} onClick={load} className={inputClass}><RefreshCw size={18} /></button>
-        <button onClick={() => setForm({ direction: "emitida", scope: "nacionales", fecha: "", razon_social: "", cuit: "", numero_comprobante: "", tipo_comprobante: "factura_a", moneda: "ARS", monto: "", plazo: 30 })} className="flex items-center gap-2 bg-primary text-primary-foreground rounded-lg px-4 py-2"><Plus size={18} />Registrar comprobante</button>
+        <Button native disabled={loading || saving} onClick={load} className={inputClass}><RefreshCw size={18} /></Button>
+        <Button native onClick={() => setForm({ direction: "emitida", scope: "nacionales", fecha: "", razon_social: "", cuit: "", numero_comprobante: "", tipo_comprobante: "factura_a", moneda: "ARS", monto: "", plazo: 30 })} className="flex items-center gap-2 bg-primary text-primary-foreground rounded-lg px-4 py-2"><Plus size={18} />Registrar comprobante</Button>
       </div>
     </div>
     <p className="text-default-500">Facturación emitida contra recibida, con cobros, pagos y saldos pendientes. Los importes se comparan por moneda; las notas de crédito restan del total. Los recibos se muestran en el detalle, sin duplicar la facturación.</p>
@@ -74,7 +75,7 @@ export default function Balance({ embedded = false, onManagePayments }) {
         {[['Fecha', 'fecha', 'date'], ['Empresa / Fletero', 'razon_social', 'text'], ['CUIT', 'cuit', 'text'], ['Número', 'numero_comprobante', 'text'], ['Importe', 'monto', 'number'], ['Plazo de pago (días)', 'plazo', 'number']].map(([label, key, type]) => <label key={key} className="grid gap-1">{label}<input required type={type} min={key === 'monto' ? '0.01' : key === 'plazo' ? '0' : undefined} step={key === 'monto' ? '0.01' : undefined} className={inputClass} value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></label>)}
         <label className="grid gap-1">Moneda<select className={inputClass} value={form.moneda} onChange={(e) => setForm({ ...form, moneda: e.target.value })}>{['ARS','USD','CLP'].map((value) => <option key={value}>{value}</option>)}</select></label>
       </div>
-      <div className="flex gap-3"><button disabled={saving} className="bg-primary text-primary-foreground rounded-lg px-4 py-2">{saving ? 'Guardando…' : 'Guardar'}</button><button type="button" disabled={saving} onClick={() => setForm(null)} className={inputClass}>Cancelar</button></div>
+      <div className="flex gap-3"><Button native disabled={saving} className="bg-primary text-primary-foreground rounded-lg px-4 py-2">{saving ? 'Guardando…' : 'Guardar'}</Button><Button native type="button" disabled={saving} onClick={() => setForm(null)} className={inputClass}>Cancelar</Button></div>
     </form>}
     <div className="flex flex-wrap gap-3">
       <label className="grid gap-1">Desde<input className={inputClass} type="date" value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} /></label>
@@ -106,6 +107,6 @@ export default function Balance({ embedded = false, onManagePayments }) {
         </div>
       </details>;
     })}
-    {onManagePayments ? <button type="button" onClick={onManagePayments} className="text-primary underline">Administrar cobros y pagos</button> : <Link href="/facturacion" className="text-primary underline">Administrar cobros y pagos</Link>}
+    {onManagePayments ? <Button native type="button" onClick={onManagePayments} className="text-primary underline">Administrar cobros y pagos</Button> : <Link href="/facturacion" className="text-primary underline">Administrar cobros y pagos</Link>}
   </div>;
 }

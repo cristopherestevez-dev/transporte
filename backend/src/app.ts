@@ -13,6 +13,7 @@ import { camionesRoutes } from './modules/camiones/camiones.routes';
 import { semirremolquesRoutes } from './modules/semirremolques/semirremolques.routes';
 import { choferesRoutes } from './modules/choferes/choferes.routes';
 import { viajesRoutes } from './modules/viajes/viajes.routes';
+import { liquidacionesRoutes } from './modules/liquidaciones/liquidaciones.routes';
 import { facturacionRoutes } from './modules/facturacion/facturacion.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
 import { usuariosRoutes } from './modules/usuarios/usuarios.routes';
@@ -39,6 +40,7 @@ app.use('/api/camiones', authMiddleware, (req, res, next) => requirePermission(.
 app.use('/api/semirremolques', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['camiones', 'cotizador'] : ['camiones']))(req, res, next), semirremolquesRoutes);
 app.use('/api/choferes', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['choferes', 'viajes', 'cotizador'] : ['choferes']))(req, res, next), choferesRoutes);
 app.use('/api/viajes', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['viajes', 'cotizador'] : ['viajes', 'cotizador']))(req, res, next), viajesRoutes);
+app.use('/api/liquidaciones', authMiddleware, requirePermission('viajes'), liquidacionesRoutes);
 app.use('/api/facturacion', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['facturacion'] : ['facturacion']))(req, res, next), facturacionRoutes);
 app.use('/api/dashboard', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['dashboard'] : ['dashboard']))(req, res, next), dashboardRoutes);
 app.use('/api/mantenimiento', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['camiones'] : ['camiones']))(req, res, next), mantenimientoRoutes);

@@ -1,0 +1,30 @@
+@media print {
+  :global(body):has(.comprobante),
+  :global(body) :has(.comprobante) {
+    display: block !important;
+    position: static !important;
+    overflow: visible !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  :global(body):has(.comprobante) > :not(:has(.comprobante)):not(.comprobante),
+  :global(body) :has(.comprobante) > :not(:has(.comprobante)):not(.comprobante) {
+    display: none !important;
+  }
+
+  .comprobante {
+    padding: 8mm;
+  }
+
+  .comprobante tr {
+    break-inside: avoid;
+  }
+}

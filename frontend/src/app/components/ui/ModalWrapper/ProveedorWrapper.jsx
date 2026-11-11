@@ -1,4 +1,5 @@
 "use client";
+import Button from "@/app/components/ui/Button/button";
 import { X } from "lucide-react";
 
 import React, { useState, useEffect } from "react";
@@ -43,12 +44,12 @@ const ProveedorWrapper = ({ isOpen, onClose, proveedores = [], onSelect }) => {
               <h2 className="text-xl font-bold text-foreground">
                 Seleccionar proveedor
               </h2>
-              <button
+              <Button native
                 onClick={onClose}
                 className="text-default-400 hover:text-foreground transition-colors"
               >
                 <X size={20} />
-              </button>
+              </Button>
             </div>
 
             {/* Buscador */}

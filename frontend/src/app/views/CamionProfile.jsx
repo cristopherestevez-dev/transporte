@@ -1,4 +1,5 @@
 "use client";
+import Button from "@/app/components/ui/Button/button";
 import { ArrowLeft, ChevronDown, ChevronUp, Droplets, Pencil, Plus, Save, Search, Settings, Trash2, Truck, Wrench, X } from "lucide-react";
 
 import React, { useState, useEffect, useMemo } from "react";
@@ -373,25 +374,25 @@ const MaintenanceCard = ({
         {/* Action Buttons */}
         <div className="ml-auto pl-4 border-l border-divider flex items-center gap-2">
           {isEditing ? (
-            <button
+            <Button native
               disabled={saving}
               onClick={handleSaveClick}
               className="p-2 text-success hover:bg-success/10 rounded-lg transition-colors"
               title="Guardar cambios"
             >
               <Save size={16} />
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button native
               onClick={handleEditClick}
               className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
               title="Editar registro"
             >
               <Pencil size={16} />
-            </button>
+            </Button>
           )}
 
-          <button
+          <Button native
             onClick={(e) => {
               e.stopPropagation();
               requestDelete(row.id);
@@ -400,7 +401,7 @@ const MaintenanceCard = ({
             title="Eliminar registro"
           >
             <Trash2 size={14} />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -925,13 +926,13 @@ export default function CamionProfile({ id }) {
                 ${grandTotal.toLocaleString()}
               </p>
             </div> */}
-            <button
+            <Button native
               onClick={addRow}
               className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
             >
               <Plus size={14} />
               <span>Nuevo Registro</span>
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -987,7 +988,7 @@ export default function CamionProfile({ id }) {
                 className="w-28 bg-content2 border border-divider rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               />
             </div>
-            <button
+            <Button native
               onClick={handleSearch}
               disabled={
                 isSearching || (!searchFecha && !searchKmMin && !searchKmMax)
@@ -996,15 +997,15 @@ export default function CamionProfile({ id }) {
             >
               <Search size={11} />
               {isSearching ? "Buscando..." : "Buscar"}
-            </button>
+            </Button>
             {isFiltered && (
-              <button
+              <Button native
                 onClick={clearFilters}
                 className="flex items-center gap-1 text-foreground/60 hover:text-danger px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-danger/10 transition-all"
               >
                 <X size={11} />
                 Limpiar filtros
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -1020,12 +1021,12 @@ export default function CamionProfile({ id }) {
               Comenzá un historial detallado para este vehículo agregando el
               primer registro.
             </p>
-            <button
+            <Button native
               onClick={addRow}
               className="mt-6 text-primary font-medium hover:underline text-sm"
             >
               Crear primer registro
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="space-y-4">

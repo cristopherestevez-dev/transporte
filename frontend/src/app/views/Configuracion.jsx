@@ -1,5 +1,6 @@
 "use client";
 
+import Button from "@/app/components/ui/Button/button";
 import { useState, useEffect } from "react";
 import CrudTable from "@/app/components/ui/CrudTable/CrudTable";
 import { useAuth } from "@/app/contexts/AuthContext";
@@ -157,7 +158,7 @@ export default function Configuracion() {
         </p>
 
         {configError && <p role="alert" className="text-danger mb-4">{configError}</p>}
-        {!availablePermissions.length ? <button onClick={loadConfig} className="text-primary underline">Reintentar carga</button> : <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {!availablePermissions.length ? <Button native onClick={loadConfig} className="text-primary underline">Reintentar carga</Button> : <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {perfilOptions.map((perfil) => {
             const selected = profilePermissions[perfil.value] || [];
             const dirty = JSON.stringify([...selected].sort()) !== JSON.stringify([...(savedPermissions[perfil.value] || [])].sort());
@@ -173,9 +174,9 @@ export default function Configuracion() {
                 })}
               </div>
               {perfil.value === "operador_seguridad" && <p className="text-xs text-default-500">Configuración permanece habilitada para administrar los perfiles.</p>}
-              <button type="button" onClick={() => savePermissions(perfil.value)} disabled={!dirty || !!savingPerfil} className="px-3 py-2 rounded-[10px] bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50">
+              <Button native type="button" onClick={() => savePermissions(perfil.value)} disabled={!dirty || !!savingPerfil} className="px-3 py-2 rounded-[10px] bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50">
                 {savingPerfil === perfil.value ? "Guardando…" : "Guardar permisos"}
-              </button>
+              </Button>
             </fieldset>;
           })}
         </div>}

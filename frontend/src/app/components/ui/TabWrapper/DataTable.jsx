@@ -1,4 +1,5 @@
 "use client";
+import Button from "@/app/components/ui/Button/button";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown } from "lucide-react";
 
 
@@ -144,25 +145,25 @@ export default function DataTable({ title, columns, data, pagination, onPageChan
 
       <div className="flex justify-end items-center gap-2 p-4 border-t border-divider">
         {loading && <span className="text-sm text-default-500">Cargando…</span>}
-        <button
+        <Button native
           onClick={() => onPageChange ? onPageChange(Math.max(shownPage - 1, 1)) : setCurrentPage((p) => Math.max(p - 1, 1))}
           disabled={shownPage === 1 || loading}
           className="px-3 py-1 rounded-md bg-blue-500 disabled:opacity-50 hover:bg-blue-300 transition"
         >
          <ChevronLeft size={20} className="text-white" />
-        </button>
+        </Button>
 
         <span className="text-foreground font-medium">
           Página {shownPage} de {pageCount}{pagination ? ` · ${pagination.total} resultados` : ''}
         </span>
 
-        <button
+        <Button native
           onClick={() => onPageChange ? onPageChange(Math.min(shownPage + 1, pageCount)) : setCurrentPage((p) => Math.min(p + 1, pageCount))}
           disabled={shownPage >= pageCount || loading}
           className="px-3 py-1 rounded-md bg-blue-500 disabled:opacity-50 hover:bg-blue-300 transition"
         >
          <ChevronRight size={20} className="text-white" />
-        </button>
+        </Button>
       </div>
     </Card>
   );

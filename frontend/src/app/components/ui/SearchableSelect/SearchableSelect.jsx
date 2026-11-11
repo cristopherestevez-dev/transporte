@@ -1,4 +1,5 @@
 "use client";
+import Button from "@/app/components/ui/Button/button";
 import { Check, ChevronsUpDown, Search } from "lucide-react";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
@@ -118,7 +119,7 @@ export default function SearchableSelect({
       }}
     >
       {/* Trigger Button */}
-      <button
+      <Button native
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
@@ -132,7 +133,7 @@ export default function SearchableSelect({
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         <ChevronsUpDown className="w-5 h-5 text-default-400" />
-      </button>
+      </Button>
 
       {/* Dropdown */}
       <AnimatePresence>

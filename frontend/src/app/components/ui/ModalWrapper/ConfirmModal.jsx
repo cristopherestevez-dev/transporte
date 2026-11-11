@@ -1,4 +1,5 @@
 "use client";
+import Button from "@/app/components/ui/Button/button";
 import { X } from "lucide-react";
 
 import React from "react";
@@ -44,29 +45,29 @@ export default function ConfirmModal({
             transition={{ type: "spring", duration: 0.3 }}
             className="relative w-full max-w-md bg-content1 rounded-2xl shadow-xl border border-divider p-6 z-10 m-4"
           >
-            <button
+            <Button native
               onClick={onClose}
               className="absolute top-4 right-4 text-default-400 hover:text-foreground transition-colors"
             >
               <X size={20} />
-            </button>
+            </Button>
 
             <h2 className="text-xl font-bold mb-2 text-foreground">{title}</h2>
             <p className="text-default-500 mb-8">{message}</p>
 
             <div className="flex justify-end gap-3">
-              <button
+              <Button native
                 onClick={onClose}
                 className="px-4 py-2 text-sm font-medium text-default-600 bg-default-100 hover:bg-default-200 rounded-lg transition-colors"
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button native
                 onClick={onConfirm}
                 className={`px-4 py-2 text-sm font-medium text-white rounded-lg shadow-md transition-transform active:scale-95 ${bgcolor} ${hoverClass}`}
               >
                 {label}
-              </button>
+              </Button>
             </div>
           </motion.div>
         </div>

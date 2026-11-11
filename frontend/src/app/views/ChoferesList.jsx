@@ -1,5 +1,6 @@
 "use client";
 
+import Button from "@/app/components/ui/Button/button";
 import CrudTable from "../components/ui/CrudTable/CrudTable";
 import TabsWrapper from "../components/ui/TabsWrapper/TabsWrapper";
 import { useState , useEffect } from "react";
@@ -122,12 +123,12 @@ export default function ChoferesList() {
             <span className="text-sm text-default-500">ARS</span>
           </div>
 
-          <button
+          <Button native
             onClick={handleSaveCotizaciones}
             className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/80 transition-colors shadow-sm text-sm"
           >
             Guardar Cotizaciones
-          </button>
+          </Button>
 
           {saved && (
             <span className="text-success text-xs font-semibold animate-pulse">

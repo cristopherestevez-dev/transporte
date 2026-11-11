@@ -1,3 +1,4 @@
+import Button from "@/app/components/ui/Button/button";
 import { X } from "lucide-react";
 // components/ModalWrapper.jsx
 import React from "react";
@@ -28,12 +29,12 @@ export default function ModalWrapper({ isOpen, onClose, title, children }) {
           >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-foreground">{title}</h2>
-              <button
+              <Button native
                 onClick={onClose}
                 className="text-default-400 hover:text-foreground transition-colors"
               >
                 <X size={20} />
-              </button>
+              </Button>
             </div>
             <div className="text-foreground">{children}</div>
           </motion.div>

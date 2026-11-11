@@ -1,5 +1,6 @@
 "use client";
 
+import Button from "@/app/components/ui/Button/button";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -82,11 +83,11 @@ export default function LoginPage() {
               <input required type="password" autoComplete="current-password" maxLength={128} value={password} onChange={(event) => setPassword(event.target.value)} className="rounded-[10px] bg-white/10 border border-white/10 text-white px-3 py-3 outline-none focus:ring-2 focus:ring-cyan-400/40" />
             </label>
             {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
-            <button disabled={saving} className="w-full rounded-[10px] bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 disabled:opacity-60">{saving ? "Ingresando…" : "Ingresar"}</button>
+            <Button native disabled={saving} className="w-full rounded-[10px] bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 disabled:opacity-60">{saving ? "Ingresando…" : "Ingresar"}</Button>
           </form>
           <div className="flex items-center gap-3 w-full text-xs text-gray-400 mb-5"><span className="h-px bg-white/10 flex-1" />O continuá con<span className="h-px bg-white/10 flex-1" /></div>
           {/* Botón de Google */}
-          <motion.button
+          <Button native as={motion.button}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
@@ -97,7 +98,7 @@ export default function LoginPage() {
           >
             <FcGoogle className="text-3xl" />
             <span className="text-lg">Continuar con Google</span>
-          </motion.button>
+          </Button>
 
           {/* Footer */}
           <motion.p

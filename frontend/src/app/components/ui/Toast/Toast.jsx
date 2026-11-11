@@ -1,4 +1,5 @@
 "use client";
+import Button from "@/app/components/ui/Button/button";
 import { CircleCheck, CircleX, Info, TriangleAlert, X } from "lucide-react";
 
 import { createContext, useContext, useState, useCallback } from "react";
@@ -32,12 +33,12 @@ function Toast({ id, message, type = "info", onClose }) {
       <span className="flex-1 text-sm font-medium text-foreground">
         {message}
       </span>
-      <button
+      <Button native
         onClick={() => onClose(id)}
         className="p-1 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
       >
         <X className="w-4 h-4 text-foreground/60" />
-      </button>
+      </Button>
     </div>
   );
 }

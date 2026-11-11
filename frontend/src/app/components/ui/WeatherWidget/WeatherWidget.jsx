@@ -1,5 +1,5 @@
 "use client";
-import { CircleAlert, CircleCheck, Radio } from "lucide-react";
+import { CircleAlert, CircleCheck, CircleX } from "lucide-react";
 
 
 import React, { useEffect, useState } from "react";
@@ -21,9 +21,15 @@ function getWeatherDescription(code) {
   return "Variable";
 }
 
-function getPassStatus() {
-  return { status: "SIN CONFIRMAR", color: "bg-slate-600", icon: <CircleAlert /> };
-}
+const passStatuses = {
+  open: { status: "SIN RESTRICCIONES", color: "bg-emerald-700", icon: <CircleCheck /> },
+  restricted: { status: "CON RESTRICCIONES", color: "bg-amber-700", icon: <CircleAlert /> },
+  closed: { status: "INTERRUMPIDO", color: "bg-red-700", icon: <CircleX /> },
+  unknown: { status: "SIN CONFIRMAR", color: "bg-slate-600", icon: <CircleAlert /> },
+};
+
+const officialPassUrl =
+  "https://www.argentina.gob.ar/seguridad/pasosinternacionales/detalle/ruta/29/Sistema-Cristo-Redentor";
 
 const RenderWeatherEffects = ({ code }) => {
   const isRain =
@@ -54,6 +60,30 @@ const RenderWeatherEffects = ({ code }) => {
 export default function WeatherWidget({ mode = "card", className = "" }) {
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [passReport, setPassReport] = useState(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function refreshPass() {
+      try {
+        const response = await fetch("/api/pasos/cristo-redentor", {
+          signal: controller.signal,
+          cache: "no-store",
+        });
+        if (!response.ok) throw new Error("No se pudo consultar el paso");
+        const report = await response.json();
+        if (!controller.signal.aborted) setPassReport(report);
+      } catch {
+        if (!controller.signal.aborted) setPassReport(null);
+      }
+    }
+    refreshPass();
+    const timer = setInterval(refreshPass, 5 * 60 * 1000);
+    return () => {
+      controller.abort();
+      clearInterval(timer);
+    };
+  }, []);
 
   useEffect(() => {
     async function fetchWeather() {
@@ -92,20 +122,22 @@ export default function WeatherWidget({ mode = "card", className = "" }) {
     );
   }
 
-  if (!weather) return null;
+  const passStatus = passStatuses[passReport?.status] ?? passStatuses.unknown;
+  const reportDate = passReport?.reportedAt && new Date(passReport.reportedAt)
+    .toLocaleDateString("es-AR", { timeZone: "UTC" });
 
   if (mode === "navbar") {
-    const passStatus = getPassStatus(weather.code);
+
     return (
       <div
         className={`flex items-center gap-3 text-foreground bg-content1 shadow-sm px-4 py-1.5 rounded-full border border-divider ${className}`}
       >
         <div className="flex items-center gap-2">
           <IconWeather className="w-5 h-5 text-blue-500" />
-          <span className="font-bold">{weather.temp}°C</span>
+          <span className="font-bold">{weather ? (weather.temp + "°C") : "Clima sin datos"}</span>
         </div>
         <span className="text-xs text-foreground/50 hidden md:inline border-l border-divider pl-2">
-          {weather.condition}
+          {weather?.condition}
         </span>
         <div
           className={`flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${passStatus.color} text-white`}
@@ -117,11 +149,11 @@ export default function WeatherWidget({ mode = "card", className = "" }) {
   }
 
   // Card Mode (Dashboard Hero)
-  const passStatus = getPassStatus(weather.code);
+
   const bgGradient =
-    weather.code >= 71
+    weather?.code >= 71
       ? "from-gray-700 to-gray-900" // Snow
-      : weather.code >= 51
+      : weather?.code >= 51
         ? "from-slate-700 to-slate-900" // Rain
         : "from-blue-500 to-blue-700"; // Clear/Cloudy
 
@@ -130,7 +162,7 @@ export default function WeatherWidget({ mode = "card", className = "" }) {
       className={`relative overflow-hidden p-0 rounded-3xl shadow-xl bg-gradient-to-br ${bgGradient} text-white hover:shadow-2xl transition-all duration-500 ${className}`}
     >
       {/* Weather Animation Layer */}
-      <RenderWeatherEffects code={weather.code} />
+      <RenderWeatherEffects code={weather?.code} />
 
       <div className="relative z-10 p-8 flex flex-col md:flex-row items-center justify-between gap-6 h-full">
         {/* Left: Info */}
@@ -141,21 +173,21 @@ export default function WeatherWidget({ mode = "card", className = "" }) {
           </div>
           <div className="flex items-end gap-2">
             <span className="text-7xl font-extrabold tracking-tighter">
-              {weather.temp}°
+              {weather ? (weather.temp + "°") : "—"}
             </span>
             <span className="text-2xl font-medium mb-3 opacity-90">
-              {weather.condition}
+              {weather?.condition}
             </span>
           </div>
           <div className="flex items-center gap-4 text-sm text-white/70 mt-2">
-            <span>Viento: {weather.wind} km/h</span>
+            <span>{weather ? ("Viento: " + weather.wind + " km/h") : "Clima sin datos"}</span>
           </div>
         </div>
 
         {/* Right: Pass Status */}
         <div className="flex flex-col items-center gap-3 bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20">
           <span className="text-white/80 text-sm font-medium uppercase tracking-widest">
-            Estado oficial del paso
+            Transitabilidad del paso
           </span>
           <div
             className={`flex items-center gap-3 px-6 py-2 rounded-full shadow-lg ${passStatus.color} transition-transform hover:scale-105`}
@@ -165,7 +197,22 @@ export default function WeatherWidget({ mode = "card", className = "" }) {
               {passStatus.status}
             </span>
           </div>
-          <p className="text-xs text-center text-white/80">El clima no confirma si el paso está habilitado.</p>
+          {passReport?.restriction && (
+            <p className="text-sm text-center">{passReport.restriction}</p>
+          )}
+          {reportDate && (
+            <p className="text-xs text-center text-white/80">
+              Vialidad de Chile · Informe del {reportDate}
+            </p>
+          )}
+          <a
+            href={officialPassUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs underline underline-offset-2"
+          >
+            Consultar avisos y horarios para carga
+          </a>
         </div>
       </div>
     </div>

@@ -4,6 +4,8 @@ import { Model } from 'mongoose';
 import mongoose from 'mongoose';
 import { AppError } from '../../shared/errors/AppError';
 
+import { CargaCombustible } from './viajes.combustible';
+
 export class ViajesRepository {
     private model: Model<IViaje>;
 
@@ -33,6 +35,14 @@ export class ViajesRepository {
         }, { new: true, runValidators: true });
         if (!result) throw new AppError('El viaje cambió mientras lo editabas. Recargá y volvé a intentar', 409);
         return result;
+    }
+
+    async addFuel(id: string, carga: CargaCombustible): Promise<IViaje | null> {
+        return this.model.findOneAndUpdate(
+            { _id: id, 'cargasCombustible.registroId': { $ne: carga.registroId } },
+            { $push: { cargasCombustible: carga } },
+            { new: true, runValidators: true },
+        );
     }
 
     async delete(id: string): Promise<IViaje | null> {

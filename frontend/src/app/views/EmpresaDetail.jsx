@@ -1,4 +1,5 @@
 "use client";
+import Button from "@/app/components/ui/Button/button";
 import { ArrowLeft, Eye, Search, X } from "lucide-react";
 
 
@@ -248,12 +249,12 @@ export default function EmpresaDetail({ id, tipo = 'proveedor' }) {
             />
           </div>
           {searchTerm && (
-            <button
+            <Button native
               onClick={() => setSearchTerm("")}
               className="flex items-center gap-1 text-foreground/60 hover:text-danger text-sm"
             >
               <X size={16} /> Limpiar
-            </button>
+            </Button>
           )}
           <span className="text-sm text-foreground/50 ml-auto">
             {filteredFacturas.length} registro(s)
@@ -386,13 +387,13 @@ export default function EmpresaDetail({ id, tipo = 'proveedor' }) {
                         {/* Acciones */}
                         <td className="px-4 py-3 text-center">
                           <FacturaAdjunto item={item} onChange={archivoFactura => setFacturas(previous => previous.map(row => row._id === item._id && row.endpoint === item.endpoint ? { ...row, archivoFactura } : row))} />
-                          {item.orden_pago_url && <button
+                          {item.orden_pago_url && <Button native
                             onClick={() => viewFactura(item)}
                             className="p-2 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
                             title="Ver factura"
                           >
                             <Eye size={16} />
-                          </button>}
+                          </Button>}
                         </td>
                         <td className="px-4 py-3 text-sm text-right whitespace-nowrap">{money(amounts(item).paid, item.moneda || 'Sin definir')}</td>
                         <td className="px-4 py-3 text-sm text-right whitespace-nowrap">{money(amounts(item).pending, item.moneda || 'Sin definir')}</td>

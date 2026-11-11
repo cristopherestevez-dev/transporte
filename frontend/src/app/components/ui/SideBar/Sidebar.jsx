@@ -1,4 +1,5 @@
 "use client";
+import Button from "@/app/components/ui/Button/button";
 import { FileText, House, LogOut, Moon, PanelLeft, SlidersHorizontal, Sun, Scale } from "lucide-react";
 
 
@@ -16,7 +17,7 @@ import {
   IconWeather,
   IconCalculator,
 } from "../Icons/Icons";
-import { Button, Switch } from "@heroui/react";
+import { Switch } from "@heroui/react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
@@ -174,7 +175,7 @@ export default function Sidebar() {
               </span>
             )}
 
-            <button
+            <Button native
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className={`relative flex items-center justify-center rounded-full transition-colors focus:outline-none ${
                 collapsed
@@ -216,7 +217,7 @@ export default function Sidebar() {
                   </motion.div>
                 </>
               )}
-            </button>
+            </Button>
           </div>
         )}
       </div>

@@ -1,6 +1,18 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+import { CargaCombustible } from './viajes.combustible';
+
+const cargaCombustibleFields = new Schema<CargaCombustible>({
+    registroId: { type: String, required: true },
+    camionId: { type: String, required: true },
+    patente: { type: String, required: true },
+    importe: { type: Number, required: true },
+    moneda: { type: String, enum: ['ARS', 'USD', 'CLP'], required: true },
+    fecha: { type: String, required: true },
+}, { _id: false });
+
 export interface IViaje extends Document {
+    cargasCombustible?: CargaCombustible[];
     origen: string;
     destino: string;
     fecha_salida?: string;
@@ -43,6 +55,7 @@ export interface IViaje extends Document {
 }
 
 const viajeFields = {
+    cargasCombustible: { type: [cargaCombustibleFields], default: undefined },
     notificationEvents: { type: [{ eventId: String, previous: String, current: String, createdAt: Date }], default: [], select: false },
     origen: { type: String, required: true },
     destino: { type: String, required: true },

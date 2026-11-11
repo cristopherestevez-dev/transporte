@@ -138,3 +138,40 @@ html {
     transition: none;
   }
 }
+
+:root {
+  --button-hover-overlay: rgb(15 43 89 / 14%);
+  --button-focus-ring: #2563eb;
+  --button-default-foreground: #0b1f3b;
+}
+
+.dark {
+  --button-hover-overlay: rgb(148 197 255 / 22%);
+  --button-focus-ring: #7dd3fc;
+  --button-default-foreground: #e5e7eb;
+}
+
+:where(.app-button[data-app-button]) {
+  color: var(--button-default-foreground);
+}
+
+.app-button[data-app-button],
+button:not([data-app-button]) {
+  border-radius: 10px;
+}
+
+@media (hover: hover) {
+  :is(.app-button[data-app-button], button:not([data-app-button])):hover:not(:disabled):not([aria-disabled="true"]):not([data-disabled="true"]) {
+    background-image: linear-gradient(var(--button-hover-overlay), var(--button-hover-overlay));
+  }
+}
+
+.app-button[data-app-button]:focus-visible {
+  outline: 2px solid var(--button-focus-ring);
+  outline-offset: 2px;
+}
+
+.app-button[data-app-button]:is(:disabled, [aria-disabled="true"]) {
+  cursor: not-allowed;
+  opacity: 0.55;
+}

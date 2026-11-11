@@ -1,10 +1,11 @@
 "use client";
+import Button from "@/app/components/ui/Button/button";
 import { Bell, LogOut, Menu, UserRound, Settings, ArrowLeft } from "lucide-react";
 
 
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { Button, Dropdown } from "@heroui/react";
+import { Dropdown } from "@heroui/react";
 
 import WeatherWidget from "@/app/components/ui/WeatherWidget/WeatherWidget";
 import { Logo } from "@/app/components/ui/Logo";
@@ -179,7 +180,7 @@ export default function Navbar({ onToggleSidebar }) {
 
         {/* Notificaciones */}
         <div className="relative" ref={notificationRef}>
-          <button
+          <Button native
             onClick={toggleNotifications}
             aria-label="Abrir notificaciones"
             className="relative p-2 text-foreground/60 hover:text-foreground focus:outline-none"
@@ -190,7 +191,7 @@ export default function Navbar({ onToggleSidebar }) {
                 {alerts.length}
               </span>
             )}
-          </button>
+          </Button>
 
           {openNotifications && (
             <div className="absolute right-0 mt-2 w-80 bg-content1 border border-divider rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto">
@@ -203,12 +204,12 @@ export default function Navbar({ onToggleSidebar }) {
                     {alerts.length} alertas
                   </span>
                   {!notificationSettings && alerts.length > 0 && (
-                    <button
+                    <Button native
                       onClick={handleClearAll}
                       className="text-xs text-red-500 hover:text-red-700 font-medium"
                     >
                       Borrar todas
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -263,10 +264,10 @@ export default function Navbar({ onToggleSidebar }) {
                 )}
               </div>
               <div className="sticky bottom-0 border-t border-divider bg-content1 px-4 py-2 flex justify-end">
-                <button type="button" disabled={savingNotifications} aria-label={notificationSettings ? 'Volver a notificaciones' : 'Configurar notificaciones'} onClick={() => { setNotificationSettings(!notificationSettings); if (!notificationSettings) loadNotificationOptions(); }} className="flex items-center gap-2 p-1 rounded text-xs text-foreground/60 hover:text-foreground">
+                <Button native type="button" disabled={savingNotifications} aria-label={notificationSettings ? 'Volver a notificaciones' : 'Configurar notificaciones'} onClick={() => { setNotificationSettings(!notificationSettings); if (!notificationSettings) loadNotificationOptions(); }} className="flex items-center gap-2 p-1 rounded text-xs text-foreground/60 hover:text-foreground">
                   {notificationSettings ? <ArrowLeft size={17} /> : <Settings size={17} />}
                   {notificationSettings ? 'Volver' : 'Configurar notificaciones'}
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -275,7 +276,7 @@ export default function Navbar({ onToggleSidebar }) {
         {/* Usuario y acciones */}
         <div className="relative" ref={dropdownRef}>
           <div className="flex items-center gap-2">
-            <button
+            <Button native
               type="button"
               onClick={toggleDropdown}
               aria-label="Abrir menú de usuario"
@@ -288,15 +289,15 @@ export default function Navbar({ onToggleSidebar }) {
                   {user?.name?.charAt(0) || <UserRound size={16} />}
                 </div>
               )}
-            </button>
+            </Button>
             <div className="flex min-w-0 flex-col items-start">
-              <button
+              <Button native
                 type="button"
                 onClick={toggleDropdown}
                 className="px-2 text-left font-medium text-sm leading-tight text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-focus/40 rounded"
               >
                 {user?.name || "Invitado"}
-              </button>
+              </Button>
               {authenticated && perfiles.length > 0 && <AppSelect
                 compact
                 ariaLabel="Perfil activo"
@@ -347,7 +348,7 @@ export default function Navbar({ onToggleSidebar }) {
 
                 {companyProfile && <div className="px-5 py-3 border-b border-divider flex items-center gap-3">{companyProfile.logo && <img src={companyProfile.logo} alt={`Logo de ${companyProfile.nombre}`} className="w-10 h-10 object-contain rounded-[10px] bg-white p-1" />}<span className="text-sm font-medium truncate">{companyProfile.nombre}</span></div>}
                 <div className="p-2">
-                  <button
+                  <Button native
                     onClick={handleLogoutClick}
                     className="w-full flex items-center gap-2 px-3 py-2.5 text-sm rounded-xl hover:bg-red-500/10 text-foreground/70 hover:text-red-500 transition-colors group"
                   >
@@ -355,7 +356,7 @@ export default function Navbar({ onToggleSidebar }) {
                       <LogOut size={16} />
                     </div>
                     <span>Cerrar sesión</span>
-                  </button>
+                  </Button>
                 </div>
               </motion.div>
             )}

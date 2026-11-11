@@ -1,6 +1,8 @@
 "use client";
 
+import Button from "@/app/components/ui/Button/button";
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import TabsWrapper from "../components/ui/TabsWrapper/TabsWrapper";
 import CrudTable from "../components/ui/CrudTable/CrudTable";
 import ProveedorWrapper from "../components/ui/ModalWrapper/ProveedorWrapper";
@@ -397,6 +399,9 @@ const ViajesList = () => {
 
   return (
     <>
+      <div className="mb-4 flex justify-end">
+        <Button as={Link} href="/viajes/liquidaciones" color="primary">Liquidación agrupada</Button>
+      </div>
       <TabsWrapper
         tabs={[
           { label: "Viajes que facturamos", content: renderTripTabs("emitida") },

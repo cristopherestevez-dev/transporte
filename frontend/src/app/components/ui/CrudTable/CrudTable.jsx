@@ -1,4 +1,5 @@
 "use client";
+import Button from "@/app/components/ui/Button/button";
 import { Check, ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 
 import { useState, useMemo, useEffect } from "react";
@@ -262,12 +263,12 @@ export default function CrudTable({
               className="pl-10 pr-4 py-2 border border-divider rounded-md bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-navy/50 w-full sm:w-64"
             />
           </div>
-          {allowCreate && <button
+          {allowCreate && <Button native
             onClick={() => openModal()}
             className="flex items-center gap-1 px-3 py-2 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/80 hover:shadow-md transition-all whitespace-nowrap"
           >
             <Plus size={16} /> Agregar
-          </button>}
+          </Button>}
         </div>
       </div>
 
@@ -361,13 +362,13 @@ export default function CrudTable({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center justify-center gap-3">
                     {extraActions && extraActions(item)}
-                    <button
+                    <Button native
                       onClick={() => openModal(item)}
                       className="text-yellow-500 hover:text-yellow-600"
                     >
                       <Pencil size={20} />
-                    </button>
-                    <button
+                    </Button>
+                    <Button native
                       onClick={() => {
                         setItemToDelete(item);
                         setConfirmOpen(true);
@@ -375,7 +376,7 @@ export default function CrudTable({
                       className="text-red-600 hover:text-red-700"
                     >
                       <Trash2 size={20} />
-                    </button>
+                    </Button>
                   </div>
                 </td>
               </tr>
@@ -384,7 +385,7 @@ export default function CrudTable({
         </tbody>
       </table>
 
-      {pageError && <p role="alert" className="text-danger mt-3">{pageError} <button onClick={() => setRevision(value => value + 1)} className="underline">Reintentar</button></p>}
+      {pageError && <p role="alert" className="text-danger mt-3">{pageError} <Button native onClick={() => setRevision(value => value + 1)} className="underline">Reintentar</Button></p>}
       {pageLoading && <p className="text-sm text-default-500 mt-3">Cargando resultados…</p>}
       {/* Paginación */}
       {(
@@ -395,23 +396,23 @@ export default function CrudTable({
             {totalResults}
           </span>
           <div className="flex items-center gap-2">
-            <button
+            <Button native
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1 || pageLoading}
               className="p-2 rounded-md border border-divider hover:bg-content2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft size={18} />
-            </button>
+            </Button>
             <span className="text-sm font-medium px-3">
               {currentPage} / {totalPages}
             </span>
-            <button
+            <Button native
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage >= totalPages || pageLoading}
               className="p-2 rounded-md border border-divider hover:bg-content2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight size={18} />
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -515,20 +516,20 @@ export default function CrudTable({
               </div>
             ))}
             <div className="flex justify-end gap-3">
-              <button
+              <Button native
                 type="button"
                 onClick={closeModal}
                 className="px-4 py-2 bg-default-400 text-white rounded hover:bg-default-500 transition"
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button native
                 type="submit"
                 disabled={!requiredFilled}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50"
               >
                 Guardar
-              </button>
+              </Button>
             </div>
           </form>
         </div>

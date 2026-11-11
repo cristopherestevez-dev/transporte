@@ -1,4 +1,5 @@
 "use client";
+import Button from "@/app/components/ui/Button/button";
 import React, { useState, useEffect } from "react";
 import { useToast } from "../Toast/Toast";
 
@@ -605,13 +606,13 @@ export default function DriverTripTable({ trips = [] }) {
         </tbody>
       </table>
        <div className="flex justify-end m-4">
-        <button
+        <Button native
           onClick={handleSaveAll}
           disabled={savingPlanilla}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition disabled:opacity-50 text-sm shadow flex items-center gap-2"
         >
           {savingPlanilla ? "Guardando..." : "Guardar Planilla"}
-        </button>
+        </Button>
       </div>
     </div>
   </div>

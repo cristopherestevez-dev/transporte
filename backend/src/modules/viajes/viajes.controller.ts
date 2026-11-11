@@ -8,6 +8,15 @@ export class ViajesController {
         this.service = tipo === 'nacional' ? viajesNacionalesService : viajesInternacionalesService;
     }
 
+    getFuelTrucks = async (_req: Request, res: Response) => {
+        res.json({ status: 'success', data: await this.service.getFuelTrucks() });
+    };
+
+    addFuel = async (req: Request, res: Response) => {
+        const viaje = await this.service.addFuel(req.params.id, req.body);
+        res.json({ status: 'success', data: viaje });
+    };
+
     getAll = async (req: Request, res: Response, next: NextFunction) => {
         const viajes = await this.service.getAll();
         res.status(200).json({

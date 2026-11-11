@@ -4,7 +4,37 @@ import { AppError } from '../../shared/errors/AppError';
 import { drainTripEvents } from '../notifications/notifications.events';
 import { logger } from '../../config/logger';
 
+import { CamionModel } from '../camiones/camiones.model';
+import { CargaCombustibleInput } from './viajes.combustible';
+
 export class ViajesService {
+    async getFuelTrucks() {
+        return CamionModel.find().select('patente').sort({ patente: 1 }).lean();
+    }
+
+    async addFuel(id: string, carga: CargaCombustibleInput): Promise<IViaje> {
+        const viaje = await this.getById(id);
+        const existing = viaje.cargasCombustible?.find(row => row.registroId === carga.registroId);
+        if (existing) {
+            if (existing.camionId !== carga.camionId || existing.importe !== carga.importe ||
+                existing.moneda !== carga.moneda || existing.fecha !== carga.fecha) {
+                throw new AppError('El identificador ya corresponde a otra carga de combustible', 409);
+            }
+            return viaje;
+        }
+
+        const camion = await CamionModel.findById(carga.camionId).select('patente').lean();
+        if (!camion) throw new AppError('Camión no encontrado', 404);
+        const updated = await this.repository.addFuel(id, { ...carga, patente: camion.patente });
+        if (updated) return updated;
+
+        const current = await this.getById(id);
+        const saved = current.cargasCombustible?.find(row => row.registroId === carga.registroId);
+        if (saved && saved.camionId === carga.camionId && saved.importe === carga.importe &&
+            saved.moneda === carga.moneda && saved.fecha === carga.fecha) return current;
+        throw new AppError('El identificador ya corresponde a otra carga de combustible', 409);
+    }
+
     private repository: ViajesRepository;
     private tipo: string;
 

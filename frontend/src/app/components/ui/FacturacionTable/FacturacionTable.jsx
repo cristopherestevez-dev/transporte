@@ -1,4 +1,5 @@
 "use client";
+import Button from "@/app/components/ui/Button/button";
 import { Banknote, CreditCard, FileDown, FileText, Search, Upload, X } from "lucide-react";
 
 
@@ -10,7 +11,6 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  Button,
 } from "@heroui/react";
 import SelectSearch from "../SelectSearch/Select";
 import jsPDF from "jspdf";
@@ -884,7 +884,7 @@ export default function FacturacionTable({
                       }
                       className="w-28 px-3 py-1 text-sm border border-divider rounded-md bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-navy text-right"
                     />
-                    <button
+                    <Button native
                       type="button"
                       onClick={() => {
                         const totalADeber =
@@ -910,7 +910,7 @@ export default function FacturacionTable({
                       title="Poner el total"
                     >
                       Total
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -957,7 +957,7 @@ export default function FacturacionTable({
                       }
                       className="w-28 px-3 py-1 text-sm border border-divider rounded-md bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-navy text-right"
                     />
-                    <button
+                    <Button native
                       type="button"
                       onClick={() => {
                         const totalADeber =
@@ -983,7 +983,7 @@ export default function FacturacionTable({
                       title="Poner el total"
                     >
                       Total
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -1044,7 +1044,7 @@ export default function FacturacionTable({
                         }
                         className="w-24 px-3 py-2 text-sm border border-divider rounded-md bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-brand-navy text-right"
                       />
-                      <button
+                      <Button native
                         type="button"
                         onClick={() => {
                           const totalADeber =
@@ -1074,23 +1074,23 @@ export default function FacturacionTable({
                         title="Poner el total"
                       >
                         Total
-                      </button>
+                      </Button>
                       {cheques.length > 1 && (
-                        <button
+                        <Button native
                           onClick={() => removeCheque(index)}
                           className="p-1 text-red-500 hover:text-red-700 transition"
                         >
                           <X size={18} />
-                        </button>
+                        </Button>
                       )}
                     </div>
                   ))}
-                  <button
+                  <Button native
                     onClick={addCheque}
                     className="text-sm text-primary font-medium hover:underline"
                   >
                     + Agregar cheque
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -1179,12 +1179,12 @@ export default function FacturacionTable({
       <div className="px-4 py-3 border-b border-divider flex justify-between items-center">
         <h3 className="text-lg font-bold text-foreground">{title}</h3>
         {hasActiveFilters && (
-          <button
+          <Button native
             onClick={clearFilters}
             className="flex items-center gap-1 text-sm text-secondary hover:text-secondary/80 transition"
           >
             <X size={16} /> Limpiar filtros
-          </button>
+          </Button>
         )}
       </div>
 

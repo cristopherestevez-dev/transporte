@@ -5,7 +5,14 @@ import { asyncHandler } from '../../shared/asyncHandler';
 import { validateBody } from '../../shared/middleware/validationMiddleware';
 import { CreateViajeSchema, UpdateViajeSchema } from './viajes.dto';
 
+import { cargaCombustibleSchema } from './viajes.combustible';
+import { requirePermission } from '../../shared/middleware/authMiddleware';
+
 const router = Router();
+
+router.get('/combustible/camiones', requirePermission('viajes'), asyncHandler(viajesNacionalesController.getFuelTrucks));
+router.post('/nacionales/:id/combustible', requirePermission('viajes'), validateBody(cargaCombustibleSchema), asyncHandler(viajesNacionalesController.addFuel));
+router.post('/internacionales/:id/combustible', requirePermission('viajes'), validateBody(cargaCombustibleSchema), asyncHandler(viajesInternacionalesController.addFuel));
 
 // Rutas para viajes nacionales
 router.get('/nacionales', paginationMiddleware, asyncHandler(viajesNacionalesController.getAll));

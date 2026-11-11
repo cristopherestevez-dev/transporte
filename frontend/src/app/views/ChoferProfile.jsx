@@ -1,11 +1,11 @@
 "use client";
+import Button from "@/app/components/ui/Button/button";
 import { ArrowLeft } from "lucide-react";
 
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import DriverTripTable from "../components/ui/DriverTripTable/DriverTripTable";
-import { Button } from "@heroui/react";
 import Link from "next/link";
 import api from "@/services/api";
 
@@ -93,11 +93,9 @@ export default function ChoferProfile() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/choferes">
-          <Button isIconOnly variant="light">
+        <Button as={Link} href="/choferes" isIconOnly variant="light" aria-label="Volver">
             <ArrowLeft size={24} />
           </Button>
-        </Link>
         <div>
           <h1 className="text-2xl font-bold text-foreground">{driver.nombre}</h1>
           <div className="flex gap-4 text-sm text-default-500 mt-1">

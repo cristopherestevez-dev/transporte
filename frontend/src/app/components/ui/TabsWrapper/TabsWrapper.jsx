@@ -1,4 +1,5 @@
 "use client";
+import Button from "@/app/components/ui/Button/button";
 import { useState } from "react";
 
 export default function TabsWrapper({ tabs, initialTab = 0, className = "" }) {
@@ -9,7 +10,7 @@ export default function TabsWrapper({ tabs, initialTab = 0, className = "" }) {
       {/* Botones de pestañas */}
       <div className="flex flex-wrap gap-2 border-b border-divider mb-4">
         {tabs.map((tab, index) => (
-          <button
+          <Button native
             key={index}
             aria-pressed={activeIndex === index}
             data-selected={activeIndex === index}
@@ -21,7 +22,7 @@ export default function TabsWrapper({ tabs, initialTab = 0, className = "" }) {
             }`}
           >
             {tab.label}
-          </button>
+          </Button>
         ))}
       </div>
 

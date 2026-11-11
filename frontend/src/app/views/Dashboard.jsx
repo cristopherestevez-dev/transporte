@@ -1,4 +1,5 @@
 "use client";
+import Button from "@/app/components/ui/Button/button";
 import { ChevronLeft, ChevronRight, Eye } from "lucide-react";
 
 
@@ -172,12 +173,12 @@ export default function Dashboard() {
       {/* 3. Carrusel de cards */}
       <h2 className="text-2xl font-bold text-foreground mb-4 px-2">Métricas Rápidas</h2>
       <div className="flex items-center mb-12 gap-4 w-full">
-        <button
+        <Button native
           onClick={scrollLeft}
           className="bg-content1 p-2 rounded-full shadow hover:bg-content2 text-foreground transition shrink-0"
         >
           <ChevronLeft size={24} />
-        </button>
+        </Button>
 
         <div className="flex-1 overflow-hidden relative" style={{ minHeight: "160px" }}> 
           <AnimatePresence mode="wait" initial={false}>
@@ -208,12 +209,12 @@ export default function Dashboard() {
           </AnimatePresence>
         </div>
 
-        <button
+        <Button native
           onClick={scrollRight}
           className="bg-content1 p-2 rounded-full shadow hover:bg-content2 text-foreground transition shrink-0"
         >
           <ChevronRight size={24} />
-        </button>
+        </Button>
       </div>
     </div>
   );
