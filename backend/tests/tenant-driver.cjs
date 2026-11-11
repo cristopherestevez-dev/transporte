@@ -107,7 +107,7 @@ test('driver HTTP endpoints use the logged-in driver and assigned truck, ignorin
       return query;
     });
     mock(MantenimientoModel, 'countDocuments', async () => 1);
-    const app = express(); app.use('/mi-operacion', miOperacionRoutes);
+    const app = express(); app.use(express.json()); app.use('/mi-operacion', miOperacionRoutes);
     app.use((error, req, res, next) => res.status(error.statusCode || 500).json({ message: error.message }));
     server = await new Promise(resolve => { const s = app.listen(0, '127.0.0.1', () => resolve(s)); });
     const token = jwt.sign({ email: 'test@example.com', purpose: 'session', perfil: 'chofer' }, env.JWT_SECRET, { expiresIn: 60, issuer: 'transporte-frontend', audience: 'transporte-api' });
@@ -122,6 +122,29 @@ test('driver HTTP endpoints use the logged-in driver and assigned truck, ignorin
     assert.equal((await fetch(base + '/viajes?pageSize=100', { headers })).status, 400);
     const truck = await fetch(base + '/camion?camionId=foreign-truck', { headers });
     assert.equal(truck.status, 200); assert.equal((await truck.json()).data.camion._id, 'truck-a');
+    const { MantenimientoService } = require('../src/modules/mantenimiento/mantenimiento.service');
+    let altas = 0;
+    mock(MantenimientoService.prototype, 'create', async payload => {
+      altas += 1;
+      assert.equal(tenantContext.getStore().empresaId, 'company-a');
+      assert.equal(payload.vehiculoId, 'truck-a');
+      assert.equal(payload.patente, 'AA123AA');
+      assert.equal(payload.km, 100);
+      return { _id: 'service-new', vehiculoId: payload.vehiculoId };
+    });
+    const request = {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vehiculoId: 'foreign-truck', patente: 'Otra patente', km: 100 }),
+    };
+    const servicios = '/camion/servicios/';
+    assert.equal((await fetch(base + servicios + 'foreign-truck', request)).status, 403);
+    const alta = await fetch(base + servicios + 'truck-a', request);
+    assert.equal(alta.status, 201);
+    assert.equal((await alta.json()).data.vehiculoId, 'truck-a');
+    assert.equal(altas, 1);
+    assert.equal((await fetch(base + servicios + 'truck-a?kmMin=100', { headers })).status, 200);
+    assert.equal((await fetch(base + servicios + 'foreign-truck', { headers })).status, 403);
     let denied; requirePermission('viajes', 'camiones', 'configuracion')({ user: { permisos: ['mis-viajes', 'mi-camion'] } }, {}, error => { denied = error; });
     assert.equal(denied.statusCode, 403);
   } finally { for (const reset of restore.reverse()) reset(); if (server) await new Promise(resolve => server.close(resolve)); }

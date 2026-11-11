@@ -1,0 +1,10 @@
+**
+!package.json
+!package-lock.json
+!jsconfig.json
+!next.config.mjs
+!postcss.config.js
+!public
+!public/**
+!src
+!src/**

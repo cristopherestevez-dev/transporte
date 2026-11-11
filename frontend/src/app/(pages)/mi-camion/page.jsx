@@ -1,2 +1,5 @@
-import MiOperacion from "@/app/views/MiOperacion";
-export default function Page() { return <MiOperacion camion />; }
+import CamionProfile from "@/app/views/CamionProfile";
+
+export default function Page() {
+  return <CamionProfile propio />;
+}

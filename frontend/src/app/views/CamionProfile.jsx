@@ -100,6 +100,7 @@ const MaintenanceCard = ({
   index,
   handleChange,
   requestDelete,
+  canManage,
   previousRow,
   onSave,
 }) => {
@@ -372,7 +373,7 @@ const MaintenanceCard = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="ml-auto pl-4 border-l border-divider flex items-center gap-2">
+        {canManage && <div className="ml-auto pl-4 border-l border-divider flex items-center gap-2">
           {isEditing ? (
             <Button native
               disabled={saving}
@@ -402,7 +403,7 @@ const MaintenanceCard = ({
           >
             <Trash2 size={14} />
           </Button>
-        </div>
+        </div>}
       </div>
 
       {/* General Validation Error */}
@@ -706,10 +707,59 @@ const MaintenanceCard = ({
   );
 };
 
-export default function CamionProfile({ id }) {
+const camposCamion = [
+  ["patente", "Patente"],
+  ["marca", "Marca"],
+  ["modelo", "Modelo"],
+  ["anio", "Año"],
+  ["seguro", "Seguro"],
+  ["vencimiento_seguro", "Vencimiento del seguro"],
+];
+
+function diasHastaVencimiento(fecha, hoy = new Date()) {
+  const dia = typeof fecha === "string" && fecha.match(/^\d{4}-\d{2}-\d{2}(?=$|T)/)?.[0];
+  if (!dia) return null;
+  const vencimiento = new Date(dia + "T00:00:00Z");
+  if (!Number.isFinite(vencimiento.getTime()) || vencimiento.toISOString().slice(0, 10) !== dia) return null;
+  const hoyCalendario = Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  return (vencimiento.getTime() - hoyCalendario) / 86_400_000;
+}
+
+function ResumenCamion({ truck }) {
+  const dias = diasHastaVencimiento(truck.vencimiento_seguro);
+  let alerta = "";
+  let color = "bg-content2";
+  if (dias !== null && dias <= 30) {
+    color = "bg-red-100 text-red-900 dark:bg-red-950 dark:text-red-100";
+    alerta = dias < 0 ? "Vencido" : dias === 0 ? "Vence hoy" : "Vence en " + dias + (dias === 1 ? " día" : " días");
+  } else if (dias !== null && dias <= 60) {
+    color = "bg-yellow-100 text-yellow-900 dark:bg-yellow-950 dark:text-yellow-100";
+    alerta = "Vence en " + dias + " días";
+  }
+
+  return (
+    <dl className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3">
+      {camposCamion.map(([campo, etiqueta]) => {
+        const esVencimiento = campo === "vencimiento_seguro";
+        return (
+          <div key={campo} className={"rounded-[10px] p-4 " + (esVencimiento ? color : "bg-content2")}>
+            <dt className="text-xs opacity-75">{etiqueta}</dt>
+            <dd className="mt-1 font-medium">{truck[campo] || "—"}</dd>
+            {esVencimiento && alerta && <dd className="mt-1 text-xs font-semibold">{alerta}</dd>}
+          </div>
+        );
+      })}
+    </dl>
+  );
+}
+
+export default function CamionProfile({ id, propio = false }) {
   const [truck, setTruck] = useState(null);
   const [maintenanceLog, setMaintenanceLog] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const vehicleId = propio ? truck?._id : id;
+  const serviciosPropios = "/mi-operacion/camion/servicios/" + encodeURIComponent(vehicleId ?? "");
 
   // Modal State
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -727,6 +777,12 @@ export default function CamionProfile({ id }) {
     async function fetchTruck() {
       try {
         setLoading(true);
+        setLoadError("");
+        if (propio) {
+          const data = await api.get("/mi-operacion/camion");
+          setTruck(data.camion);
+          return;
+        }
         const [camiones, semirremolques] = await Promise.all([
           api.getCamiones(),
           api.getSemirremolques(),
@@ -736,18 +792,18 @@ export default function CamionProfile({ id }) {
           semirremolques?.find((c) => c._id.toString() === id.toString());
         setTruck(found);
       } catch (err) {
-        console.error("Error loading truck:", err);
+        setLoadError(err.message);
       } finally {
         setLoading(false);
       }
     }
     fetchTruck();
-  }, [id]);
+  }, [id, propio]);
 
   // Load Maintenance Log from API
   const fetchMaintenanceLog = async () => {
     try {
-      const data = await api.getMantenimiento(id);
+      const data = propio ? await api.get(serviciosPropios) : await api.getMantenimiento(vehicleId);
       setMaintenanceLog(data || []);
       setIsFiltered(false);
     } catch (err) {
@@ -756,8 +812,8 @@ export default function CamionProfile({ id }) {
   };
 
   useEffect(() => {
-    if (id) fetchMaintenanceLog();
-  }, [id]);
+    if (vehicleId) fetchMaintenanceLog();
+  }, [vehicleId, propio]);
 
   const addRow = async () => {
     try {
@@ -812,9 +868,11 @@ export default function CamionProfile({ id }) {
 
   const saveRow = async (row) => {
     const { _id, isNew, createdAt, updatedAt, ...payload } = row;
-    const saved = _id.startsWith("draft-")
-      ? await api.createMantenimiento(id, payload)
-      : await api.updateMantenimiento(_id, payload);
+    const saved = propio
+      ? await api.post(serviciosPropios, payload)
+      : _id.startsWith("draft-")
+        ? await api.createMantenimiento(vehicleId, payload)
+        : await api.updateMantenimiento(_id, payload);
     setMaintenanceLog(prev => prev.map(item => item._id === _id ? saved : item));
   };
 
@@ -829,7 +887,9 @@ export default function CamionProfile({ id }) {
 
     try {
       setIsSearching(true);
-      const data = await api.searchMantenimiento(id, filters);
+      const data = propio
+        ? await api.get(serviciosPropios + "?" + new URLSearchParams(filters))
+        : await api.searchMantenimiento(vehicleId, filters);
       setMaintenanceLog(data || []);
       setIsFiltered(true);
     } catch (err) {
@@ -885,10 +945,10 @@ export default function CamionProfile({ id }) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background">
         <Truck size={60} className=" text-foreground/20" />
-        <p className="text-lg text-foreground/60">Vehículo no encontrado</p>
-        <Link href="/dashboard" className="text-primary hover:underline">
-          Volver al Dashboard
-        </Link>
+        <p className="text-lg text-foreground/60" role={loadError ? "alert" : undefined}>
+          {loadError || (propio ? "Tu administrador todavía no te asignó un camión." : "Vehículo no encontrado")}
+        </p>
+        {!propio && <Link href="/dashboard" className="text-primary hover:underline">Volver al Dashboard</Link>}
       </div>
     );
 
@@ -898,15 +958,15 @@ export default function CamionProfile({ id }) {
       <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-lg border-b border-divider">
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link
+            {!propio && <Link
               href="/camiones"
               className="p-2 -ml-2 rounded-full hover:bg-content2 transition-colors"
             >
               <ArrowLeft className="text-foreground/70" />
-            </Link>
+            </Link>}
             <div>
               <h1 className="text-xl font-bold flex items-center gap-2">
-                {truck.marca} {truck.modelo}
+                {propio ? "Mi camión" : truck.marca + " " + truck.modelo}
                 <span className="px-2 py-0.5 rounded text-xs font-mono bg-content2 border border-divider">
                   {truck.patente}
                 </span>
@@ -931,7 +991,7 @@ export default function CamionProfile({ id }) {
               className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
             >
               <Plus size={14} />
-              <span>Nuevo Registro</span>
+              <span>Agregar servicio</span>
             </Button>
           </div>
         </div>
@@ -939,6 +999,7 @@ export default function CamionProfile({ id }) {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
+        <ResumenCamion truck={truck} />
         {/* Search Bar */}
         <div className="mb-6 bg-content1 border border-divider rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
@@ -1040,6 +1101,7 @@ export default function CamionProfile({ id }) {
                   requestDelete={() => requestDelete(row._id)}
                   previousRow={maintenanceLog[index + 1]}
                   onSave={saveRow}
+                  canManage={!propio || row.isNew}
                 />
               ))}
             </AnimatePresence>
