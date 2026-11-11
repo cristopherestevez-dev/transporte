@@ -81,7 +81,7 @@ const SelectSearch = ({
   return (
     <div
       ref={selectRef}
-      className={`relative flex items-center bg-white dark:bg-content1 border border-gray-300 dark:border-divider rounded-full h-[40px] ${isOpen ? "z-50" : "z-10"} ${className}`}
+      className={`relative flex items-center bg-white dark:bg-content1 border border-gray-300 dark:border-divider rounded-[10px] h-[40px] ${isOpen ? "z-50" : "z-10"} ${className}`}
       style={width ? { width } : undefined}
     >
       {/* Sector del Select */}
@@ -109,7 +109,7 @@ const SelectSearch = ({
               left: `${coords.left}px`,
               width: `${coords.width}px`,
             }}
-            className="bg-white dark:bg-content1 border border-gray-200 dark:border-divider rounded-xl shadow-lg z-[9999] py-1 max-h-60 overflow-y-auto animate-in fade-in zoom-in duration-200"
+            className="bg-white dark:bg-content1 border border-gray-200 dark:border-divider rounded-[10px] shadow-lg z-[9999] py-1 max-h-60 overflow-y-auto animate-in fade-in zoom-in duration-200"
           >
             {options.map((opt, index) => (
               <div

@@ -8,6 +8,8 @@ import TabsWrapper from "../components/ui/TabsWrapper/TabsWrapper";
 import CrudTable from "../components/ui/CrudTable/CrudTable";
 import ProveedorWrapper from "../components/ui/ModalWrapper/ProveedorWrapper";
 import api from "@/services/api";
+import { useAuth } from "@/app/contexts/AuthContext";
+import TripInvoicePayment from "./TripInvoicePayment";
 import SelectSearch from "../components/ui/SelectSearch/Select";
 import SearchableSelect from "../components/ui/SearchableSelect/SearchableSelect";
 
@@ -58,6 +60,7 @@ const validateDates = (form) => {
 };
 
 const ViajesList = () => {
+  const { tienePermiso } = useAuth();
   const [proveedoresOptions, setProveedoresOptions] = useState([]);
   const [choferesOptions, setChoferesOptions] = useState([]);
   const [fleterosOptions, setFleterosOptions] = useState([]);
@@ -393,6 +396,8 @@ const ViajesList = () => {
           formFields={fields}
           defaultValues={{ direccion_facturacion: direccion }}
           extraActions={(trip) => (
+            <div className="flex flex-wrap items-center gap-2">
+              {received && tienePermiso("facturacion") && <TripInvoicePayment trip={trip} scope={endpoint} />}
             <Link
               href={"/viajes/" + type + "/" + encodeURIComponent(trip._id || trip.id) + "?desde=viajes"}
               aria-label="Ver detalles del viaje"
@@ -401,6 +406,7 @@ const ViajesList = () => {
             >
               <Eye size={20} aria-hidden="true" />
             </Link>
+            </div>
           )}
           validate={validateDates}
         />,

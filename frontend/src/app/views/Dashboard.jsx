@@ -180,7 +180,7 @@ export default function Dashboard() {
           <ChevronLeft size={24} />
         </Button>
 
-        <div className="flex-1 overflow-hidden relative" style={{ minHeight: "160px" }}> 
+        <div className="min-w-0 flex-1 overflow-hidden px-1 pb-2"> 
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={page}
@@ -188,7 +188,7 @@ export default function Dashboard() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -300, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 absolute w-full"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
             >
               {visibleCards.map((c, index) => (
                 <div

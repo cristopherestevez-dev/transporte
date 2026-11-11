@@ -320,3 +320,10 @@ button:not([data-app-button]) {
     border-radius: 0.75rem;
   }
 }
+
+/* Keep native and HeroUI selects consistent across themes. */
+select,
+.select__trigger,
+.select__popover {
+  border-radius: 10px;
+}

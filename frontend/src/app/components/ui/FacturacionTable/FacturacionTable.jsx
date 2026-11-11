@@ -18,6 +18,24 @@ export default function FacturacionTable({
   tipo = "cobranzas",
   apiUrl,
 }) {
+  const [selectedInvoices, setSelectedInvoices] = useState([]);
+  const group = selectedInvoices.map(id => data.find(invoice => invoice._id === id)).filter(Boolean);
+  const beneficiary = group[0];
+  const invoiceBalance = invoice => Math.round((invoice.monto - (invoice.monto_pagado || 0)) * 100) / 100;
+  const sameBeneficiary = invoice => !beneficiary || (
+    invoice.razon_social.trim().replace(/\s+/g, " ").toLowerCase() === beneficiary.razon_social.trim().replace(/\s+/g, " ").toLowerCase() &&
+    invoice.cuit.replace(/\D/g, "") === beneficiary.cuit.replace(/\D/g, "") &&
+    invoice.moneda === beneficiary.moneda
+  );
+  const groupedInvoices = group.map(invoice => ({ ...invoice, importeOrden: invoiceBalance(invoice) }));
+  const groupedItem = beneficiary && {
+    razon_social: beneficiary.razon_social,
+    cuit: beneficiary.cuit,
+    moneda: beneficiary.moneda,
+    endpoint: apiUrl.split("/facturacion/")[1],
+    monto: group.reduce((sum, invoice) => sum + Math.round(invoice.monto * 100), 0) / 100,
+    monto_pagado: group.reduce((sum, invoice) => sum + Math.round((invoice.monto_pagado || 0) * 100), 0) / 100,
+  };
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const savingRef = useRef(false);
@@ -1182,6 +1200,17 @@ export default function FacturacionTable({
         )}
       </div>
 
+      {tipo === "pagos" && group.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 border-b border-divider px-4 py-3 text-sm">
+          <span>{group.length} factura(s) de {beneficiary.razon_social}</span>
+          <Button native type="button" onClick={() => setSelectedInvoices([])} className="px-2 text-primary">Limpiar selección</Button>
+          {group.length > 1 && <ComprobanteOperacion item={groupedItem} invoices={groupedInvoices} onChange={saved => {
+            const updates = new Map(saved.map(invoice => [invoice._id, invoice]));
+            setData(data.map(invoice => updates.get(invoice._id) || invoice));
+            setSelectedInvoices([]);
+          }} />}
+        </div>
+      )}
       {/* Filters */}
       <div className="px-4 py-3 bg-content2 border-b border-divider grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-3">
         <div className="relative">
@@ -1281,6 +1310,7 @@ export default function FacturacionTable({
         <table className="w-full border-collapse">
           <thead className="bg-brand-navy">
             <tr>
+              {tipo === "pagos" && <th scope="col" className="px-3 text-white"><span className="sr-only">Seleccionar para pago agrupado</span></th>}
               <th className="px-4 py-3 text-left text-sm font-semibold text-white uppercase">
                 Fecha
               </th>
@@ -1311,7 +1341,7 @@ export default function FacturacionTable({
             {filteredData.length === 0 ? (
               <tr>
                 <td
-                  colSpan={8}
+                  colSpan={tipo === 'pagos' ? 9 : 8}
                   className="px-4 py-8 text-center text-default-500"
                 >
                   No se encontraron registros
@@ -1323,6 +1353,16 @@ export default function FacturacionTable({
                   key={(item._id || item.id)}
                   className="bg-content1 hover:bg-content2 transition-colors border-b border-divider"
                 >
+                  {tipo === "pagos" && <td className="px-3">
+                    <input type="checkbox" aria-label={`Seleccionar factura ${item.numero_comprobante}`}
+                      title="Para agrupar, seleccioná facturas pendientes con la misma razón social, CUIT y moneda"
+                      checked={selectedInvoices.includes(item._id)}
+                      disabled={!item._id || !item.moneda || item.estado === "pagado" || invoiceBalance(item) <= 0 || !sameBeneficiary(item) || (group.length >= 50 && !selectedInvoices.includes(item._id))}
+                      onChange={event => {
+                        const checked = event.target.checked;
+                        setSelectedInvoices(previous => checked ? [...previous, item._id] : previous.filter(id => id !== item._id));
+                      }} />
+                  </td>}
                   <td className="px-4 py-3 text-sm text-foreground">
                     {item.fecha}
                   </td>

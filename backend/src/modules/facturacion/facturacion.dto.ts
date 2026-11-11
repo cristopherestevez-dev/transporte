@@ -7,6 +7,7 @@ const payment = z.object({
     monto: z.number().positive().finite(),
     metodos_pago: z.object({ efectivo: method.optional(), transferencia: method.optional(), cheque: method.optional() }),
     cheques: z.array(cheque).optional(),
+    observaciones: z.string().trim().max(1000).optional(),
 });
 
 export const CreateFacturacionSchema = z.object({
@@ -27,4 +28,14 @@ export const UpdateFacturacionSchema = z.object({
     historial_pagos: z.array(payment).max(1000).optional(),
     orden_pago_pdf: z.string().max(255).optional(),
     orden_pago_url: z.string().max(7 * 1024 * 1024).optional(),
+});
+
+export const GroupPaymentSchema = z.object({
+    facturas: z.array(z.object({
+        id: z.string().regex(/^[0-9a-f]{24}$/i).transform(id => id.toLowerCase()),
+        version: z.string().datetime(),
+    })).min(2).max(50).refine(rows => new Set(rows.map(row => row.id)).size === rows.length, 'Hay facturas duplicadas'),
+    pago: payment,
+    orden_pago_pdf: z.string().min(1).max(255),
+    orden_pago_url: z.string().max(300000).regex(/^data:application\/pdf;base64,[A-Za-z0-9+/=]+$/),
 });

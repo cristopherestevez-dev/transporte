@@ -28,7 +28,14 @@ test('cheque payments require numbers, real due dates, and matching amounts', as
     await assert.rejects(service.update('invoice', { historial_pagos: [payment([{ numero: '1', monto: 100, vencimiento: '2026-02-31' }])] }), error => error.statusCode === 400);
     await assert.rejects(service.update('invoice', { historial_pagos: [payment([{ numero: '1', monto: 50, vencimiento: '2026-11-10' }])] }), error => error.statusCode === 400);
     await assert.rejects(service.update('invoice', { historial_pagos: [payment([{ numero: '1', monto: 50, vencimiento: '2026-11-10' }, { numero: '1', monto: 50, vencimiento: '2026-12-10' }])] }), error => error.statusCode === 400);
-    await service.update('invoice', { historial_pagos: [payment([{ numero: '1', monto: 40, vencimiento: '2026-11-10' }, { numero: '2', monto: 60, vencimiento: '2026-12-10' }])] });
+    const mixedPayment = payment([
+      { numero: '1', monto: 40, vencimiento: '2026-11-10' },
+      { numero: '2', monto: 35, vencimiento: '2026-12-10' },
+    ]);
+    mixedPayment.metodos_pago.cheque.monto = 75;
+    mixedPayment.metodos_pago.transferencia = { enabled: true, monto: 25 };
+    await service.update('invoice', { historial_pagos: [mixedPayment] });
+    assert.deepEqual(current.historial_pagos[0].metodos_pago, mixedPayment.metodos_pago);
     assert.equal(current.estado, 'pagado');
     assert.equal(current.monto_restante, 0);
     assert.equal(current.cheques[1].vencimiento, '2026-12-10');

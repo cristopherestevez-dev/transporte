@@ -5,6 +5,9 @@ import {
     pagosNacionalesRepository,
     pagosInternacionalesRepository
 } from './facturacion.repository';
+import mongoose, { ClientSession } from 'mongoose';
+import { z } from 'zod';
+import { GroupPaymentSchema } from './facturacion.dto';
 import { IFacturacion } from './facturacion.model';
 import { AppError } from '../../shared/errors/AppError';
 
@@ -30,8 +33,8 @@ export class FacturacionService {
         return this.repository.findAll();
     }
 
-    async getById(id: string): Promise<IFacturacion> {
-        const item = await this.repository.findById(id);
+    async getById(id: string, session?: ClientSession): Promise<IFacturacion> {
+        const item = await this.repository.findById(id, session);
         if (!item) {
             throw new AppError(`${this.tipo} no encontrado`, 404);
         }
@@ -46,8 +49,8 @@ export class FacturacionService {
         return this.repository.create({ ...data, estado: 'pendiente', monto_pagado: 0, monto_restante: data.monto, historial_pagos: [] });
     }
 
-    async update(id: string, data: Partial<IFacturacion>): Promise<IFacturacion> {
-        const current = await this.getById(id);
+    async update(id: string, data: Partial<IFacturacion>, session?: ClientSession): Promise<IFacturacion> {
+        const current = await this.getById(id, session);
         const allowed = ['moneda', 'estado', 'plazo', 'historial_pagos', 'metodos_pago', 'cheques', 'orden_pago_pdf', 'orden_pago_url'];
         data = Object.fromEntries(Object.entries(data).filter(([key]) => allowed.includes(key))) as Partial<IFacturacion>;
         const isPayment = this.tipo.startsWith('pagos');
@@ -103,9 +106,86 @@ export class FacturacionService {
             data.monto_pagado = current.monto;
             data.monto_restante = 0;
         }
-        const item = await this.repository.update(id, data, current.updatedAt);
+        const item = await this.repository.update(id, data, current.updatedAt, session);
         if (!item) throw new AppError('El comprobante cambió. Recargá e intentá nuevamente', 409);
         return item;
+    }
+
+    async settleGroup(data: z.infer<typeof GroupPaymentSchema>): Promise<IFacturacion[]> {
+        const session = await mongoose.startSession();
+        try {
+            return await session.withTransaction(async () => {
+                const invoices: IFacturacion[] = [];
+                for (const row of data.facturas) invoices.push(await this.getById(row.id, session));
+                const first = invoices[0];
+                const cents = (value: number | string) => Math.round(Number(value) * 100);
+                const balance = (invoice: IFacturacion) => cents(invoice.monto - (invoice.monto_pagado || 0));
+                const name = (value: string) => value.trim().replace(/\s+/g, ' ').toLowerCase();
+                const taxId = (value: string) => value.replace(/\D/g, '');
+                for (const [index, invoice] of invoices.entries()) {
+                    if (name(invoice.razon_social) !== name(first.razon_social) || taxId(invoice.cuit) !== taxId(first.cuit) || !first.moneda || invoice.moneda !== first.moneda) {
+                        throw new AppError('Seleccioná facturas de la misma razón social, CUIT y moneda', 400);
+                    }
+                    if (invoice.updatedAt.toISOString() !== data.facturas[index].version || invoice.estado === 'pagado' || balance(invoice) <= 0) {
+                        throw new AppError('Una factura cambió. Recargá la lista y volvé a seleccionarla', 409);
+                    }
+                }
+
+                const movement = data.pago;
+                const methods = movement.metodos_pago;
+                const cheques = movement.cheques || [];
+                const parts = (['transferencia', 'efectivo'] as const).flatMap(method => {
+                    const entry = methods[method];
+                    if (!entry?.enabled) return [];
+                    return [{ method, remaining: cents(entry.monto) }];
+                }) as { method: 'transferencia' | 'efectivo' | 'cheque'; remaining: number; cheque?: typeof cheques[number] }[];
+                if (methods.cheque?.enabled) {
+                    if (!cheques.length || new Set(cheques.map(cheque => cheque.numero)).size !== cheques.length ||
+                        cents(methods.cheque.monto) !== cheques.reduce((sum, cheque) => sum + cents(cheque.monto), 0)) {
+                        throw new AppError('Revisá los importes y números de los cheques', 400);
+                    }
+                    for (const cheque of cheques) parts.push({ method: 'cheque', remaining: cents(cheque.monto), cheque });
+                } else if (cheques.length) {
+                    throw new AppError('Seleccioná cheque como forma de pago', 400);
+                }
+                const total = invoices.reduce((sum, invoice) => sum + balance(invoice), 0);
+                if (parts.some(part => !Number.isSafeInteger(part.remaining) || part.remaining <= 0) ||
+                    cents(movement.monto) !== total || parts.reduce((sum, part) => sum + part.remaining, 0) !== total) {
+                    throw new AppError('Las formas de pago deben cubrir el saldo exacto de las facturas seleccionadas', 400);
+                }
+
+                const saved: IFacturacion[] = [];
+                let index = 0;
+                for (const invoice of invoices) {
+                    let pending = balance(invoice);
+                    const applied: typeof methods = {};
+                    const appliedCheques: typeof cheques = [];
+                    while (pending > 0) {
+                        const part = parts[index];
+                        const amount = Math.min(pending, part.remaining);
+                        applied[part.method] = { enabled: true, monto: (cents(applied[part.method]?.monto || 0) + amount) / 100 };
+                        if (part.cheque) appliedCheques.push({ ...part.cheque, monto: amount / 100 });
+                        pending -= amount;
+                        part.remaining -= amount;
+                        if (part.remaining === 0) index++;
+                    }
+                    const payment = { ...movement, monto: balance(invoice) / 100, metodos_pago: applied, cheques: appliedCheques };
+                    saved.push(await this.update(String(invoice._id), {
+                        historial_pagos: [...(invoice.historial_pagos || []), payment],
+                        orden_pago_pdf: data.orden_pago_pdf,
+                        orden_pago_url: data.orden_pago_url,
+                    }, session));
+                }
+                return saved;
+            });
+        } catch (error) {
+            if ((error as { code?: number })?.code === 20) {
+                throw new AppError('El pago agrupado requiere MongoDB con transacciones habilitadas', 503);
+            }
+            throw error;
+        } finally {
+            await session.endSession();
+        }
     }
 
     async delete(id: string): Promise<void> {

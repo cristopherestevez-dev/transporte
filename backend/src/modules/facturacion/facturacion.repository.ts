@@ -6,7 +6,7 @@ import {
     PagoInternacionalModel,
     IFacturacion
 } from './facturacion.model';
-import { Model } from 'mongoose';
+import { ClientSession, Model } from 'mongoose';
 
 type TipoFacturacion = 'cobranzas-nacionales' | 'cobranzas-internacionales' | 'pagos-nacionales' | 'pagos-internacionales';
 
@@ -28,16 +28,16 @@ export class FacturacionRepository {
         return paginateQuery(this.model, this.model.find().sort({ fecha: -1 }));
     }
 
-    async findById(id: string): Promise<IFacturacion | null> {
-        return this.model.findById(id);
+    async findById(id: string, session?: ClientSession): Promise<IFacturacion | null> {
+        return this.model.findById(id, null, { session });
     }
 
     async create(data: Partial<IFacturacion>): Promise<IFacturacion> {
         return this.model.create(data);
     }
 
-    async update(id: string, data: Partial<IFacturacion>, updatedAt?: Date): Promise<IFacturacion | null> {
-        return this.model.findOneAndUpdate({ _id: id, ...(updatedAt ? { updatedAt } : {}) }, { $set: data }, { new: true, runValidators: true });
+    async update(id: string, data: Partial<IFacturacion>, updatedAt?: Date, session?: ClientSession): Promise<IFacturacion | null> {
+        return this.model.findOneAndUpdate({ _id: id, ...(updatedAt ? { updatedAt } : {}) }, { $set: data }, { new: true, runValidators: true, session });
     }
 
     async delete(id: string): Promise<IFacturacion | null> {

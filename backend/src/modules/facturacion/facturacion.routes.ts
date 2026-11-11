@@ -1,5 +1,5 @@
 import { paginationMiddleware } from '../../shared/pagination';
-import { Router } from 'express';
+import { Request, Response, Router } from 'express';
 import {
     cobranzasNacionalesController,
     cobranzasInternacionalesController,
@@ -9,8 +9,13 @@ import {
 import { asyncHandler } from '../../shared/asyncHandler';
 
 import { validateBody } from '../../shared/middleware/validationMiddleware';
-import { CreateFacturacionSchema, UpdateFacturacionSchema } from './facturacion.dto';
+import { CreateFacturacionSchema, GroupPaymentSchema, UpdateFacturacionSchema } from './facturacion.dto';
 import { archivosRoutes } from './facturacion.archivos';
+
+import { pagosNacionalesService, pagosInternacionalesService } from './facturacion.service';
+
+import { requirePermission } from '../../shared/middleware/authMiddleware';
+import { InvoiceFromTripSchema, registerInvoiceFromTrip } from './facturacion.desde-viaje';
 
 const router = Router();
 router.use(archivosRoutes);
@@ -28,6 +33,18 @@ router.get('/cobranzas/internacionales/:id', asyncHandler(cobranzasInternacional
 router.post('/cobranzas/internacionales', validateBody(CreateFacturacionSchema), asyncHandler(cobranzasInternacionalesController.create));
 router.patch('/cobranzas/internacionales/:id', validateBody(UpdateFacturacionSchema), asyncHandler(cobranzasInternacionalesController.update));
 router.delete('/cobranzas/internacionales/:id', asyncHandler(cobranzasInternacionalesController.delete));
+
+for (const [scope, service] of [['nacionales', pagosNacionalesService], ['internacionales', pagosInternacionalesService]] as const) {
+    router.post('/pagos/' + scope + '/desde-viaje/:id', requirePermission('viajes'), validateBody(InvoiceFromTripSchema),
+        asyncHandler(async (req: Request, res: Response) => {
+            const data = await registerInvoiceFromTrip(scope, req.params.id, req.body);
+            res.status(data.created ? 201 : 200).json({ status: 'success', data });
+        }));
+    router.post('/pagos/' + scope + '/orden-agrupada', validateBody(GroupPaymentSchema), asyncHandler(async (req: Request, res: Response) => {
+        const data = await service.settleGroup(req.body);
+        res.status(201).json({ status: 'success', data });
+    }));
+}
 
 // Pagos Nacionales
 router.get('/pagos/nacionales', paginationMiddleware, asyncHandler(pagosNacionalesController.getAll));
