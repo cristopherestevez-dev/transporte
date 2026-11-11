@@ -25,22 +25,62 @@ function Saldos({ saldos }) {
   );
 }
 
-function Detalle({ datos, seleccion, cambiarSeleccion }) {
+const etiquetasMoneda = { ARS: "Pesos argentinos (ARS)", USD: "Dólares (USD)", CLP: "Pesos chilenos (CLP)" };
+const formatoTasa = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 8 });
+
+function Conversion({ conversion }) {
+  if (!conversion) return null;
+  const { moneda, total, cotizaciones } = conversion;
+  const formato = new Intl.NumberFormat("es-AR", { style: "currency", currency: moneda, currencyDisplay: "code" });
+  return (
+    <div className="space-y-1 rounded-lg bg-content2 p-3">
+      <p>Total a liquidar</p>
+      <p className="text-lg font-semibold">{formato.format(total / 100)}</p>
+      {Object.entries(cotizaciones).map(([origen, tasa]) => (
+        <p className="text-sm" key={origen}>1 {origen} = {formatoTasa.format(tasa)} ARS</p>
+      ))}
+    </div>
+  );
+}
+
+function Detalle({ datos, seleccion, cambiarSeleccion, seleccionarTodos, ocupado = false }) {
+  const cantidad = datos.viajes.filter(viaje => seleccion?.has(viaje.clave)).length;
+  const todosIncluidos = cantidad > 0 && cantidad === datos.viajes.length;
   return (
     <div className="space-y-3">
       <p>{datos.responsable} ({datos.filtros.tipo}) · {datos.filtros.desde} al {datos.filtros.hasta}</p>
       <Saldos saldos={datos.saldos} />
+      <Conversion conversion={datos.conversion} />
       <div className="table-frame">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr>{seleccion && <th className="p-2" scope="col">Incluir</th>}{["Salida", "Tipo", "Origen", "Destino", ...monedas].map(titulo => <th className="p-2" key={titulo} scope="col">{titulo}</th>)}</tr>
+            <tr>
+              {seleccion && (
+                <th className="p-2" scope="col">
+                  <label className="inline-flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      aria-label="Incluir todos los viajes"
+                      checked={todosIncluidos}
+                      disabled={ocupado || !datos.viajes.length}
+                      ref={input => { if (input) input.indeterminate = cantidad > 0 && !todosIncluidos; }}
+                      onChange={evento => seleccionarTodos(evento.target.checked)}
+                    />
+                    Incluir
+                  </label>
+                </th>
+              )}
+              {["Salida", "Tipo", "Origen", "Destino", ...monedas].map(titulo => (
+                <th className="p-2" key={titulo} scope="col">{titulo}</th>
+              ))}
+            </tr>
           </thead>
           <tbody>
             {datos.viajes.map(viaje => (
               <tr key={viaje.clave} className="border-t border-divider">
                 {seleccion && (
                   <td className="p-2">
-                    <input type="checkbox" checked={seleccion.has(viaje.clave)} onChange={() => cambiarSeleccion(viaje.clave)}
+                    <input type="checkbox" disabled={ocupado} checked={seleccion.has(viaje.clave)} onChange={() => cambiarSeleccion(viaje.clave)}
                       aria-label={`Incluir viaje ${viaje.tipoViaje} de ${viaje.origen} a ${viaje.destino}, ${viaje.fechaSalida}, ${viaje.clave.split(":")[1]}`} />
                   </td>
                 )}
@@ -68,6 +108,15 @@ export default function Liquidaciones() {
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState("");
   const [errorCarga, setErrorCarga] = useState("");
+  const [moneda, setMoneda] = useState("");
+  const [tasas, setTasas] = useState({ USD: "", CLP: "" });
+
+  useEffect(() => {
+    setTasas({
+      USD: localStorage.getItem("cotizacionDolar") ?? "",
+      CLP: localStorage.getItem("cotizacionPesoChileno") ?? "",
+    });
+  }, []);
 
   useEffect(() => {
     let activo = true;
@@ -120,13 +169,15 @@ export default function Liquidaciones() {
   }
 
   function confirmar() {
+    if (ocupado || !seleccion.size || (moneda && !conversion)) return;
     const entrada = {
       filtros: previa.filtros,
+      ...(moneda ? { moneda, cotizaciones: conversion.cotizaciones } : {}),
       seleccion: previa.viajes.filter(viaje => seleccion.has(viaje.clave)).map(({ clave, revision }) => ({ clave, revision })),
     };
-    setPrevia(null);
     ejecutar(async () => {
       const recibo = await api.post(endpoint, entrada);
+      setPrevia(null);
       setComprobante(recibo);
       setHistorial(actual => ({ items: [recibo, ...(actual?.items || [])], siguiente: actual?.siguiente || null }));
     });
@@ -146,6 +197,20 @@ export default function Liquidaciones() {
     if (seleccion.has(viaje.clave)) {
       for (const moneda of monedas) saldosSeleccionados[moneda] += viaje.saldos[moneda];
     }
+  }
+
+  const origenes = moneda ? monedas.filter(origen => origen !== moneda && saldosSeleccionados[origen] !== 0) : [];
+  const requeridas = origenes.length ? [...new Set([...origenes, moneda])].filter(item => item !== "ARS") : [];
+  const cotizaciones = Object.fromEntries(requeridas.map(item => [item, Number(tasas[item])]));
+  const tasasValidas = requeridas.every(item => cotizaciones[item] > 0 && cotizaciones[item] <= 1_000_000_000);
+  let conversion = null;
+  if (moneda && tasasValidas && seleccion.size) {
+    const total = origenes.reduce((acumulado, origen) => (
+      acumulado + saldosSeleccionados[origen] * (cotizaciones[origen] ?? 1) / (cotizaciones[moneda] ?? 1)
+    ), saldosSeleccionados[moneda]);
+    const unidad = moneda === "CLP" ? 100 : 1;
+    const redondeado = Math.sign(total) * Math.round(Math.abs(total) / unidad) * unidad;
+    if (Number.isSafeInteger(redondeado)) conversion = { moneda, total: redondeado || 0, cotizaciones };
   }
 
   return (
@@ -184,8 +249,35 @@ export default function Liquidaciones() {
           {previa.viajes.length ? (
             <>
               <p>Seleccioná los viajes que querés liquidar.</p>
-              <Detalle datos={{ ...previa, saldos: saldosSeleccionados }} seleccion={seleccion} cambiarSeleccion={cambiarSeleccion} />
-              <Button native className={buttonStyle} type="button" disabled={ocupado || !seleccion.size} onClick={confirmar}>
+              <fieldset disabled={ocupado} className="flex flex-wrap items-end gap-3">
+                <label className="grid gap-1">Moneda de liquidación
+                  <select className={inputStyle} value={moneda} onChange={evento => setMoneda(evento.target.value)}>
+                    <option value="">Mantener monedas originales</option>
+                    {Object.entries(etiquetasMoneda).map(([codigo, etiqueta]) => (
+                      <option key={codigo} value={codigo}>{etiqueta}</option>
+                    ))}
+                  </select>
+                </label>
+                {requeridas.map(item => (
+                  <label className="grid gap-1" key={item}>ARS por 1 {item}
+                    <input className={inputStyle} type="number" min="0" max="1000000000" step="any"
+                      value={tasas[item]} onChange={evento => setTasas(actual => ({ ...actual, [item]: evento.target.value }))} />
+                  </label>
+                ))}
+              </fieldset>
+              {moneda && seleccion.size > 0 && !conversion && (
+                <p className="text-sm text-danger">
+                  {tasasValidas ? "El saldo convertido excede el importe permitido." : "Ingresá una cotización mayor que cero para cada moneda indicada."}
+                </p>
+              )}
+              <Detalle
+                datos={{ ...previa, saldos: saldosSeleccionados, conversion }}
+                seleccion={seleccion}
+                cambiarSeleccion={cambiarSeleccion}
+                seleccionarTodos={incluir => setSeleccion(new Set(incluir ? previa.viajes.map(viaje => viaje.clave) : []))}
+                ocupado={ocupado}
+              />
+              <Button native className={buttonStyle} type="button" disabled={ocupado || !seleccion.size || Boolean(moneda && !conversion)} onClick={confirmar}>
                 Confirmar liquidación ({seleccion.size})
               </Button>
             </>

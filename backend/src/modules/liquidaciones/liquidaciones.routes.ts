@@ -8,7 +8,7 @@ import { IViaje, ViajeInternacionalModel, ViajeNacionalModel } from '../viajes/v
 import { asyncHandler } from '../../shared/asyncHandler';
 import { AppError } from '../../shared/errors/AppError';
 import { tenantContext } from '../../shared/tenant';
-import { monedas, saldosViaje, Saldos } from './liquidaciones.saldos';
+import { convertirSaldos, monedas, saldosViaje, Saldos } from './liquidaciones.saldos';
 
 const id = z.string().regex(/^[a-f0-9]{24}$/);
 const filtrosSchema = z.object({
@@ -23,7 +23,10 @@ const seleccionSchema = z.object({
     clave: z.string().regex(/^(nacional|internacional):[a-f0-9]{24}$/),
     revision: z.string().regex(/^[a-f0-9]{64}$/),
 });
+const tasaSchema = z.number().positive().max(1_000_000_000);
 const confirmarSchema = z.object({
+    moneda: z.enum(monedas).optional(),
+    cotizaciones: z.object({ USD: tasaSchema.optional(), CLP: tasaSchema.optional() }).optional(),
     filtros: filtrosSchema,
     seleccion: z.array(seleccionSchema).min(1).max(limiteViajes)
         .refine(items => new Set(items.map(item => item.clave)).size === items.length),
@@ -38,6 +41,7 @@ const schema = new Schema({
     clavesViaje: { type: [String], required: true },
     viajes: { type: [Object], required: true },
     saldos: { type: Object, required: true },
+    conversion: { type: Object },
 }, { collection: 'liquidaciones', timestamps: true, autoIndex: false });
 
 const Liquidacion = model('LiquidacionAgrupada', schema);
@@ -137,7 +141,7 @@ liquidacionesRoutes.get('/vista-previa', asyncHandler(async (req: Request, res: 
 liquidacionesRoutes.post('/', asyncHandler(async (req: Request, res: Response) => {
     const { empresaId, creadoPor } = identidad();
     const entrada = confirmarSchema.safeParse(req.body);
-    if (!entrada.success) throw new AppError('Seleccioná entre 1 y 500 viajes distintos de una vista previa válida', 400);
+    if (!entrada.success) throw new AppError('Revisá la selección de viajes, la moneda y las cotizaciones', 400);
 
     await asegurarIndice();
     const { filtros, seleccion } = entrada.data;
@@ -148,13 +152,16 @@ liquidacionesRoutes.post('/', asyncHandler(async (req: Request, res: Response) =
         throw new AppError(conflicto, 409);
     }
     const saldos = sumarSaldos(datos.viajes);
+    const conversion = entrada.data.moneda
+        ? convertirSaldos(saldos, entrada.data.moneda, entrada.data.cotizaciones ?? {})
+        : undefined;
 
     try {
         const comprobante = await Liquidacion.create({
-            empresaId, creadoPor, ...datos, saldos, clavesViaje: datos.viajes.map(viaje => viaje.clave),
+            empresaId, creadoPor, ...datos, saldos, conversion, clavesViaje: datos.viajes.map(viaje => viaje.clave),
         });
         const { _id, createdAt } = comprobante;
-        res.status(201).json({ data: { _id, createdAt, ...datos, saldos } });
+        res.status(201).json({ data: { _id, createdAt, ...datos, saldos, conversion } });
     } catch (error) {
         if ((error as { code?: number }).code === 11000) throw new AppError(conflicto, 409);
         throw error;
@@ -167,7 +174,7 @@ liquidacionesRoutes.get('/', asyncHandler(async (req: Request, res: Response) =>
     if (!antes.success) throw new AppError('Cursor inválido', 400);
     const cursor = antes.data ? { _id: { $lt: new Types.ObjectId(antes.data) } } : {};
     const comprobantes = await Liquidacion.find({ empresaId, ...cursor })
-        .select('filtros responsable saldos createdAt').sort({ _id: -1 }).limit(21).lean();
+        .select('filtros responsable saldos conversion createdAt').sort({ _id: -1 }).limit(21).lean();
     const items = comprobantes.slice(0, 20);
     res.json({ data: { items, siguiente: comprobantes.length > 20 ? items[19]._id : null } });
 }));
@@ -186,7 +193,7 @@ liquidacionesRoutes.get('/:id', asyncHandler(async (req: Request, res: Response)
     const { empresaId } = identidad();
     if (!id.safeParse(req.params.id).success) throw new AppError('Comprobante inválido', 400);
     const comprobante = await Liquidacion.findOne({ empresaId, _id: req.params.id })
-        .select('filtros responsable saldos viajes createdAt').lean();
+        .select('filtros responsable saldos conversion viajes createdAt').lean();
     if (!comprobante) throw new AppError('No se encontró el comprobante', 404);
     res.json({ data: comprobante });
 }));

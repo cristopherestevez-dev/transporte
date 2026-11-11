@@ -38,3 +38,29 @@ export function enCentavos(importe: number): number {
     if (!Number.isSafeInteger(centavos)) throw new AppError('Importe fuera del rango permitido', 422);
     return centavos || 0;
 }
+type Cotizaciones = Partial<Record<'USD' | 'CLP', number>>;
+
+export function convertirSaldos(saldos: Saldos, moneda: Moneda, cotizaciones: Cotizaciones) {
+    const usadas: Cotizaciones = {};
+    const tasa = (origen: Moneda) => {
+        if (origen === 'ARS') return 1;
+        const valor = cotizaciones[origen];
+        if (valor === undefined || !Number.isFinite(valor) || valor <= 0) {
+            throw new AppError('Ingresá una cotización válida en ARS para ' + origen, 422);
+        }
+        usadas[origen] = valor;
+        return valor;
+    };
+
+    let total = saldos[moneda];
+    for (const origen of monedas) {
+        if (origen !== moneda && saldos[origen] !== 0) {
+            total += saldos[origen] * tasa(origen) / tasa(moneda);
+        }
+    }
+    // Se redondea una sola vez en la moneda de liquidación.
+    const unidad = moneda === 'CLP' ? 100 : 1;
+    const centavos = Math.sign(total) * Math.round(Math.abs(total) / unidad) * unidad;
+    if (!Number.isSafeInteger(centavos)) throw new AppError('Saldo convertido fuera del rango permitido', 422);
+    return { moneda, total: centavos || 0, cotizaciones: usadas };
+}
