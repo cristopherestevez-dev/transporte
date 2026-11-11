@@ -5,7 +5,6 @@ import { Bell, LogOut, Menu, UserRound, Settings, ArrowLeft } from "lucide-react
 
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { Dropdown } from "@heroui/react";
 
 import WeatherWidget from "@/app/components/ui/WeatherWidget/WeatherWidget";
 import { Logo } from "@/app/components/ui/Logo";

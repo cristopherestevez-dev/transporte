@@ -3,7 +3,7 @@ import { Banknote, TrendingDown, TrendingUp } from "lucide-react";
 
 
 import { useState, useEffect } from "react";
-import { Tabs, Tab } from "@heroui/react";
+import { AppTabs, AppTab } from "@/app/components/ui/TabsWrapper/AppTabs";
 import FacturacionTable from "@/app/components/ui/FacturacionTable/FacturacionTable";
 import Balance from "@/app/views/Balance";
 import TabsWrapper from "@/app/components/ui/TabsWrapper/TabsWrapper";
@@ -171,21 +171,20 @@ export default function Facturacion({ notificationTab, notificationScope }) {
       </div>
 
       {/* Main Tabs */}
-      <Tabs
+      <AppTabs
         selectedKey={activeTab}
         onSelectionChange={setActiveTab}
-        color="secondary"
         variant="underlined"
         classNames={{
           tabList: "gap-6 w-full border-b border-divider pb-0",
           cursor: "bg-secondary",
-          tab: "app-tab px-0 h-12",
-          tabContent: "group-data-[selected=true]:text-secondary font-semibold",
+          tab: "app-tab group px-0 h-12",
+          tabContent: "group-data-[selected]:text-secondary font-semibold",
         }}
       >
         {/* Balance Tab */}
-        <Tab
-          key="balance"
+        <AppTab
+          key="balance" id="balance"
           title={
             <div className="flex items-center gap-2">
               <Banknote size={20} />
@@ -196,11 +195,11 @@ export default function Facturacion({ notificationTab, notificationScope }) {
           <div className="pt-6">
             <Balance embedded onManagePayments={() => setActiveTab('pagos')} />
           </div>
-        </Tab>
+        </AppTab>
 
         {/* Cobranzas Tab */}
-        <Tab
-          key="cobranzas"
+        <AppTab
+          key="cobranzas" id="cobranzas"
           title={
             <div className="flex items-center gap-2">
               <TrendingUp size={20} />
@@ -211,11 +210,11 @@ export default function Facturacion({ notificationTab, notificationScope }) {
           <div className="pt-6">
             <TabsWrapper key={notificationScope} tabs={cobranzasTabs} initialTab={notificationScope === 'internacional' ? 1 : 0} />
           </div>
-        </Tab>
+        </AppTab>
 
         {/* Pagos Tab */}
-        <Tab
-          key="pagos"
+        <AppTab
+          key="pagos" id="pagos"
           title={
             <div className="flex items-center gap-2">
               <TrendingDown size={20} />
@@ -226,8 +225,8 @@ export default function Facturacion({ notificationTab, notificationScope }) {
           <div className="pt-6">
             <TabsWrapper key={notificationScope} tabs={pagosTabs} initialTab={notificationScope === 'internacional' ? 1 : 0} />
           </div>
-        </Tab>
-      </Tabs>
+        </AppTab>
+      </AppTabs>
     </div>
   );
 }

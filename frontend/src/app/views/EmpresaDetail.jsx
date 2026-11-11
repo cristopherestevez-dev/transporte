@@ -263,8 +263,8 @@ export default function EmpresaDetail({ id, tipo = 'proveedor' }) {
         </div>
 
         {/* Table */}
-        <div className="bg-content1 rounded-xl border border-divider shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="min-w-0 bg-content1 rounded-xl">
+          <div className="table-frame">
             <table className="w-full border-collapse">
               <thead className="bg-brand-navy">
                 <tr>
@@ -407,7 +407,7 @@ export default function EmpresaDetail({ id, tipo = 'proveedor' }) {
             </table>
           </div>
 
-          <div className="px-4 border-t border-divider"><Pagination {...pageControls} /></div>
+          <div className="px-4"><Pagination {...pageControls} /></div>
         </div>
       </div>
     </div>

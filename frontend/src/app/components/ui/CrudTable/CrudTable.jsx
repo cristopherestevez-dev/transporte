@@ -276,7 +276,8 @@ export default function CrudTable({
         <AppSelect ariaLabel="Mostrar resultados" value={String(pageSize)} onChange={value => { setPageSize(Number(value)); setCurrentPage(1); }} options={[5, 15, 25].map(value => ({ value: String(value), label: `Mostrar ${value}` }))} compact className="w-36" />
       </div>
       {/* Tabla */}
-      <table className="w-full border-collapse rounded-lg overflow-visible shadow-sm">
+      <div className="table-frame">
+        <table className="w-full border-collapse">
         <thead className="bg-brand-navy border-b border-brand-navy">
           <tr>
             {columns.map((col) => (
@@ -383,7 +384,8 @@ export default function CrudTable({
             ))
           )}
         </tbody>
-      </table>
+        </table>
+      </div>
 
       {pageError && <p role="alert" className="text-danger mt-3">{pageError} <Button native onClick={() => setRevision(value => value + 1)} className="underline">Reintentar</Button></p>}
       {pageLoading && <p className="text-sm text-default-500 mt-3">Cargando resultados…</p>}
@@ -474,24 +476,21 @@ export default function CrudTable({
                         <div onClick={(e) => e.stopPropagation()}>
                           <Switch
                             isSelected={!!form[f.key]}
-                            onValueChange={(val) =>
+                            onChange={(val) =>
                               setForm({ ...form, [f.key]: val })
-                            }
-                            size="lg"
-                            classNames={{
-                              wrapper:
-                                "group-data-[selected=true]:bg-green-500 group-data-[selected=false]:bg-red-500 transition-colors duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-active:scale-95",
-                              thumb:
-                                "transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-data-[selected=true]:ml-6 group-data-[selected=false]:ml-0 group-active:w-7 group-data-[selected=true]:group-active:ml-5",
-                            }}
-                            thumbIcon={({ isSelected, className }) =>
-                              isSelected ? (
-                                <Check className={className} />
-                              ) : (
-                                <X className={className} />
-                              )
-                            }
-                          />
+                            }                            aria-label={f.label || "Usuario activo"}
+                            className="group"
+                          >
+                            <Switch.Content>
+                              <Switch.Control className="bg-red-500 group-data-[selected]:bg-green-500">
+                                <Switch.Thumb>
+                                  <Switch.Icon>
+                                    {form[f.key] ? <Check size={12} /> : <X size={12} />}
+                                  </Switch.Icon>
+                                </Switch.Thumb>
+                              </Switch.Control>
+                            </Switch.Content>
+                          </Switch>
                         </div>
                       </div>
                     ) : (

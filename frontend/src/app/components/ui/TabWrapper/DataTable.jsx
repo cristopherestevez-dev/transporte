@@ -5,7 +5,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown } fro
 
 import { useState, useMemo } from "react";
 import AppSelect from '../AppSelect/AppSelect';
-import { Card, CardHeader, CardBody } from "@heroui/react";
+import { Card } from "@heroui/react";
 
 
 
@@ -77,8 +77,8 @@ export default function DataTable({ title, columns, data, pagination, onPageChan
   };
 
   return (
-    <Card shadow="md" className="rounded-xl">
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-divider">
+    <Card className="min-w-0 shadow-none ring-0">
+      <Card.Header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-divider">
         <h3 className="text-xl font-bold text-foreground">{title}</h3>
         <input
           type="text"
@@ -99,9 +99,9 @@ export default function DataTable({ title, columns, data, pagination, onPageChan
           compact
           className="w-36 shrink-0 self-end sm:self-auto"
         />
-      </CardHeader>
+      </Card.Header>
 
-      <CardBody className="p-0 overflow-x-auto">
+      <Card.Content className="table-frame p-0">
         <table className="min-w-full border-collapse table-auto text-foreground">
           <thead className="bg-brand-navy border-b border-brand-navy">
             <tr>
@@ -141,9 +141,9 @@ export default function DataTable({ title, columns, data, pagination, onPageChan
             )}
           </tbody>
         </table>
-      </CardBody>
+      </Card.Content>
 
-      <div className="flex justify-end items-center gap-2 p-4 border-t border-divider">
+      <div className="flex justify-end items-center gap-2 p-4">
         {loading && <span className="text-sm text-default-500">Cargando…</span>}
         <Button native
           onClick={() => onPageChange ? onPageChange(Math.max(shownPage - 1, 1)) : setCurrentPage((p) => Math.max(p - 1, 1))}

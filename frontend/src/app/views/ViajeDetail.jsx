@@ -143,7 +143,7 @@ function TripSettlementStatus({ tripId, scope, isFinished }) {
   );
 }
 
-export default function ViajeDetail() {
+export default function ViajeDetail({ backHref = "/dashboard" }) {
   const { type, id } = useParams();
   const { tienePermiso } = useAuth();
   const [trip, setTrip] = useState(null);
@@ -273,7 +273,7 @@ export default function ViajeDetail() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <Button as={Link} href="/dashboard" isIconOnly variant="light" aria-label="Volver">
+          <Button as={Link} href={backHref} isIconOnly variant="light" aria-label="Volver">
               <ArrowLeft size={24} />
             </Button>
           <div>

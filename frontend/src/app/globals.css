@@ -1,18 +1,133 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "@heroui/styles";
 
-:root {
-  font-family: var(--font-poppins), sans-serif !important;
-  --font-size-caption: 0.875rem;
-  --color-primary: #0B1F3B;
-  --color-primary-light: #F1F6FF;
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --color-brand-navy: #0B1F3B;
+  --color-brand-cyan: #06B6D4;
+  --color-brand-cyanSoft: #22D3EE;
+  --color-brand-blue: #2563EB;
+  --color-background: var(--app-background);
+  --color-foreground: var(--app-foreground);
+  --color-primary: var(--app-primary);
+  --color-primary-foreground: var(--app-primary-foreground);
+  --color-secondary: var(--app-secondary);
+  --color-secondary-foreground: var(--app-secondary-foreground);
+  --color-success: var(--app-success);
+  --color-success-foreground: var(--app-success-foreground);
+  --color-warning: var(--app-warning);
+  --color-warning-foreground: var(--app-warning-foreground);
+  --color-danger: var(--app-danger);
+  --color-danger-foreground: var(--app-danger-foreground);
+  --color-focus: var(--app-focus);
+  --color-content1: var(--app-content1);
+  --color-content2: var(--app-content2);
+  --color-divider: var(--app-divider);
+  --color-default: var(--app-default);
+  --color-default-100: var(--app-default-100);
+  --color-default-200: var(--app-default-200);
+  --color-default-300: var(--app-default-300);
+  --color-default-400: var(--app-default-400);
+  --color-default-500: var(--app-default-500);
+  --color-default-600: var(--app-default-600);
+  --color-default-700: var(--app-default-700);
+}
+
+:root, .light {
+  --app-background: #F7FAFF;
+  --app-foreground: #0B1220;
+  --app-primary: #0B1F3B;
+  --app-primary-foreground: #FFFFFF;
+  --app-secondary: #06B6D4;
+  --app-secondary-foreground: #FFFFFF;
+  --app-success: #16A34A;
+  --app-success-foreground: #FFFFFF;
+  --app-warning: #F59E0B;
+  --app-warning-foreground: #FFFFFF;
+  --app-danger: #EF4444;
+  --app-danger-foreground: #FFFFFF;
+  --app-focus: #38BDF8;
+  --app-content1: #FFFFFF;
+  --app-content2: #F1F6FF;
+  --app-divider: #E2E8F0;
+  --app-default: #F1F6FF;
+  --app-default-100: #F1F6FF;
+  --app-default-200: #E2E8F0;
+  --app-default-300: #CBD5E1;
+  --app-default-400: #94A3B8;
+  --app-default-500: #64748B;
+  --app-default-600: #475569;
+  --app-default-700: #334155;
 }
 
 .dark {
-  --color-primary: #3B82F6;
-  --color-primary-light: #0F1B2D;
+  --app-background: #070B14;
+  --app-foreground: #E5E7EB;
+  --app-primary: #3B82F6;
+  --app-primary-foreground: #FFFFFF;
+  --app-secondary: #22D3EE;
+  --app-secondary-foreground: #0B1220;
+  --app-success: #22C55E;
+  --app-success-foreground: #0B1220;
+  --app-warning: #FBBF24;
+  --app-warning-foreground: #0B1220;
+  --app-danger: #F87171;
+  --app-danger-foreground: #0B1220;
+  --app-focus: #22D3EE;
+  --app-content1: #0B1220;
+  --app-content2: #0F1B2D;
+  --app-divider: #1F2A3A;
+  --app-default: #0F1B2D;
+  --app-default-100: #0F1B2D;
+  --app-default-200: #1F2A3A;
+  --app-default-300: #334155;
+  --app-default-400: #64748B;
+  --app-default-500: #94A3B8;
+  --app-default-600: #CBD5E1;
+  --app-default-700: #E2E8F0;
 }
+
+:root, .light, .dark {
+  --accent: var(--app-primary);
+  --accent-foreground: var(--app-primary-foreground);
+  --surface: var(--app-content1);
+  --surface-foreground: var(--app-foreground);
+  --surface-secondary: var(--app-content2);
+  --surface-secondary-foreground: var(--app-foreground);
+  --border: var(--app-divider);
+  --muted: var(--app-default-500);
+  --field-background: var(--app-content2);
+  --field-foreground: var(--app-foreground);
+  --field-placeholder: var(--app-default-500);
+  --field-border: var(--app-divider);
+  --background: var(--app-background);
+  --foreground: var(--app-foreground);
+  --default: var(--app-default);
+  --default-foreground: var(--app-foreground);
+  --danger: var(--app-danger);
+  --danger-foreground: var(--app-danger-foreground);
+  --warning: var(--app-warning);
+  --warning-foreground: var(--app-warning-foreground);
+  --success: var(--app-success);
+  --success-foreground: var(--app-success-foreground);
+  --focus: var(--app-focus);
+}
+
+:root {
+  font-family: var(--font-poppins), sans-serif;
+  --font-size-caption: 0.875rem;
+  --color-primary: var(--app-primary);
+  --color-primary-light: var(--app-content2);
+}
+
+@layer base {
+  *, ::before, ::after, ::backdrop, ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
+
 
 html {
   scroll-behavior: smooth;
@@ -129,7 +244,7 @@ html {
   transition: transform 180ms ease-out, background-color 180ms ease-out, color 180ms ease-out;
 }
 
-.app-tab[data-selected="true"] {
+.app-tab[data-selected="true"], .app-tab[data-selected=""] {
   transform: scale(1.04);
 }
 
@@ -151,8 +266,10 @@ html {
   --button-default-foreground: #e5e7eb;
 }
 
-:where(.app-button[data-app-button]) {
-  color: var(--button-default-foreground);
+@layer base {
+  :where(.app-button[data-app-button]) {
+    color: var(--button-default-foreground);
+  }
 }
 
 .app-button[data-app-button],
@@ -174,4 +291,32 @@ button:not([data-app-button]) {
 .app-button[data-app-button]:is(:disabled, [aria-disabled="true"]) {
   cursor: not-allowed;
   opacity: 0.55;
+}
+
+.app-button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  font-weight: 500;
+}
+
+.app-button-link-primary {
+  background-color: var(--app-primary);
+  color: var(--app-primary-foreground);
+}
+
+.app-button-link-light {
+  color: var(--app-foreground);
+}
+
+@layer components {
+  .table-frame {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--app-divider);
+    border-radius: 0.75rem;
+  }
 }

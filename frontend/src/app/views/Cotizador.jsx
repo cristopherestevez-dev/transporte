@@ -2,7 +2,8 @@
 
 import Button from "@/app/components/ui/Button/button";
 import React, { useState, useEffect, useRef } from "react";
-import { Input, Card, CardBody, CardHeader, Tab, Tabs, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@heroui/react";
+import { Card } from "@heroui/react";
+import { AppTabs, AppTab } from "@/app/components/ui/TabsWrapper/AppTabs";
 import { IconCalculator, IconTruck, IconDriver, IconBuilding, IconTrailer, IconRoutes, IconBuilding as IconCompany } from "@/app/components/ui/Icons/Icons";
 import Script from "next/script";
 import api from "@/services/api";
@@ -219,8 +220,8 @@ export default function Cotizador() {
         {/* Left: Form */}
         <div className="flex-1 space-y-6">
             <Card className="shadow-lg border border-gray-100 p-2">
-                <CardHeader className="font-semibold text-lg px-6 pt-6 pb-0">Ruta y Origen</CardHeader>
-                <CardBody className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card.Header className="font-semibold text-lg px-6 pt-6 pb-0">Ruta y Origen</Card.Header>
+                <Card.Content className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="relative">
                         <label className="block text-sm font-medium text-gray-700 mb-1">Origen</label>
                         <input
@@ -245,26 +246,25 @@ export default function Cotizador() {
                         />
                         <span className="text-xs text-gray-400 mt-1 block">País detectado: {destCountry}</span>
                     </div>
-                </CardBody>
+                </Card.Content>
             </Card>
 
             <Card className="shadow-lg border border-gray-100 p-2">
-                <CardHeader className="font-semibold text-lg px-6 pt-6 pb-0">Recursos</CardHeader>
-                <CardBody className="p-6">
-                     <Tabs 
+                <Card.Header className="font-semibold text-lg px-6 pt-6 pb-0">Recursos</Card.Header>
+                <Card.Content className="p-6">
+                     <AppTabs 
                         aria-label="Options" 
-                        color="primary" 
                         variant="bordered"
                         selectedKey={selectedType}
                         onSelectionChange={(key) => { setSelectedType(key); setSelectedResource(""); }}
                         className="mb-6"
                         classNames={{ tab: "app-tab" }}
                     >
-                        <Tab key="camiones" title="Camiones" />
-                        <Tab key="fleteros" title="Fleteros" />
-                        <Tab key="semis" title="Semis" />
-                        <Tab key="choferes" title="Choferes" />
-                    </Tabs>
+                        <AppTab key="camiones" id="camiones" title="Camiones" />
+                        <AppTab key="fleteros" id="fleteros" title="Fleteros" />
+                        <AppTab key="semis" id="semis" title="Semis" />
+                        <AppTab key="choferes" id="choferes" title="Choferes" />
+                    </AppTabs>
 
                     {(() => {
                         const options = (data[selectedType] || []).map((item) => {
@@ -295,7 +295,7 @@ export default function Cotizador() {
                             </div>
                         );
                     })()}
-                </CardBody>
+                </Card.Content>
             </Card>
 
              <Button 
@@ -314,7 +314,7 @@ export default function Cotizador() {
         <div className="w-full xl:w-[400px] flex flex-col gap-6">
              <Card className="bg-gray-900 text-white shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-32 bg-blue-500 rounded-full blur-3xl opacity-20 -mr-16 -mt-16"></div>
-                <CardBody className="p-8 text-center">
+                <Card.Content className="p-8 text-center">
                     <span className="text-gray-400 text-sm uppercase tracking-wider mb-2">Distancia Estimada</span>
                     <span className="text-5xl font-black tracking-tight">{distance ? distance.text : "--"}</span>
                     {distance && (
@@ -323,50 +323,49 @@ export default function Cotizador() {
                             <span className="text-2xl font-bold text-green-400">${(distance.value * 2.5).toLocaleString()}</span>
                          </div>
                     )}
-                </CardBody>
+                </Card.Content>
              </Card>
 
             {/* Dynamic Summary Table */}
-             <Card className="shadow-md border border-gray-100 flex-1">
-                <CardHeader className="font-bold text-gray-700 bg-gray-50 border-b">Resumen del Viaje</CardHeader>
-                <div className="p-0 overflow-x-auto">
-                    <Table removeWrapper aria-label="Resumen">
-                        <TableHeader>
-                            <TableColumn>CONCEPTO</TableColumn>
-                            <TableColumn>DETALLE</TableColumn>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow key="1">
-                                <TableCell className="font-medium text-gray-500">Origen</TableCell>
-                                <TableCell>{origin || "-"}</TableCell>
-                            </TableRow>
-                            <TableRow key="2">
-                                <TableCell className="font-medium text-gray-500">Destino</TableCell>
-                                <TableCell>{destination || "-"}</TableCell>
-                            </TableRow>
-                             <TableRow key="3">
-                                <TableCell className="font-medium text-gray-500">Tipo</TableCell>
-                                <TableCell>
+             <Card className="min-w-0 flex-1 shadow-none ring-0">
+                <Card.Header className="font-bold text-gray-700 bg-gray-50 border-b">Resumen del Viaje</Card.Header>
+                <div className="table-frame">
+                    <table className="w-full text-left text-sm [&_td]:px-3 [&_td]:py-2 [&_th]:px-3 [&_th]:py-2 [&_thead]:bg-content2" aria-label="Resumen">
+                        <thead>
+                            <tr><th scope="col">CONCEPTO</th><th scope="col">DETALLE</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr key="1">
+                                <td className="font-medium text-gray-500">Origen</td>
+                                <td>{origin || "-"}</td>
+                            </tr>
+                            <tr key="2">
+                                <td className="font-medium text-gray-500">Destino</td>
+                                <td>{destination || "-"}</td>
+                            </tr>
+                             <tr key="3">
+                                <td className="font-medium text-gray-500">Tipo</td>
+                                <td>
                                     <span className={`px-2 py-0.5 rounded text-xs text-white ${originCountry !== destCountry ? 'bg-purple-500' : 'bg-blue-500'}`}>
                                         {originCountry !== destCountry ? "INTERNACIONAL" : "NACIONAL"}
                                     </span>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow key="4">
-                                <TableCell className="font-medium text-gray-500">Recurso</TableCell>
-                                <TableCell>
+                                </td>
+                            </tr>
+                            <tr key="4">
+                                <td className="font-medium text-gray-500">Recurso</td>
+                                <td>
                                     {resourceDetails ? (
                                         <div className="flex flex-col">
                                             <span className="font-semibold">{resourceDetails.nombre || resourceDetails.marca}</span>
                                             <span className="text-xs text-gray-400">{resourceDetails.patente || resourceDetails.dni}</span>
                                         </div>
                                     ) : "-"}
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <CardBody className="p-4 bg-gray-50">
+                <Card.Content className="p-4 bg-gray-50">
                      <Button 
                         className="w-full font-bold text-white bg-brand-navy shadow-lg hover:bg-brand-navy/80 hover:shadow-xl transition-all"
                         isDisabled={!distance || !selectedResource}
@@ -375,7 +374,7 @@ export default function Cotizador() {
                     >
                         AGREGAR VIAJE
                      </Button>
-                </CardBody>
+                </Card.Content>
              </Card>
         </div>
 

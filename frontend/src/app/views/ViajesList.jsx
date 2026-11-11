@@ -3,6 +3,7 @@
 import Button from "@/app/components/ui/Button/button";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { Eye } from "lucide-react";
 import TabsWrapper from "../components/ui/TabsWrapper/TabsWrapper";
 import CrudTable from "../components/ui/CrudTable/CrudTable";
 import ProveedorWrapper from "../components/ui/ModalWrapper/ProveedorWrapper";
@@ -378,9 +379,9 @@ const ViajesList = () => {
       : columns;
     return (
       <TabsWrapper key={direccion} tabs={[
-        { label: "Nacionales", rows: nacionales, setter: setNacionales, endpoint: "nacionales" },
-        { label: "Internacionales", rows: internacionales, setter: setInternacionales, endpoint: "internacionales" },
-      ].map(({ label, rows, setter, endpoint }) => ({
+        { label: "Nacionales", rows: nacionales, setter: setNacionales, endpoint: "nacionales", type: "nacional" },
+        { label: "Internacionales", rows: internacionales, setter: setInternacionales, endpoint: "internacionales", type: "internacional" },
+      ].map(({ label, rows, setter, endpoint, type }) => ({
         label,
         content: <CrudTable
           title={`Viajes ${label.toLowerCase()} — ${received ? "facturas recibidas" : "facturas emitidas"}`}
@@ -391,6 +392,16 @@ const ViajesList = () => {
           columns={tableColumns}
           formFields={fields}
           defaultValues={{ direccion_facturacion: direccion }}
+          extraActions={(trip) => (
+            <Link
+              href={"/viajes/" + type + "/" + encodeURIComponent(trip._id || trip.id) + "?desde=viajes"}
+              aria-label="Ver detalles del viaje"
+              title="Ver detalles del viaje"
+              className="inline-flex text-default-500 transition-colors hover:text-primary"
+            >
+              <Eye size={20} aria-hidden="true" />
+            </Link>
+          )}
           validate={validateDates}
         />,
       }))} />

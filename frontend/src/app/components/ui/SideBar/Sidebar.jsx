@@ -17,7 +17,6 @@ import {
   IconWeather,
   IconCalculator,
 } from "../Icons/Icons";
-import { Switch } from "@heroui/react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";

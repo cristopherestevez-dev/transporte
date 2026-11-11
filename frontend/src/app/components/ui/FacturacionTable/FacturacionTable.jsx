@@ -5,13 +5,7 @@ import { Banknote, CreditCard, FileDown, FileText, Search, Upload, X } from "luc
 
 import { useState, useMemo, useRef } from "react";
 
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-} from "@heroui/react";
+import { AppDialog, DialogHeader, DialogBody, DialogFooter } from "@/app/components/ui/ModalWrapper/AppDialog";
 import SelectSearch from "../SelectSearch/Select";
 import jsPDF from "jspdf";
 import ComprobanteOperacion from "../ComprobanteOperacion/ComprobanteOperacion";
@@ -820,14 +814,14 @@ export default function FacturacionTable({
       />
 
       {/* Modal de método de pago */}
-      <Modal
+      <AppDialog
         isOpen={paymentModalOpen}
         onClose={() => setPaymentModalOpen(false)}
         size="md"
         backdrop="blur"
       >
-        <ModalContent>
-          <ModalHeader className="flex flex-col gap-1 bg-brand-navy text-white">
+        
+          <DialogHeader className="flex flex-col gap-1 bg-brand-navy text-white">
             <span className="text-xl">Registrar Pago</span>
             {paymentItem && (
               <span className="text-sm font-normal opacity-80">
@@ -835,8 +829,8 @@ export default function FacturacionTable({
                 {paymentItem.monto?.toLocaleString()}
               </span>
             )}
-          </ModalHeader>
-          <ModalBody className="py-6">
+          </DialogHeader>
+          <DialogBody className="py-6">
             {/* Instrucciones */}
             <p className="text-sm text-default-500 mb-4">
               Seleccione los métodos de pago y complete los montos
@@ -1158,8 +1152,8 @@ export default function FacturacionTable({
                   </div>
                 )}
             </div>
-          </ModalBody>
-          <ModalFooter>
+          </DialogBody>
+          <DialogFooter>
             <Button variant="light" onPress={() => setPaymentModalOpen(false)}>
               Cancelar
             </Button>
@@ -1171,9 +1165,9 @@ export default function FacturacionTable({
             >
               Confirmar y Generar Orden
             </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+          </DialogFooter>
+        
+      </AppDialog>
 
       {/* Header */}
       <div className="px-4 py-3 border-b border-divider flex justify-between items-center">
@@ -1283,7 +1277,7 @@ export default function FacturacionTable({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
+      <div className="table-frame">
         <table className="w-full border-collapse">
           <thead className="bg-brand-navy">
             <tr>
@@ -1447,16 +1441,16 @@ export default function FacturacionTable({
         </span>
       </div>
       {/* Modal de confirmación para estado FINAL */}
-      <Modal
+      <AppDialog
         isOpen={confirmModalOpen}
         onOpenChange={setConfirmModalOpen}
         backdrop="blur"
       >
-        <ModalContent>
-          <ModalHeader className="flex flex-col gap-1 text-red-600">
+        
+          <DialogHeader className="flex flex-col gap-1 text-red-600">
             ⚠ Confirmar Estado Final
-          </ModalHeader>
-          <ModalBody>
+          </DialogHeader>
+          <DialogBody>
             <p className="text-foreground">
               Si cambia el estado a{" "}
               <span className="font-bold text-green-600">Pagado</span>, no podrá
@@ -1466,8 +1460,8 @@ export default function FacturacionTable({
               Esto asegura que no se generen duplicados de órdenes de pago y que
               el registro sea definitivo.
             </p>
-          </ModalBody>
-          <ModalFooter>
+          </DialogBody>
+          <DialogFooter>
             <Button
               variant="light"
               onPress={() => {
@@ -1483,9 +1477,9 @@ export default function FacturacionTable({
             >
               Confirmar y Continuar
             </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+          </DialogFooter>
+        
+      </AppDialog>
     </div>
   );
 }

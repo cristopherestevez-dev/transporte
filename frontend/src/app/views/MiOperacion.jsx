@@ -7,7 +7,7 @@ import TabsWrapper from "@/app/components/ui/TabsWrapper/TabsWrapper";
 const currency = value => new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(value || 0);
 const chileanCurrency = value => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(value || 0);
 function Table({ columns, rows, summary }) {
-  return <div className="overflow-x-auto rounded-xl border border-divider"><table className="w-full text-sm text-foreground">
+  return <div className="table-frame"><table className="w-full text-sm text-foreground">
     <thead className="bg-content2"><tr>{columns.map(([key, label]) => <th key={key} className="p-3 text-left whitespace-nowrap">{label}</th>)}</tr></thead>
     <tbody>{rows.map(row => <tr key={row._id} className="border-t border-divider">{columns.map(([key, , render]) => <td key={key} className="p-3">{render ? render(row[key], row) : row[key] || "—"}</td>)}</tr>)}
     {!rows.length && <tr><td colSpan={columns.length} className="p-6 text-default-500 text-center">Todavía no hay registros.</td></tr>}</tbody>

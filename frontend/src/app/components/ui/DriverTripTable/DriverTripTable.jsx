@@ -323,7 +323,7 @@ export default function DriverTripTable({ trips = [] }) {
     <div className="space-y-4">
 
 
-      <div className="overflow-x-auto bg-content1 text-foreground border border-divider rounded shadow-lg">
+      <div className="table-frame bg-content1 text-foreground">
       <table className="min-w-full text-xs border-collapse [&_th]:border-divider [&_td]:border-divider dark:[color-scheme:dark]">
         <thead>
           {/* Fila 1 */}

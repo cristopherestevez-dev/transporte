@@ -30,7 +30,7 @@ function Detalle({ datos, seleccion, cambiarSeleccion }) {
     <div className="space-y-3">
       <p>{datos.responsable} ({datos.filtros.tipo}) · {datos.filtros.desde} al {datos.filtros.hasta}</p>
       <Saldos saldos={datos.saldos} />
-      <div className="overflow-x-auto">
+      <div className="table-frame">
         <table className="w-full text-left text-sm">
           <thead>
             <tr>{seleccion && <th className="p-2" scope="col">Incluir</th>}{["Salida", "Tipo", "Origen", "Destino", ...monedas].map(titulo => <th className="p-2" key={titulo} scope="col">{titulo}</th>)}</tr>

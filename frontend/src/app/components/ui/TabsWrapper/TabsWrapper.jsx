@@ -27,7 +27,7 @@ export default function TabsWrapper({ tabs, initialTab = 0, className = "" }) {
       </div>
 
       {/* Contenido de la pestaña activa */}
-      <div className="bg-content1 shadow-sm rounded-md">
+      <div className="min-w-0">
         {tabs[activeIndex].content}
       </div>
     </div>
