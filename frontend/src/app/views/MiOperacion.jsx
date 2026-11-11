@@ -5,10 +5,31 @@ import TabsWrapper from "@/app/components/ui/TabsWrapper/TabsWrapper";
 
 const currency = value => new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(value || 0);
 const chileanCurrency = value => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(value || 0);
-function Table({ columns, rows, summary }) {
+function TripNumber({ number }) {
+  return (
+    <span aria-label={`Viaje ${number}`} className="inline-grid min-h-7 min-w-7 shrink-0 place-items-center rounded-full bg-primary/10 px-1.5 text-xs font-bold tabular-nums text-primary">
+      {number}
+    </span>
+  );
+}
+
+function Table({ columns, rows, summary, offset }) {
   return <div className="table-frame"><table className="w-full text-sm text-foreground">
     <thead className="bg-content2"><tr>{columns.map(([key, label]) => <th key={key} className="p-3 text-left whitespace-nowrap">{label}</th>)}</tr></thead>
-    <tbody>{rows.map(row => <tr key={row._id} className="border-t border-divider">{columns.map(([key, , render]) => <td key={key} className="p-3">{render ? render(row[key], row) : row[key] || "—"}</td>)}</tr>)}
+    <tbody>{rows.map((row, index) => (
+      <tr key={row._id} className="border-t border-divider">
+        {columns.map(([key, , render]) => (
+          <td key={key} className="p-3">
+            {key === 'origen' ? (
+              <span className="inline-flex items-center gap-2">
+                <TripNumber number={offset + index + 1} />
+                {row.origen || '—'}
+              </span>
+            ) : render ? render(row[key], row) : row[key] || '—'}
+          </td>
+        ))}
+      </tr>
+    ))}
     {!rows.length && <tr><td colSpan={columns.length} className="p-6 text-default-500 text-center">Todavía no hay registros.</td></tr>}</tbody>
     {summary && <tfoot className="bg-content2 font-semibold"><tr>{columns.map(([key], index) => {
       if (index === 0) return <th key={key} scope="row" className="p-3 text-left">TOTAL</th>;
@@ -18,14 +39,75 @@ function Table({ columns, rows, summary }) {
     })}</tr></tfoot>}
   </table></div>;
 }
-function DriverTrips({ tipo }) {
-  const page = usePage('/mi-operacion/viajes', { tipo });
-  if (page.error) return <p role="alert" className="text-danger p-4">{page.error}</p>;
-  if (!page.result) return <p className="p-4">Cargando…</p>;
-  const tripColumns = [['origen', 'Origen'], ['destino', 'Destino'], ['fecha_salida', 'Salida'], ['fecha_llegada', 'Llegada'], ['carga', 'Carga'], ['estado', 'Estado', value => value?.replaceAll('_', ' ')], ['totalChofer', 'Total chofer (ARS)', currency], ['viaticoArgentino', 'Viático (ARS)', currency], ['peajeAr', 'Peajes (ARS)', currency], ['viaticoChileno', 'Viático (CLP)'], ['peajeCh', 'Peajes (CLP)'], ['adelantoAr', 'Adelanto (ARS)', currency], ['netoCobrar', 'Neto a cobrar (ARS)', value => value == null ? 'Pendiente de liquidar' : currency(value)]];
-  return <div><PageSizeSelect {...page} /><Table rows={page.result.data} columns={tripColumns} summary={page.result.summary} />{page.result.summary.pendientes > 0 && <p className="text-sm text-default-500 mt-3">{page.result.summary.pendientes} viaje(s) sin liquidación completa. Su importe todavía no está incluido en el neto.</p>}<Pagination {...page} /><p className="text-xs text-default-500">El neto incluye los descuentos y adelantos de la liquidación. Los totales abarcan todas las páginas.</p></div>;
-}
-export default function MiOperacion() {
-  return <section className="space-y-5 p-6 bg-content1 rounded-xl"><h1 className="text-xl font-semibold">Mis viajes</h1><TabsWrapper tabs={['nacional', 'internacional'].map(tipo => ({ label: tipo === 'nacional' ? 'Nacionales' : 'Internacionales', content: <DriverTrips key={tipo} tipo={tipo} /> }))} /></section>;
+function TripCards({ columns, rows, summary, offset }) {
+  const details = columns.filter(([key]) => !['origen', 'destino', 'netoCobrar'].includes(key));
+
+  return (
+    <div className="space-y-3 md:hidden">
+      <p className="rounded-[10px] bg-content2 p-3 text-sm">
+        Neto de esta pestaña · ARS <strong className="block text-lg tabular-nums">{currency(summary.neto)}</strong>
+      </p>
+      {!rows.length && <p className="py-4 text-center text-sm text-default-500">Todavía no hay registros.</p>}
+      {rows.map((row, index) => (
+        <details key={row._id} className="rounded-[10px] border border-divider bg-content1">
+          <summary className="min-h-11 cursor-pointer break-words p-3 text-sm font-semibold">
+            <span className="inline-flex max-w-full items-center gap-2 align-middle">
+              <TripNumber number={offset + index + 1} />
+              <span className="min-w-0">{row.origen || '—'} → {row.destino || '—'}</span>
+            </span>
+            <span className="mt-1 block font-normal">
+              Neto a cobrar · {row.netoCobrar == null ? 'Pendiente de liquidar' : currency(row.netoCobrar)}
+            </span>
+          </summary>
+          <dl className="grid grid-cols-2 gap-3 border-t border-divider p-3 text-sm">
+            {details.map(([key, label, render]) => (
+              <div key={key} className="min-w-0 break-words">
+                <dt className="text-xs text-default-500">{label}</dt>
+                <dd>{render ? render(row[key], row) || '—' : row[key] ?? '—'}</dd>
+              </div>
+            ))}
+          </dl>
+        </details>
+      ))}
+    </div>
+  );
 }
 
+function DriverTrips({ page }) {
+  if (page.error) return <p role="alert" className="text-danger p-4">{page.error}</p>;
+  if (!page.result) return <p className="p-4">Cargando…</p>;
+  const { page: currentPage, pageSize } = page.result.pagination ?? page;
+  const offset = (currentPage - 1) * pageSize;
+  const tripColumns = [['origen', 'Origen'], ['destino', 'Destino'], ['fecha_salida', 'Salida'], ['fecha_llegada', 'Llegada'], ['carga', 'Carga'], ['estado', 'Estado', value => value?.replaceAll('_', ' ')], ['totalChofer', 'Total chofer (ARS)', currency], ['viaticoArgentino', 'Viático (ARS)', currency], ['peajeAr', 'Peajes (ARS)', currency], ['viaticoChileno', 'Viático (CLP)'], ['peajeCh', 'Peajes (CLP)'], ['adelantoAr', 'Adelanto (ARS)', currency], ['netoCobrar', 'Neto a cobrar (ARS)', value => value == null ? 'Pendiente de liquidar' : currency(value)]];
+  return <div><PageSizeSelect {...page} /><div className="hidden md:block"><Table rows={page.result.data} columns={tripColumns} summary={page.result.summary} offset={offset} /></div><TripCards rows={page.result.data} columns={tripColumns} summary={page.result.summary} offset={offset} />{page.result.summary.pendientes > 0 && <p className="text-sm text-default-500 mt-3">{page.result.summary.pendientes} viaje(s) sin liquidación completa. Su importe todavía no está incluido en el neto.</p>}<Pagination {...page} /><p className="text-xs text-default-500">El neto incluye los descuentos y adelantos de la liquidación. Los totales abarcan todas las páginas.</p></div>;
+}
+export default function MiOperacion() {
+  const nacionales = usePage('/mi-operacion/viajes', { tipo: 'nacional' });
+  const internacionales = usePage('/mi-operacion/viajes', { tipo: 'internacional' });
+  const netoNacional = nacionales.result?.summary?.neto;
+  const netoInternacional = internacionales.result?.summary?.neto;
+  const error = nacionales.error || internacionales.error;
+
+  return (
+    <section className="space-y-4 p-3 md:space-y-5 md:p-6 bg-content1 rounded-xl">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-semibold">Mis viajes</h1>
+        <div className="w-full rounded-[10px] bg-content2 px-4 py-3 sm:w-auto">
+          <p className="text-sm font-medium">Total a cobrar · ARS</p>
+          <p className="text-sm text-default-500">Nacionales + internacionales</p>
+          <p className="mt-1 text-xl font-bold tabular-nums" aria-live="polite">
+            {error
+              ? 'No se pudo cargar el total'
+              : netoNacional == null || netoInternacional == null
+                ? 'Cargando…'
+                : currency(netoNacional + netoInternacional)}
+          </p>
+        </div>
+      </div>
+      <TabsWrapper tabs={[
+        { label: 'Nacionales', content: <DriverTrips page={nacionales} /> },
+        { label: 'Internacionales', content: <DriverTrips page={internacionales} /> },
+      ]} />
+    </section>
+  );
+}

@@ -22,7 +22,7 @@ import { useTheme } from "next-themes";
 import { useEffect } from "react";
 import { useAuth } from "@/app/contexts/AuthContext";
 
-export default function Sidebar() {
+export default function Sidebar({ driverPage }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(true);
   const { theme, setTheme } = useTheme();
@@ -93,10 +93,24 @@ export default function Sidebar() {
     allMenuItems.filter((item) => permisos.includes(item.permiso));
 
   return (
+    <>
+    {driverPage && (
+      <nav aria-label="Navegación del chofer" className="order-1 flex flex-wrap items-center gap-1 border-b border-divider bg-content1 px-3 py-2 md:hidden">
+        {menuItems.map(({ name, icon, href }) => (
+          <Link key={href} href={href} aria-current={pathname === href ? "page" : undefined}
+            className={`inline-flex min-h-11 items-center gap-2 rounded-[10px] px-3 text-sm font-semibold ${pathname === href ? "bg-primary/10 text-primary" : "text-foreground"}`}>
+            <span aria-hidden="true">{icon}</span>{name}
+          </Link>
+        ))}
+        {mounted && <Button native type="button" aria-label="Cambiar tema" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="ml-auto grid size-11 place-items-center text-foreground">
+          {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+        </Button>}
+      </nav>
+    )}
     <div
       className={`bg-content1 border-r border-divider h-screen sticky top-0 left-0 flex flex-col transition-all duration-300 ${
         collapsed ? "w-16" : "w-64"
-      }`}
+      } ${driverPage ? "max-md:hidden" : ""}`}
     >
       {/* Toggle button */}
       <div className="flex justify-end p-3 border-b border-divider">
@@ -221,5 +235,6 @@ export default function Sidebar() {
         )}
       </div>
     </div>
+    </>
   );
 }

@@ -101,6 +101,7 @@ const MaintenanceCard = ({
   handleChange,
   requestDelete,
   canManage,
+  propio,
   previousRow,
   onSave,
 }) => {
@@ -273,7 +274,7 @@ const MaintenanceCard = ({
         }`}
         onClick={() => !isEditing && setExpanded(!expanded)}
       >
-        <div className="flex items-center gap-3 flex-1 min-w-[200px]">
+        <div className={`flex items-center gap-3 flex-1 ${propio ? "min-w-0 max-sm:basis-full" : "min-w-[200px]"}`}>
           <div
             className={`p-2 rounded-full transition-colors ${
               expanded
@@ -373,7 +374,7 @@ const MaintenanceCard = ({
         </div>
 
         {/* Action Buttons */}
-        {canManage && <div className="ml-auto pl-4 border-l border-divider flex items-center gap-2">
+        {canManage && <div className={`ml-auto pl-4 border-l border-divider flex items-center gap-2 ${propio ? "max-sm:w-full max-sm:justify-end max-sm:border-0 max-sm:pl-0" : ""}`}>
           {isEditing ? (
             <Button native
               disabled={saving}
@@ -424,7 +425,7 @@ const MaintenanceCard = ({
             exit={{ height: 0, opacity: 0 }}
             className="border-t border-divider"
           >
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 bg-content2/20">
+            <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 bg-content2/20 ${propio ? "gap-3 p-3 md:gap-6 md:p-6" : "gap-6 p-6"}`}>
               {/* NOTE: All inputs inside renderStandardInputs and here have disabled={!isEditing} passed */}
 
               {/* 1. Aceite y Motor */}
@@ -955,7 +956,7 @@ export default function CamionProfile({ id, propio = false }) {
   return (
     <div className="min-h-screen bg-background text-foreground pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-lg border-b border-divider">
+      <div className={`top-0 z-30 bg-background/80 backdrop-blur-lg border-b border-divider ${propio ? "md:sticky" : "sticky"}`}>
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             {!propio && <Link
@@ -988,7 +989,7 @@ export default function CamionProfile({ id, propio = false }) {
             </div> */}
             <Button native
               onClick={addRow}
-              className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
+              className={`flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95 ${propio ? "min-h-11 max-md:w-full max-md:justify-center" : ""}`}
             >
               <Plus size={14} />
               <span>Agregar servicio</span>
@@ -1013,8 +1014,8 @@ export default function CamionProfile({ id, propio = false }) {
               </span>
             )}
           </div>
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="flex flex-col gap-1">
+          <div className={propio ? "grid grid-cols-2 items-end gap-3 md:flex md:flex-wrap" : "flex flex-wrap items-end gap-3"}>
+            <div className={propio ? "col-span-2 flex min-w-0 flex-col gap-1" : "flex flex-col gap-1"}>
               <label className="text-[10px] uppercase font-bold text-foreground/50 tracking-wider">
                 Fecha
               </label>
@@ -1034,7 +1035,7 @@ export default function CamionProfile({ id, propio = false }) {
                 value={searchKmMin}
                 onChange={(e) => setSearchKmMin(e.target.value)}
                 placeholder="Desde"
-                className="w-28 bg-content2 border border-divider rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                className={`bg-content2 border border-divider rounded-lg px-3 py-1.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all ${propio ? "w-full min-w-0 min-h-11 text-base md:min-h-0 md:w-28 md:text-xs" : "w-28 text-xs"}`}
               />
             </div>
             <div className="flex flex-col gap-1">
@@ -1046,7 +1047,7 @@ export default function CamionProfile({ id, propio = false }) {
                 value={searchKmMax}
                 onChange={(e) => setSearchKmMax(e.target.value)}
                 placeholder="Hasta"
-                className="w-28 bg-content2 border border-divider rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                className={`bg-content2 border border-divider rounded-lg px-3 py-1.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all ${propio ? "w-full min-w-0 min-h-11 text-base md:min-h-0 md:w-28 md:text-xs" : "w-28 text-xs"}`}
               />
             </div>
             <Button native
@@ -1101,6 +1102,7 @@ export default function CamionProfile({ id, propio = false }) {
                   requestDelete={() => requestDelete(row._id)}
                   previousRow={maintenanceLog[index + 1]}
                   onSave={saveRow}
+                  propio={propio}
                   canManage={!propio || row.isNew}
                 />
               ))}

@@ -19,7 +19,7 @@ import { useAuth } from "@/app/contexts/AuthContext";
 import useCompanyProfile from "@/hooks/useCompanyProfile";
 import { permissionForPath } from "@/lib/access.mjs";
 
-export default function Navbar({ onToggleSidebar }) {
+export default function Navbar({ onToggleSidebar, driverPage }) {
   const { user, perfil, perfiles, cambiarPerfil, logout, authenticated, tienePermiso } = useAuth();
   const { profile: companyProfile } = useCompanyProfile();
   const [switchingProfile, setSwitchingProfile] = useState(false);
@@ -162,23 +162,37 @@ export default function Navbar({ onToggleSidebar }) {
     logout();
   };
 
-  // ... existing code ...
+  const profileSelector = authenticated && perfiles.length > 0 && (
+    <AppSelect
+      compact
+      ariaLabel="Perfil activo"
+      className="w-[195px] max-w-full"
+      value={perfil}
+      options={perfiles.map((value) => ({ value, label: user?.perfilLabels?.[value] || perfilOptions.find((option) => option.value === value)?.label || value }))}
+      disabled={switchingProfile}
+      onChange={handleProfileChange}
+    />
+  );
 
   return (
-    <header className="w-full bg-content1 shadow-md px-6 py-4 flex flex-wrap gap-3 justify-between items-center border-b border-divider transition-colors duration-300">
+    <header className={`w-full bg-content1 shadow-md px-6 py-4 flex flex-wrap gap-3 justify-between items-center border-b border-divider transition-colors duration-300 ${driverPage ? "max-md:relative max-md:z-40 max-md:justify-start max-md:gap-2 max-md:px-3 max-md:py-2" : ""}`}>
       {/* ... Logo ... */}
-      <div className="flex items-center">
-        <Link href="/dashboard">
-          <Logo width={260} height={70} className="cursor-pointer" />
+      <div className={`flex items-center ${driverPage ? "max-md:mr-auto" : ""}`}>
+        <Link href={driverPage ? "/mis-viajes" : "/dashboard"}>
+          <Logo width={260} height={70} className={`cursor-pointer ${driverPage ? "max-md:w-36 max-md:h-auto" : ""}`} />
         </Link>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4">
+      <div className={`flex flex-wrap items-center gap-4 ${driverPage ? "max-md:contents" : ""}`}>
 
-        {pathname !== "/dashboard" && <WeatherWidget mode="navbar" />}
+        {pathname !== "/dashboard" && (
+          <div className={driverPage ? "order-last w-full md:contents" : "contents"}>
+            <WeatherWidget mode="navbar" className={driverPage ? "max-md:w-full max-md:justify-between" : ""} />
+          </div>
+        )}
 
         {/* Notificaciones */}
-        <div className="relative" ref={notificationRef}>
+        <div className={driverPage ? "md:relative" : "relative"} ref={notificationRef}>
           <Button native
             onClick={toggleNotifications}
             aria-label="Abrir notificaciones"
@@ -193,7 +207,7 @@ export default function Navbar({ onToggleSidebar }) {
           </Button>
 
           {openNotifications && (
-            <div className="absolute right-0 mt-2 w-80 bg-content1 border border-divider rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto">
+            <div className={`absolute right-0 mt-2 w-80 bg-content1 border border-divider rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto ${driverPage ? "max-md:right-3 max-md:top-full max-md:w-[min(20rem,calc(100vw-1.5rem))]" : ""}`}>
               <div className="px-4 py-2 border-b border-divider bg-content2 flex justify-between items-center sticky top-0 z-10">
                 <span className="font-semibold text-sm text-foreground">
                   Notificaciones
@@ -273,7 +287,7 @@ export default function Navbar({ onToggleSidebar }) {
         </div>
 
         {/* Usuario y acciones */}
-        <div className="relative" ref={dropdownRef}>
+        <div className={driverPage ? "min-w-0 md:relative" : "relative"} ref={dropdownRef}>
           <div className="flex items-center gap-2">
             <Button native
               type="button"
@@ -289,23 +303,15 @@ export default function Navbar({ onToggleSidebar }) {
                 </div>
               )}
             </Button>
-            <div className="flex min-w-0 flex-col items-start">
+            <div className={`flex min-w-0 flex-col items-start ${driverPage ? "max-md:hidden" : ""}`}>
               <Button native
                 type="button"
                 onClick={toggleDropdown}
-                className="px-2 text-left font-medium text-sm leading-tight text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-focus/40 rounded"
+                className="max-w-full break-words px-2 text-left font-medium text-sm leading-tight text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-focus/40 rounded"
               >
                 {user?.name || "Invitado"}
               </Button>
-              {authenticated && perfiles.length > 0 && <AppSelect
-                compact
-                ariaLabel="Perfil activo"
-                className="w-[195px] max-w-full"
-                value={perfil}
-                options={perfiles.map((value) => ({ value, label: user?.perfilLabels?.[value] || perfilOptions.find((option) => option.value === value)?.label || value }))}
-                disabled={switchingProfile}
-                onChange={handleProfileChange}
-              />}
+              {profileSelector}
               {switchingProfile && <span role="status" className="px-2 text-[10px] text-default-500">Cambiando perfil…</span>}
             </div>
           </div>
@@ -318,7 +324,7 @@ export default function Navbar({ onToggleSidebar }) {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="absolute right-0 mt-3 w-64 bg-content1 border border-divider rounded-2xl shadow-xl ring-1 ring-black/5 z-50 overflow-hidden"
+                className={`absolute right-0 mt-3 w-64 bg-content1 border border-divider rounded-2xl shadow-xl ring-1 ring-black/5 z-50 overflow-hidden ${driverPage ? "max-md:right-3 max-md:top-full" : ""}`}
               >
                 {/* User Info Header */}
                 <div className="px-5 py-4 border-b border-divider bg-content2/50">
@@ -346,6 +352,12 @@ export default function Navbar({ onToggleSidebar }) {
                 </div>
 
                 {companyProfile && <div className="px-5 py-3 border-b border-divider flex items-center gap-3">{companyProfile.logo && <img src={companyProfile.logo} alt={`Logo de ${companyProfile.nombre}`} className="w-10 h-10 object-contain rounded-[10px] bg-white p-1" />}<span className="text-sm font-medium truncate">{companyProfile.nombre}</span></div>}
+                {driverPage && profileSelector && (
+                  <div className="border-b border-divider px-5 py-3 md:hidden">
+                    {profileSelector}
+                    {switchingProfile && <span role="status" className="text-xs text-default-500">Cambiando perfil…</span>}
+                  </div>
+                )}
                 <div className="p-2">
                   <Button native
                     onClick={handleLogoutClick}

@@ -23,6 +23,8 @@ export default function RootLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
 
+  const driverPage = pathname === "/mis-viajes" || pathname === "/mi-camion";
+
   // Verificar si es ruta pública
   const isPublicRoute = publicRoutes.some((route) =>
     pathname?.startsWith(route),
@@ -41,16 +43,18 @@ export default function RootLayout({ children }) {
               <>{children}</>
             ) : (
               // Layout con sidebar/navbar para rutas protegidas
-              <div className="flex min-h-screen bg-background text-foreground">
+              <div className={`flex min-h-screen bg-background text-foreground ${driverPage ? "flex-col md:flex-row" : ""}`}>
                 <Sidebar
+                  driverPage={driverPage}
                   isOpen={sidebarOpen}
                   onClose={() => setSidebarOpen(false)}
                 />
-                <div className="flex flex-col flex-1">
+                <div className={`flex flex-col flex-1 ${driverPage ? "min-w-0 max-md:contents" : ""}`}>
                   <Navbar
+                    driverPage={driverPage}
                     onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
                   />
-                  <main className="p-6 overflow-auto"><AccessGate>{children}</AccessGate></main>
+                  <main className={driverPage ? "order-2 min-w-0 p-3 md:order-none md:p-6 overflow-auto" : "p-6 overflow-auto"}><AccessGate>{children}</AccessGate></main>
                 </div>
               </div>
             )}
