@@ -1,7 +1,7 @@
 import CamionesList from "@/app/views/CamionesList";
 
-export default function CamionesPage({ searchParams }) {
+export default async function CamionesPage({ searchParams }) {
     return (
-      <CamionesList notificationTab={searchParams?.tab}/>
+      <CamionesList notificationTab={(await searchParams)?.tab}/>
     );
   }

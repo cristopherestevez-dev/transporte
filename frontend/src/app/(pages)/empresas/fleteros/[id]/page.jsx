@@ -1,6 +1,6 @@
 "use client";
 import EmpresaDetail from "@/app/views/EmpresaDetail";
 
-export default function FleteroDetailPage({ params }) {
-  return <EmpresaDetail id={params.id} tipo="fletero" />;
+export default async function FleteroDetailPage({ params }) {
+  return <EmpresaDetail id={(await params).id} tipo="fletero" />;
 }

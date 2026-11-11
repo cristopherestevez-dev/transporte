@@ -1,5 +1,6 @@
 import Facturacion from "@/app/views/Facturacion";
 
-export default function FacturacionPage({ searchParams }) {
-  return <Facturacion notificationTab={searchParams?.tab} notificationScope={searchParams?.ambito} />;
+export default async function FacturacionPage({ searchParams }) {
+  const { tab, ambito } = await searchParams;
+  return <Facturacion notificationTab={tab} notificationScope={ambito} />;
 }

@@ -1,6 +1,6 @@
 import CamionProfile from "../../../views/CamionProfile";
 
-export default function Page({ params }) {
-  const { id } = params;
+export default async function Page({ params }) {
+  const { id } = await params;
   return <CamionProfile id={id} />;
 }

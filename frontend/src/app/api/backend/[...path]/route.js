@@ -3,14 +3,14 @@ import { backendUrl, backendHeaders } from "@/lib/backend";
 
 export const dynamic = "force-dynamic";
 
-async function proxy(request, { params }) {
+async function forwardRequest(request, { params }) {
   const origin = request.headers.get("origin");
   if (!["GET", "HEAD"].includes(request.method) && origin && origin !== new URL(request.url).origin) {
     return Response.json({ message: "Origen no permitido" }, { status: 403 });
   }
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
   if (!token?.email) return Response.json({ message: "Iniciá sesión para continuar" }, { status: 401 });
-  const path = params.path.map(encodeURIComponent).join("/");
+  const path = (await params).path.map(encodeURIComponent).join("/");
   if (path === "usuarios/sync" || path === "usuarios/login" || path.startsWith("usuarios/permisos/")) {
     return Response.json({ message: "Operación no permitida" }, { status: 403 });
   }
@@ -32,4 +32,4 @@ async function proxy(request, { params }) {
   }
 }
 
-export { proxy as GET, proxy as POST, proxy as PATCH, proxy as PUT, proxy as DELETE };
+export { forwardRequest as GET, forwardRequest as POST, forwardRequest as PATCH, forwardRequest as PUT, forwardRequest as DELETE };
