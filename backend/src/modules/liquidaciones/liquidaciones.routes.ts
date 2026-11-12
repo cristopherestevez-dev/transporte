@@ -99,7 +99,7 @@ async function consultarViajes(empresaId: string, filtros: Filtros, claves?: str
                 as: 'liquidaciones',
             } },
             { $match: { 'liquidaciones.0': { $exists: false } } },
-            { $sort: { fecha_salida: 1, _id: 1 } },
+            { $sort: { fecha_salida: -1, _id: -1 } },
             { $limit: limiteViajes + 1 },
         ]);
         return viajes.map(viaje => ({
@@ -107,7 +107,7 @@ async function consultarViajes(empresaId: string, filtros: Filtros, claves?: str
             fechaSalida: viaje.fecha_salida?.slice(0, 10), saldos: saldosViaje(viaje),
         }));
     }));
-    const viajes = lotes.flat().sort((a, b) => (a.fechaSalida ?? '').localeCompare(b.fechaSalida ?? '') || a.clave.localeCompare(b.clave));
+    const viajes = lotes.flat().sort((a, b) => (b.fechaSalida ?? '').localeCompare(a.fechaSalida ?? '') || b.clave.localeCompare(a.clave));
     if (viajes.length > limiteViajes) throw new AppError('Acotá el período a un máximo de 500 viajes', 422);
 
     return { filtros, responsable: responsable.nombre, viajes };

@@ -38,9 +38,9 @@ test('trip state changes atomically save one durable event; unchanged states pro
     ViajeNacionalModel.findOneAndUpdate = async (filter, update) => {
       assert.equal(filter.estado, 'pendiente');
       assert.equal(update.$set.estado, 'en_transito');
-      assert.equal(update.$push.notificationEvents.previous, 'pendiente');
-      assert.equal(update.$push.notificationEvents.current, 'en_transito');
-      assert.ok(update.$push.notificationEvents.eventId);
+      assert.equal(update.$push.notificationEvents.$each[0].previous, 'pendiente');
+      assert.equal(update.$push.notificationEvents.$each[0].current, 'en_transito');
+      assert.ok(update.$push.notificationEvents.$each[0].eventId);
       return { estado: 'en_transito' };
     };
     await repository.update('trip', { estado: 'en_transito' });
@@ -92,5 +92,33 @@ test('mobile outbox targets only company users with an eligible profile and enab
     assert.deepEqual(queued, [{ notificationId: 'event', userId: 'u1', perfil: 'operador_logistico', channel: 'mobile' }]);
   } finally {
     NotificationRule.find = original.rules; PerfilModel.find = original.profiles; Usuario.find = original.users; Preferences.findOne = original.preferences; NotificationDelivery.updateOne = original.queue;
+  }
+});
+
+test('driver assignments save a durable event on create and reassignment without duplicating unchanged assignments', async () => {
+  const original = { create: ViajeNacionalModel.create, find: ViajeNacionalModel.findById, update: ViajeNacionalModel.findOneAndUpdate };
+  const repository = new ViajesRepository('nacional');
+  let trip = { tipoAsignacion: 'chofer', asignadoId: 'driver-a', estado: 'pendiente' };
+  try {
+    ViajeNacionalModel.create = async data => data;
+    const created = await repository.create(trip);
+    assert.equal(created.notificationEvents[0].driverId, 'driver-a');
+    assert.equal((await repository.create({ tipoAsignacion: 'fletero', asignadoId: 'fletero-a' })).notificationEvents, undefined);
+
+    ViajeNacionalModel.findById = async () => trip;
+    ViajeNacionalModel.findOneAndUpdate = async (filter, update) => {
+      assert.equal(filter.asignadoId, trip.asignadoId);
+      trip = { ...trip, ...update.$set };
+      return { ...trip, notificationEvents: update.$push?.notificationEvents.$each };
+    };
+
+    const assigned = await repository.update('trip', { asignadoId: 'driver-b', estado: 'en_transito' });
+    assert.equal(assigned.notificationEvents.length, 2);
+    assert.equal(assigned.notificationEvents[1].driverId, 'driver-b');
+    assert.equal((await repository.update('trip', { asignadoId: 'driver-b' })).notificationEvents, undefined);
+  } finally {
+    ViajeNacionalModel.create = original.create;
+    ViajeNacionalModel.findById = original.find;
+    ViajeNacionalModel.findOneAndUpdate = original.update;
   }
 });

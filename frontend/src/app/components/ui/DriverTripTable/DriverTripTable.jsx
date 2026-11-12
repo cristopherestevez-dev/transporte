@@ -33,7 +33,12 @@ export default function DriverTripTable({ trips = [] }) {
     const localTrips = [...nac, ...int];
 
     // Mapear viajes a estructura de filas con calculos
-    const initialData = trips.map((t, index) => {
+    const orderedTrips = [...trips].sort((a, b) =>
+      (b.fecha_salida || "").localeCompare(a.fecha_salida || "") ||
+      (b.createdAt || "").localeCompare(a.createdAt || "") ||
+      String(b._id || "").localeCompare(String(a._id || "")),
+    );
+    const initialData = orderedTrips.map((t, index) => {
       const tripId = t._id || t.id;
       // Intentar encontrar si hay datos guardados localmente para este viaje
       const localTrip = localTrips.find((lt) => lt.id === tripId || lt._id === tripId);

@@ -1,4 +1,4 @@
-import { paginateQuery } from '../../shared/pagination';
+import { listContext, paginateQuery } from '../../shared/pagination';
 import { ViajeNacionalModel, ViajeInternacionalModel, IViaje } from './viajes.model';
 import { Model } from 'mongoose';
 import mongoose from 'mongoose';
@@ -14,7 +14,26 @@ export class ViajesRepository {
     }
 
     async findAll(): Promise<IViaje[]> {
-        return paginateQuery(this.model, this.model.find().sort({ createdAt: -1 }));
+        const filters = listContext.getStore()?.filters ?? {};
+        const criteria: Record<string, unknown> = {};
+
+        for (const field of ['origen', 'destino', 'carga', 'numero_comprobante', 'proveedor']) {
+            const value = filters[`viaje_${field}`];
+            if (value) criteria[field] = { $regex: value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
+        }
+
+        for (const field of ['fecha_salida', 'fecha_llegada', 'estado', 'tipo_comprobante']) {
+            const value = filters[`viaje_${field}`];
+            if (value) criteria[field] = field === 'tipo_comprobante' && value === 'sin_factura' ? { $in: ['', null] } : value;
+        }
+
+        if (filters.viaje_asignadoId) {
+            const [tipoAsignacion, asignadoId] = filters.viaje_asignadoId.split(':');
+            criteria.tipoAsignacion = tipoAsignacion;
+            criteria.asignadoId = asignadoId || '';
+        }
+
+        return paginateQuery(this.model, this.model.find(criteria).sort({ fecha_salida: -1, createdAt: -1, _id: -1 }));
     }
 
     async findById(id: string): Promise<IViaje | null> {
@@ -22,16 +41,38 @@ export class ViajesRepository {
     }
 
     async create(data: Partial<IViaje>): Promise<IViaje> {
-        return this.model.create(data);
+        const event = this.assignmentEvent(data.tipoAsignacion, data.asignadoId);
+        return this.model.create({ ...data, ...(event ? { notificationEvents: [event] } : {}) });
+    }
+
+    private assignmentEvent(tipo: IViaje['tipoAsignacion'], driverId?: string) {
+        if (tipo !== 'chofer' || !driverId) return undefined;
+        return { eventId: new mongoose.Types.ObjectId().toString(), driverId, createdAt: new Date() };
     }
 
     async update(id: string, data: Partial<IViaje>): Promise<IViaje | null> {
-        if (!data.estado) return this.model.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+        const changesAssignment = data.tipoAsignacion !== undefined || data.asignadoId !== undefined;
+        if (!data.estado && !changesAssignment) return this.model.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+
         const previous = await this.model.findById(id);
         if (!previous) return null;
-        const event = previous.estado !== data.estado ? { eventId: new mongoose.Types.ObjectId().toString(), previous: previous.estado, current: data.estado, createdAt: new Date() } : null;
-        const result = await this.model.findOneAndUpdate({ _id: id, estado: previous.estado }, {
-            $set: data, ...(event ? { $push: { notificationEvents: event } } : {}),
+        const statusEvent = data.estado && previous.estado !== data.estado
+            ? { eventId: new mongoose.Types.ObjectId().toString(), previous: previous.estado, current: data.estado, createdAt: new Date() }
+            : undefined;
+        const tipo = data.tipoAsignacion === undefined ? previous.tipoAsignacion : data.tipoAsignacion;
+        const driverId = data.asignadoId === undefined ? previous.asignadoId : data.asignadoId;
+        const assignmentEvent = tipo !== previous.tipoAsignacion || driverId !== previous.asignadoId
+            ? this.assignmentEvent(tipo, driverId)
+            : undefined;
+        const events = [statusEvent, assignmentEvent].filter(Boolean);
+        const filter = {
+            _id: id,
+            ...(data.estado ? { estado: previous.estado ?? null } : {}),
+            ...(changesAssignment ? { tipoAsignacion: previous.tipoAsignacion ?? null, asignadoId: previous.asignadoId ?? null } : {}),
+        };
+        const result = await this.model.findOneAndUpdate(filter, {
+            $set: data,
+            ...(events.length ? { $push: { notificationEvents: { $each: events } } } : {}),
         }, { new: true, runValidators: true });
         if (!result) throw new AppError('El viaje cambió mientras lo editabas. Recargá y volvé a intentar', 409);
         return result;

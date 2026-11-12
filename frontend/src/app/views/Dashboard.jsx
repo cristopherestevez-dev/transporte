@@ -33,7 +33,7 @@ export default function Dashboard() {
   const [tripsPage, setTripsPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [pagination, setPagination] = useState({ page: 1, pageSize: 5, total: 0, totalPages: 0 });
-  const [search, setSearch] = useState('');
+  const [tripFilters, setTripFilters] = useState({});
   const [tripsLoading, setTripsLoading] = useState(false);
   const [tripsError, setTripsError] = useState('');
   const router = useRouter();
@@ -54,13 +54,13 @@ export default function Dashboard() {
   useEffect(() => {
     if (!canViewTrips) return;
     let current = true; setTripsLoading(true); setTripsError('');
-    api.getRecentTrips({ page: tripsPage, pageSize, search }).then(result => {
+    api.getRecentTrips({ page: tripsPage, pageSize, ...tripFilters }).then(result => {
       if (!current) return;
       if (result.pagination.totalPages && tripsPage > result.pagination.totalPages) { setTripsPage(result.pagination.totalPages); return; }
       setViajes(result.data); setPagination(result.pagination);
     }).catch(error => { if (current) setTripsError(error.message); }).finally(() => { if (current) setTripsLoading(false); });
     return () => { current = false; };
-  }, [canViewTrips, tripsPage, pageSize, search]);
+  }, [canViewTrips, tripsPage, pageSize, tripFilters]);
 
   if (!stats) return <p className="p-6">Cargando...</p>;
 
@@ -143,7 +143,19 @@ export default function Dashboard() {
               pagination={pagination}
               onPageChange={setTripsPage}
               onPageSizeChange={value => { setPageSize(value); setTripsPage(1); }}
-              onSearchChange={value => { setSearch(value); setTripsPage(1); }}
+              filterFields={[
+                { key: "col_origen", label: "Origen" },
+                { key: "col_destino", label: "Destino" },
+                { key: "col_estado", label: "Estado", options: [
+                  { value: "pendiente", label: "Pendiente" },
+                  { value: "en_transito", label: "En tránsito" },
+                  { value: "finalizado", label: "Finalizado" },
+                  { value: "cancelado", label: "Cancelado" },
+                ] },
+                { key: "col_fecha_salida", label: "Fecha", type: "date" },
+              ]}
+              filters={tripFilters}
+              onFiltersChange={values => { setTripFilters(values); setTripsPage(1); }}
               loading={tripsLoading}
             columns={columns}
             data={viajes.map((v) => [

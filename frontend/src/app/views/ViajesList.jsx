@@ -387,11 +387,25 @@ const ViajesList = () => {
       ].map(({ label, rows, setter, endpoint, type }) => ({
         label,
         content: <CrudTable
+          key={`${direccion}:${endpoint}`}
           title={`Viajes ${label.toLowerCase()} — ${received ? "facturas recibidas" : "facturas emitidas"}`}
           data={rows.filter(belongs)}
           setData={(updated) => setter((previous) => [...previous.filter((row) => !belongs(row)), ...updated])}
           apiUrl={`/api/backend/viajes/${endpoint}`}
           listFilters={{ direccion_facturacion: direccion }}
+          columnFilters={tableColumns.map(({ key, label }) => ({
+            key: `viaje_${key}`,
+            label,
+            type: key.startsWith("fecha_") ? "date" : undefined,
+            options: {
+              estado: estados,
+              tipo_comprobante: tiposFactura.map((option) => ({ ...option, value: option.value || "sin_factura" })),
+              asignadoId: [
+                ...choferesOptions.map(({ _id, nombre }) => ({ value: `chofer:${_id}`, label: `${nombre} (Chofer)` })),
+                ...fleterosOptions.map(({ _id, nombre }) => ({ value: `fletero:${_id}`, label: `${nombre} (Fletero)` })),
+              ],
+            }[key],
+          }))}
           columns={tableColumns}
           formFields={fields}
           defaultValues={{ direccion_facturacion: direccion }}

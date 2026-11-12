@@ -5,7 +5,9 @@ export const dynamic = "force-dynamic";
 
 async function forwardRequest(request, { params }) {
   const origin = request.headers.get("origin");
-  if (!["GET", "HEAD"].includes(request.method) && origin && origin !== new URL(request.url).origin) {
+  const publicUrl = process.env.NODE_ENV === "production" ? process.env.NEXTAUTH_URL : undefined;
+  const expectedOrigin = new URL(publicUrl || request.url).origin;
+  if (!["GET", "HEAD"].includes(request.method) && origin && origin !== expectedOrigin) {
     return Response.json({ message: "Origen no permitido" }, { status: 403 });
   }
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });

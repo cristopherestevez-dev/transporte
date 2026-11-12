@@ -8,6 +8,7 @@ export const notificationOptions = [
     { type: 'SEGURO', label: 'Vencimiento de seguros', permission: 'camiones' },
     { type: 'COBRANZA', label: 'Cobranzas por vencer y vencidas', permission: 'facturacion' },
     { type: 'PAGO', label: 'Pagos por vencer y vencidos', permission: 'facturacion' },
+    { type: 'VIAJE_ASIGNADO', label: 'Viaje asignado', permission: 'mis-viajes' },
     { type: 'VIAJE_ESTADO', label: 'Cambio de estado de un viaje', permission: 'viajes' },
 ];
 const schema = new Schema({

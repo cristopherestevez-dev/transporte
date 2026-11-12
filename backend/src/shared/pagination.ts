@@ -13,6 +13,11 @@ export const paginationMiddleware = (req: Request, res: Response, next: NextFunc
     if (req.query.search !== undefined && (typeof req.query.search !== 'string' || req.query.search.length > 100)) return next(new AppError('Búsqueda inválida', 400));
     const filters: Record<string, string> = {};
     for (const key of ['direccion_facturacion', 'asignadoId', 'tipoAsignacion', 'proveedorId', 'perfil', 'tipo']) if (typeof req.query[key] === 'string') filters[key] = String(req.query[key]);
+    for (const [key, value] of Object.entries(req.query)) {
+        if ((key.startsWith('viaje_') || key.startsWith('col_')) && typeof value === 'string' && value.length <= 100 && value.trim()) {
+            filters[key] = value.trim();
+        }
+    }
     const context: ListContext = { page, pageSize, search: String(req.query.search || '').trim(), filters };
     const json = res.json.bind(res);
     res.json = ((payload: any) => json(context.pagination ? { ...payload, pagination: context.pagination } : payload)) as typeof res.json;
@@ -23,11 +28,33 @@ export function pageInfo(total: number): PageInfo {
     if (!context) throw new AppError('Paginación no configurada', 500);
     return context.pagination = { page: context.page, pageSize: context.pageSize, total, totalPages: Math.ceil(total / context.pageSize) };
 }
+const textColumns = new Set(['patente', 'marca', 'modelo', 'seguro', 'numero_chasis', 'numero_motor', 'nombre', 'dni', 'telefono', 'cuil_cuit', 'tipo', 'direccion', 'email', 'usuario', 'estado', 'permisos', 'origen', 'destino', 'carga', 'proveedor', 'numero_comprobante']);
+const exactColumns = new Set(['vencimiento_seguro', 'licencia', 'fecha_salida', 'fecha_llegada', 'camionId', 'empresaId']);
+
 export function listFilter(model: Model<any>, filter: any = {}) {
     const context = listContext.getStore();
     if (!context) return filter;
     const conditions: any[] = [filter];
     for (const [key, value] of Object.entries(context.filters)) {
+        if (key.startsWith('col_')) {
+            const field = key.slice(4);
+            const path = model.schema.path(field);
+            if (!path) continue;
+            if (textColumns.has(field)) {
+                const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                conditions.push({ [field]: { $regex: escaped, $options: 'i' } });
+            } else if (exactColumns.has(field)) {
+                conditions.push({ [field]: value });
+            } else if (field === 'activo' && ['true', 'false'].includes(value)) {
+                conditions.push({ activo: value === 'true' });
+            } else if (['anio', 'numero_ejes'].includes(field)) {
+                const number = Number(value);
+                if (Number.isSafeInteger(number)) conditions.push({ [field]: number });
+            } else if (field === 'perfiles') {
+                conditions.push({ $or: [{ perfiles: value }, { perfil: value }] });
+            }
+            continue;
+        }
         if (key === 'perfil' && model.schema.path('perfiles')) conditions.push({ $or: [{ perfil: value }, { perfiles: value }] });
         else if (key === 'direccion_facturacion' && value === 'emitida' && model.schema.path(key)) conditions.push({ $or: [{ direccion_facturacion: 'emitida' }, { direccion_facturacion: { $exists: false } }, { direccion_facturacion: null }] });
         else if (model.schema.path(key)) conditions.push({ [key]: value });

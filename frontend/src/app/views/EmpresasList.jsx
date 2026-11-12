@@ -1,3 +1,5 @@
+"use client";
+
 import CrudTable from "../components/ui/CrudTable/CrudTable";
 import TabsWrapper from "../components/ui/TabsWrapper/TabsWrapper";
 import { useState, useEffect } from "react";

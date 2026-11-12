@@ -161,7 +161,7 @@ export default function ChoferesList() {
                   },
                   { label: "DNI", key: "dni" },    
                   { label: "Teléfono", key: "telefono" },
-                  { label: "Camión", key: "camionId", render: value => camiones.find(camion => camion._id === value)?.patente || "Sin asignar" },
+                  { label: "Camión", key: "camionId", filterOptions: camiones.map(({ _id, patente }) => ({ value: _id, label: patente })), render: value => camiones.find(camion => camion._id === value)?.patente || "Sin asignar" },
                   { 
                     label: "Vencimiento Licencia", 
                     key: "licencia",

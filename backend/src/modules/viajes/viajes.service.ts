@@ -56,7 +56,9 @@ export class ViajesService {
     }
 
     async create(data: Partial<IViaje>): Promise<IViaje> {
-        return this.repository.create(data);
+        const viaje = await this.repository.create(data);
+        if (data.tipoAsignacion === 'chofer' && data.asignadoId) await this.deliverNotifications();
+        return viaje;
     }
 
     async update(id: string, data: Partial<IViaje>): Promise<IViaje> {
@@ -64,11 +66,13 @@ export class ViajesService {
         if (!viaje) {
             throw new AppError(`Viaje ${this.tipo} no encontrado`, 404);
         }
-        if (data.estado) {
-            try { await drainTripEvents(); }
-            catch (error) { logger.error('Entrega de notificación pendiente; se reintentará', error); }
-        }
+        if (data.estado || data.tipoAsignacion !== undefined || data.asignadoId !== undefined) await this.deliverNotifications();
         return viaje;
+    }
+
+    private async deliverNotifications() {
+        try { await drainTripEvents(); }
+        catch (error) { logger.error('Entrega de notificación pendiente; se reintentará', error); }
     }
 
     async delete(id: string): Promise<void> {

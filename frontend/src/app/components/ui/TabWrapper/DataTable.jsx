@@ -4,19 +4,19 @@ import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown } fro
 
 
 import { useState, useMemo } from "react";
+import ColumnFilters from "../ColumnFilters";
 import AppSelect from '../AppSelect/AppSelect';
 import { Card } from "@heroui/react";
 
 
 
-export default function DataTable({ title, columns, data, pagination, onPageChange, onPageSizeChange, onSearchChange, loading = false }) {
+export default function DataTable({ title, columns, data, pagination, onPageChange, onPageSizeChange, filterFields = [], filters = {}, onFiltersChange, loading = false }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [localPageSize, setLocalPageSize] = useState(5);
   const rowsPerPage = pagination?.pageSize || localPageSize;
   const shownPage = pagination?.page || currentPage;
 
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
-  const [searchTerm, setSearchTerm] = useState("");
 
   // Ordenar datos
   const sortedData = useMemo(() => {
@@ -42,19 +42,9 @@ export default function DataTable({ title, columns, data, pagination, onPageChan
     return sortableItems;
   }, [data, sortConfig]);
 
-  // Filtrar por búsqueda
-  const filteredData = useMemo(() => {
-    if (pagination || !searchTerm) return sortedData;
-    return sortedData.filter(row =>
-      row.some(cell =>
-        String(cell).toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    );
-  }, [searchTerm, sortedData, pagination]);
-
   // Paginación
-  const pageCount = Math.max(1, pagination?.totalPages ?? Math.ceil(filteredData.length / rowsPerPage));
-  const currentData = pagination ? filteredData : filteredData.slice(
+  const pageCount = Math.max(1, pagination?.totalPages ?? Math.ceil(sortedData.length / rowsPerPage));
+  const currentData = pagination ? sortedData : sortedData.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
@@ -77,20 +67,9 @@ export default function DataTable({ title, columns, data, pagination, onPageChan
   };
 
   return (
-    <Card className="min-w-0 shadow-none ring-0">
-      <Card.Header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-divider">
-        <h3 className="text-xl font-bold text-foreground">{title}</h3>
-        <input
-          type="text"
-          placeholder="Buscar..."
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setCurrentPage(1);
-            onSearchChange?.(e.target.value);
-          }}
-          className="w-full sm:w-64 px-3 py-2 border rounded-md border-divider bg-content1 text-foreground focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-default-400"
-        />
+    <Card className="min-w-0 overflow-visible shadow-none ring-0">
+      <Card.Header className="flex flex-row flex-wrap items-center justify-end gap-2 border-b border-divider">
+        <h3 className="mr-auto text-xl font-bold text-foreground">{title}</h3>
         <AppSelect
           ariaLabel="Mostrar resultados"
           value={String(rowsPerPage)}
@@ -99,6 +78,7 @@ export default function DataTable({ title, columns, data, pagination, onPageChan
           compact
           className="w-36 shrink-0 self-end sm:self-auto"
         />
+        <ColumnFilters fields={filterFields} values={filters} onChange={onFiltersChange} />
       </Card.Header>
 
       <Card.Content className="table-frame p-0">
