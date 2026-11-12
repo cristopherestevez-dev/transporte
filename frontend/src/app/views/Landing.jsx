@@ -4,11 +4,14 @@ import { Calculator, ChartColumn, ClipboardList, FileText, Globe, ShieldCheck, T
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import Button from "@/app/components/ui/Button/button";
 
 import { FcGoogle } from "react-icons/fc";
 import { Logo } from "@/app/components/ui/Logo";
 import "../globals.css";
+
+const supportEmail = "soporte@atlasops.com.ar";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 60 },
@@ -65,6 +68,16 @@ const stats = [
 ];
 
 export default function LandingView() {
+  const [copyMessage, setCopyMessage] = useState("");
+
+  async function copySupportEmail() {
+    try {
+      await navigator.clipboard.writeText(supportEmail);
+      setCopyMessage("Correo copiado.");
+    } catch {
+      setCopyMessage("Copiá la dirección manualmente.");
+    }
+  }
   // Forzar scroll al inicio al cargar para que las animaciones funcionen bien
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -345,13 +358,21 @@ export default function LandingView() {
             <a href="#" className="hover:text-white transition">
               Privacidad
             </a>
-            <a
-              href="mailto:soporte@atlasops.com.ar"
-              className="flex flex-col items-center gap-1 text-center transition hover:text-white"
-            >
+            <div className="flex flex-col items-center gap-1 text-center">
               <span>Atención al cliente</span>
-              <span>soporte@atlasops.com.ar</span>
-            </a>
+              <a href={`mailto:${supportEmail}`} className="transition hover:text-white">
+                {supportEmail}
+              </a>
+              <Button
+                native
+                type="button"
+                onClick={copySupportEmail}
+                className="cursor-pointer underline underline-offset-4 hover:text-white"
+              >
+                Copiar correo
+              </Button>
+              <span role="status" className="min-h-5 text-sm">{copyMessage}</span>
+            </div>
           </div>
           <p className="text-gray-500 text-sm">
             © 2026 Atlas Transporte. Todos los derechos reservados.
