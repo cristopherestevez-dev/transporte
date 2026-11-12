@@ -27,8 +27,7 @@ for service in backend frontend; do
   test -f "$release_dir/source/$service/Dockerfile"
 done
 for service in backend frontend; do
-  rsync -a --delete --exclude=".env*" --exclude=node_modules --exclude=.next 
-    "$release_dir/source/$service/" "/opt/atlasops/$service/"
+  rsync -a --delete --exclude=".env*" --exclude=node_modules --exclude=.next "$release_dir/source/$service/" "/opt/atlasops/$service/"
 done
 "${compose[@]}" build backend frontend
 "${compose[@]}" up -d --no-deps --wait --wait-timeout 180 backend frontend
