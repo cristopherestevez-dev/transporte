@@ -5,6 +5,7 @@ import { firstAllowedRoute, isCompanySuspended } from "@/lib/access.mjs";
 export async function proxy(req) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const { pathname } = req.nextUrl;
+  if (pathname === "/") return NextResponse.next();
 
   // Rutas públicas que no requieren autenticación
   // Incluimos /landing y /login

@@ -1,4 +1,10 @@
 {$APP_DOMAIN} {
+    redir / /landing 302
     encode zstd gzip
     reverse_proxy frontend:3000
+}
+
+www.{$APP_DOMAIN} {
+    redir / https://{$APP_DOMAIN}/landing 302
+    redir https://{$APP_DOMAIN}{uri} 308
 }

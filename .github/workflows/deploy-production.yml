@@ -1,0 +1,48 @@
+name: Publicar Atlas Ops
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atlasops-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Compilar y publicar en el VPS
+        shell: bash
+        env:
+          VPS_HOST: ${{ vars.VPS_HOST }}
+          VPS_USER: ${{ vars.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          : "${VPS_HOST:?Falta VPS_HOST}" "${VPS_USER:?Falta VPS_USER}"
+          : "${VPS_SSH_KEY:?Falta VPS_SSH_KEY}" "${VPS_KNOWN_HOSTS:?Falta VPS_KNOWN_HOSTS}"
+          work=$(mktemp -d)
+          trap 'rm -rf "$work"' EXIT
+          umask 077
+          printf '%s\n' "$VPS_SSH_KEY" > "$work/key"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$work/known_hosts"
+          ssh_args=(-i "$work/key" -o BatchMode=yes -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$work/known_hosts"
+            -o ConnectTimeout=15)
+          target="$VPS_USER@$VPS_HOST"
+          git archive --format=tar.gz -o "$work/app.tar.gz" HEAD -- frontend backend ':(exclude,glob)**/.env' ':(exclude,glob)**/.env.*'
+          remote_dir=$(ssh "${ssh_args[@]}" "$target" 'mktemp -d /tmp/atlasops-deploy.XXXXXXXX')
+          [[ "$remote_dir" =~ ^/tmp/atlasops-deploy\.[A-Za-z0-9]+$ ]]
+          scp "${ssh_args[@]}" "$work/app.tar.gz" scripts/deploy-vps.sh "$target:$remote_dir/"
+          ssh "${ssh_args[@]}" "$target" "bash '$remote_dir/deploy-vps.sh' '$remote_dir/app.tar.gz'"
+

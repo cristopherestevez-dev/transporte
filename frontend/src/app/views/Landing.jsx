@@ -338,15 +338,19 @@ export default function LandingView() {
               forceWhite={true}
             />
           </div>
-          <div className="flex items-center gap-6 text-gray-400 text-sm">
+          <div className="flex flex-wrap items-center justify-center gap-6 text-gray-400 text-sm">
             <a href="#" className="hover:text-white transition">
               Términos
             </a>
             <a href="#" className="hover:text-white transition">
               Privacidad
             </a>
-            <a href="#" className="hover:text-white transition">
-              Contacto
+            <a
+              href="mailto:soporte@atlasops.com.ar"
+              className="flex flex-col items-center gap-1 text-center transition hover:text-white"
+            >
+              <span>Atención al cliente</span>
+              <span>soporte@atlasops.com.ar</span>
             </a>
           </div>
           <p className="text-gray-500 text-sm">
