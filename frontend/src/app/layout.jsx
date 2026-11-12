@@ -34,6 +34,12 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/faviconAtlas.svg" type="image/svg+xml" />
+        {driverPage && (
+          <>
+            <link rel="manifest" href="/atlas-choferes.webmanifest" />
+            <link rel="apple-touch-icon" href="/atlas-choferes-192.png" />
+          </>
+        )}
       </head>
       <body className={`font-sans ${poppins.variable}`}>
         <Providers>
