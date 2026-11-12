@@ -5,6 +5,7 @@ import "./globals.css";
 import Navbar from "./components/ui/Navbar/Navbar";
 import Sidebar from "./components/ui/SideBar/Sidebar";
 import AccessGate from "./components/AccessGate";
+import AppFooter from "./components/ui/AppFooter";
 import { usePathname } from "next/navigation";
 
 const poppins = Poppins({
@@ -45,8 +46,12 @@ export default function RootLayout({ children }) {
         <Providers>
           <ToastProvider>
             {isPublicRoute ? (
-              // Layout limpio para rutas públicas
-              <>{children}</>
+              pathname === "/landing" ? children : (
+                <div className="flex min-h-screen flex-col">
+                  <div className="flex flex-1 flex-col">{children}</div>
+                  <AppFooter />
+                </div>
+              )
             ) : (
               // Layout con sidebar/navbar para rutas protegidas
               <div className={`flex min-h-screen bg-background text-foreground ${driverPage ? "flex-col md:flex-row" : ""}`}>
@@ -60,7 +65,10 @@ export default function RootLayout({ children }) {
                     driverPage={driverPage}
                     onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
                   />
-                  <main className={driverPage ? "order-2 min-w-0 p-3 md:order-none md:p-6 overflow-auto" : "p-6 overflow-auto"}><AccessGate>{children}</AccessGate></main>
+                  <main className={driverPage ? "order-2 min-w-0 flex-1 overflow-auto p-3 md:order-none md:p-6" : "flex-1 overflow-auto p-6"}>
+                    <AccessGate>{children}</AccessGate>
+                  </main>
+                  <AppFooter className={driverPage ? "order-3 md:order-none" : ""} />
                 </div>
               </div>
             )}

@@ -51,7 +51,7 @@ export default function DriverTripTable({ trips = [] }) {
       };
 
       const tarifaTotalAr = parseFloat(getVal("tarifaTotalAr", 0)) || 0;
-      const tarifaChoferPorcentaje = parseFloat(getVal("tarifaChoferPorcentaje", 10)) || 10;
+      const tarifaChoferPorcentaje = Number(getVal("tarifaChoferPorcentaje", 10));
       const tarifaChoferAr = tarifaTotalAr * (tarifaChoferPorcentaje / 100);
 
       const tarifaTotalUsd = parseFloat(getVal("tarifaTotalUsd", 0)) || 0;
@@ -345,7 +345,7 @@ export default function DriverTripTable({ trips = [] }) {
             <th className="border p-1 bg-cyan-300 text-slate-900 dark:bg-cyan-950 dark:text-cyan-100" rowSpan={3}>
               CONTENEDOR N° O CARGA
             </th>
-            <th className="border p-1 bg-orange-400 text-slate-900 dark:bg-orange-950 dark:text-orange-100" colSpan={8}>
+            <th className="border p-1 bg-orange-400 text-slate-900 dark:bg-orange-950 dark:text-orange-100" colSpan={9}>
               TARIFA
             </th>
             <th className="border p-1 bg-green-400 text-slate-900 dark:bg-green-950 dark:text-green-100" colSpan={8}>
@@ -366,9 +366,10 @@ export default function DriverTripTable({ trips = [] }) {
             {/* Tarifa Subheaders */}
             <th className="border p-1 bg-orange-300 text-slate-900 dark:bg-orange-950 dark:text-orange-100">CHOFER</th>
             <th className="border p-1 bg-orange-300 text-slate-900 dark:bg-orange-950 dark:text-orange-100">TOTAL(AR)</th>
+            <th className="border p-1 bg-orange-300 text-slate-900 dark:bg-orange-950 dark:text-orange-100">CHOFER (AR)</th>
             <th className="border p-1 bg-orange-300 text-slate-900 dark:bg-orange-950 dark:text-orange-100">TOTAL(USD)</th>
             <th className="border p-1 bg-orange-300 text-slate-900 dark:bg-orange-950 dark:text-orange-100">CHOFER(USD)</th>
-            <th className="border p-1 bg-orange-300 text-slate-900 dark:bg-orange-950 dark:text-orange-100">CHOFER(AR)</th>
+            <th className="border p-1 bg-orange-300 text-slate-900 dark:bg-orange-950 dark:text-orange-100">CHOFER (USD → AR)</th>
             <th className="border p-1 bg-orange-300 text-slate-900 dark:bg-orange-950 dark:text-orange-100" colSpan={2}>
               ESTADIA
             </th>
@@ -394,6 +395,7 @@ export default function DriverTripTable({ trips = [] }) {
           <tr className="bg-content2/50 text-center font-semibold border-b border-divider text-[10px] md:text-xs">
             <th className="border p-1 bg-orange-200 text-slate-900 dark:bg-orange-950 dark:text-orange-100">%</th>
             {/* Placeholder alignment */}
+            <th className="border p-1 bg-orange-200 text-slate-900 dark:bg-orange-950 dark:text-orange-100"></th>
             <th className="border p-1 bg-orange-200 text-slate-900 dark:bg-orange-950 dark:text-orange-100"></th>
             <th className="border p-1 bg-orange-200 text-slate-900 dark:bg-orange-950 dark:text-orange-100"></th>
             <th className="border p-1 bg-orange-200 text-slate-900 dark:bg-orange-950 dark:text-orange-100"></th>
@@ -431,6 +433,9 @@ export default function DriverTripTable({ trips = [] }) {
               </td>
               <td className="border p-0">
                 {renderInput(row, "tarifaTotalAr")}
+              </td>
+              <td className="border px-2 py-1 text-right tabular-nums">
+                {row.tarifaChoferAr.toLocaleString("es-AR", { maximumFractionDigits: 2 })}
               </td>
               <td className="border p-0">
                 {renderInput(row, "tarifaTotalUsd")}
@@ -524,6 +529,9 @@ export default function DriverTripTable({ trips = [] }) {
               {data
                 .reduce((a, b) => a + (b.tarifaTotalAr || 0), 0)
                 .toLocaleString()}
+            </td>
+            <td className="border p-1 text-right tabular-nums">
+              {data.reduce((sum, row) => sum + row.tarifaChoferAr, 0).toLocaleString("es-AR", { maximumFractionDigits: 2 })}
             </td>
             {/* TOTAL(USD) */}
             <td className="border p-1 text-right">

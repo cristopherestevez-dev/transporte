@@ -9,6 +9,7 @@ import Button from "@/app/components/ui/Button/button";
 
 import { FcGoogle } from "react-icons/fc";
 import { Logo } from "@/app/components/ui/Logo";
+import { Copyright } from "@/app/components/ui/AppFooter";
 import "../globals.css";
 
 const supportEmail = "soporte@atlasops.com.ar";
@@ -374,9 +375,9 @@ export default function LandingView() {
               <span role="status" className="min-h-5 text-sm">{copyMessage}</span>
             </div>
           </div>
-          <p className="text-gray-500 text-sm">
-            © 2026 Atlas Transporte. Todos los derechos reservados.
-          </p>
+          <div className="text-gray-500 text-sm">
+            <Copyright />
+          </div>
         </div>
       </footer>
     </div>

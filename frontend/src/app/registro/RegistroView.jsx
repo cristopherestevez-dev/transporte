@@ -17,7 +17,7 @@ export default function Registro() {
     catch (err) { setError(err.message); }
     finally { setSaving(false); }
   };
-  return <main className="min-h-screen bg-background text-foreground flex items-center justify-center p-6">
+  return <main className="flex flex-1 bg-background text-foreground items-center justify-center p-6">
     <section className="w-full max-w-md bg-content1 border border-divider rounded-2xl p-6 space-y-4">
       <h1 className="text-xl font-semibold">Vincular tu cuenta a una empresa</h1>
       {loading ? <p>Cargando…</p> : <>
