@@ -166,7 +166,7 @@ export default function Navbar({ onToggleSidebar, driverPage }) {
     <AppSelect
       compact
       ariaLabel="Perfil activo"
-      className="w-[195px] max-w-full"
+      className="w-[220px] max-w-full"
       value={perfil}
       options={perfiles.map((value) => ({ value, label: user?.perfilLabels?.[value] || perfilOptions.find((option) => option.value === value)?.label || value }))}
       disabled={switchingProfile}

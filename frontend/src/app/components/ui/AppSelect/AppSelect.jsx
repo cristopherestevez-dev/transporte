@@ -26,7 +26,7 @@ export default function AppSelect({
       className={className}
     >
       {label && <Label className="text-xs text-default-500">{label}</Label>}
-      <Select.Trigger className={compact ? "min-h-7 bg-transparent px-2 text-xs" : "min-h-10 bg-content2 px-3"}>
+      <Select.Trigger className={compact ? "min-h-7 bg-transparent ps-2 pe-8 text-xs" : "min-h-10 bg-content2 ps-3 pe-8"}>
         <Select.Value className="min-w-0 flex-1 truncate font-medium" />
         <Select.Indicator />
       </Select.Trigger>
