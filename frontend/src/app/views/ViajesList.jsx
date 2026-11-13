@@ -483,6 +483,7 @@ const ViajesList = () => {
               ],
             }[key],
           }))}
+          fitColumns
           columns={visibleColumns.map(column => column.key === "numeroOperativo" ? { ...column, render: value => idViaje(value, type) } : column)}
           formFields={fields}
           defaultValues={{ direccion_facturacion: direccion }}

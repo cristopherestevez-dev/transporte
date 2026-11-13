@@ -28,6 +28,7 @@ export default function CrudTable({
   extraActions, // (item) => JSX — acciones adicionales en la columna Acciones
   listFilters = {},
   columnFilters,
+  fitColumns = false,
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -273,28 +274,28 @@ export default function CrudTable({
         <ColumnFilters fields={filterFields} values={columnValues} onChange={updateColumnFilters} />
       </div>
       {/* Tabla */}
-      <div className="table-frame">
-        <table className="w-full border-collapse">
-        <thead className="bg-brand-navy border-b border-brand-navy">
-          <tr>
+      <div className={fitColumns ? "table-frame trip-table-frame" : "table-frame"}>
+        <table className="w-full border-collapse" role={fitColumns ? "table" : undefined}>
+        <thead role={fitColumns ? "rowgroup" : undefined} className="bg-brand-navy border-b border-brand-navy">
+          <tr role={fitColumns ? "row" : undefined}>
             {columns.map((col) => (
               <th
-                key={col.key}
+                key={col.key} role={fitColumns ? "columnheader" : undefined}
                 className="px-6 py-3 text-left text-sm font-semibold text-white uppercase tracking-wide"
               >
                 {col.label}
               </th>
             ))}
-            <th className="px-6 py-3 text-center text-sm font-semibold text-white uppercase tracking-wide">
+            <th role={fitColumns ? "columnheader" : undefined} className="px-6 py-3 text-center text-sm font-semibold text-white uppercase tracking-wide">
               Acciones
             </th>
           </tr>
         </thead>
-        <tbody>
+        <tbody role={fitColumns ? "rowgroup" : undefined}>
           {paginatedData.length === 0 ? (
-            <tr>
+            <tr role={fitColumns ? "row" : undefined}>
               <td
-                colSpan={columns.length + 1}
+                colSpan={columns.length + 1} role={fitColumns ? "cell" : undefined}
                 className="px-6 py-8 text-center text-foreground/60"
               >
                 {hasFilters
@@ -305,6 +306,7 @@ export default function CrudTable({
           ) : (
             paginatedData.map((item) => (
               <tr
+                role={fitColumns ? "row" : undefined}
                 key={item._id || item.id}
                 className="bg-content1 hover:bg-content2 transition-colors border-b border-divider"
               >
@@ -338,7 +340,7 @@ export default function CrudTable({
 
                     return (
                       <td
-                        key={`${item._id || item.id}-${col.key}`}
+                        key={`${item._id || item.id}-${col.key}`} role={fitColumns ? "cell" : undefined} data-label={fitColumns ? col.label : undefined}
                         className="px-6 py-4"
                       >
                         {col.render(item[col.key], item, setRowData)}
@@ -348,7 +350,7 @@ export default function CrudTable({
 
                   return (
                     <td
-                      key={`${item._id || item.id}-${col.key}`}
+                      key={`${item._id || item.id}-${col.key}`} role={fitColumns ? "cell" : undefined} data-label={fitColumns ? col.label : undefined}
                       className="px-6 py-4 text-foreground"
                     >
                       {item[col.key] || "-"}
@@ -357,7 +359,7 @@ export default function CrudTable({
                 })}
 
                 {/* Acciones */}
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td role={fitColumns ? "cell" : undefined} data-label={fitColumns ? "Acciones" : undefined} className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center justify-center gap-3">
                     {extraActions && extraActions(item)}
                     <Button native

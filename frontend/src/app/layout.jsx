@@ -60,12 +60,12 @@ export default function RootLayout({ children }) {
                   isOpen={sidebarOpen}
                   onClose={() => setSidebarOpen(false)}
                 />
-                <div className={`flex flex-col flex-1 ${driverPage ? "min-w-0 max-md:contents" : ""}`}>
+                <div className={`flex min-w-0 flex-col flex-1 ${driverPage ? "max-md:contents" : ""}`}>
                   <Navbar
                     driverPage={driverPage}
                     onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
                   />
-                  <main className={driverPage ? "order-2 min-w-0 flex-1 overflow-auto p-3 md:order-none md:p-6" : "flex-1 overflow-auto p-6"}>
+                  <main className={driverPage ? "order-2 min-w-0 flex-1 overflow-auto p-3 md:order-none md:p-6" : "min-w-0 flex-1 overflow-auto p-6"}>
                     <AccessGate>{children}</AccessGate>
                   </main>
                   <AppFooter className={driverPage ? "order-3 md:order-none" : ""} />
