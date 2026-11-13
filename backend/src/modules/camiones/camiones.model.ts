@@ -1,6 +1,8 @@
+import { numeroOperativo } from '../../shared/numeroOperativo';
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ICamion extends Document {
+    numeroOperativo?: number;
     patente: string;
     marca: string;
     modelo: string;
@@ -27,4 +29,5 @@ const CamionSchema: Schema = new Schema(
     { timestamps: true, collection: 'camiones' }
 );
 
+numeroOperativo(CamionSchema);
 export const CamionModel = mongoose.model<ICamion>('Camion', CamionSchema);

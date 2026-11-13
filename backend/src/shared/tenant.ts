@@ -2,8 +2,14 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import mongoose, { Schema } from 'mongoose';
 import { AppError } from './errors/AppError';
 
-export const tenantContext = new AsyncLocalStorage<{ empresaId?: string; userId?: string; superAdmin?: boolean }>();
+export const tenantContext = new AsyncLocalStorage<{ empresaId?: string; userId?: string; superAdmin?: boolean; role?: string }>();
 const collections = new Set(['proveedores', 'fleteros', 'camiones', 'semirremolques', 'choferes', 'viajesNacionales', 'viajesInternacionales', 'cobranzasNacionales', 'cobranzasInternacionales', 'pagosNacionales', 'pagosInternacionales', 'mantenimientos', 'notifications']);
+
+export function tripOperatorScope() {
+    const context = tenantContext.getStore();
+    if (context?.role !== 'operador_logistico') return {};
+    return { operadorLogisticoId: { $in: [context.userId, '', null] } };
+}
 
 function empresaActual() {
     const context = tenantContext.getStore();
@@ -13,6 +19,7 @@ function empresaActual() {
 
 export function tenantPlugin(schema: Schema) {
     if (!collections.has(schema.options.collection || '')) return;
+    const isTrip = ['viajesNacionales', 'viajesInternacionales'].includes(schema.options.collection || '');
     schema.add({ empresaId: { type: String, index: true, immutable: true } });
     schema.pre('validate', function () {
         const empresaId = empresaActual();
@@ -21,7 +28,7 @@ export function tenantPlugin(schema: Schema) {
     schema.pre(['find', 'findOne', 'countDocuments', 'distinct', 'updateOne', 'updateMany', 'findOneAndUpdate', 'deleteOne', 'deleteMany', 'findOneAndDelete'], function () {
         const empresaId = empresaActual();
         if (!empresaId) return;
-        this.setQuery({ $and: [this.getFilter(), { empresaId }] });
+        this.setQuery({ $and: [this.getFilter(), { empresaId, ...(isTrip ? tripOperatorScope() : {}) }] });
         const update = this.getUpdate() as any;
         if (update) {
             if (Array.isArray(update)) throw new AppError('Actualización no permitida', 400);
@@ -34,7 +41,7 @@ export function tenantPlugin(schema: Schema) {
     });
     schema.pre('aggregate', function () {
         const empresaId = empresaActual();
-        if (empresaId) this.pipeline().unshift({ $match: { empresaId } });
+        if (empresaId) this.pipeline().unshift({ $match: { empresaId, ...(isTrip ? tripOperatorScope() : {}) } });
     });
 }
 

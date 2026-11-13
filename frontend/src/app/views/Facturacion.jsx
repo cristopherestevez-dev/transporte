@@ -1,4 +1,6 @@
 "use client";
+import ChoferProfile from "@/app/views/ChoferProfile";
+import PlanillasChofer from "@/app/components/ui/PlanillasChofer";
 import { Banknote, TrendingDown, TrendingUp } from "lucide-react";
 
 
@@ -9,9 +11,40 @@ import Balance from "@/app/views/Balance";
 import TabsWrapper from "@/app/components/ui/TabsWrapper/TabsWrapper";
 
 import api from "@/services/api";
+import { useAuth } from "@/app/contexts/AuthContext";
 
+
+function PlanillasAdministracion({ onClosed }) {
+  const [choferes, setChoferes] = useState([]);
+  const [choferId, setChoferId] = useState("");
+  const [error, setError] = useState("");
+  const chofer = choferes.find(item => item._id === choferId);
+
+  return (
+    <details className="rounded-[10px] border border-divider bg-content1 p-4"
+      onToggle={event => {
+        if (event.currentTarget.open && !choferes.length) {
+          api.get("/planillas-chofer/choferes").then(setChoferes).catch(error => setError(error.message));
+        }
+      }}>
+      <summary className="cursor-pointer font-semibold">Cerrar planilla de chofer</summary>
+      <label className="mt-3 grid max-w-sm gap-1 text-sm">
+        Chofer
+        <select value={choferId} onChange={event => setChoferId(event.target.value)}
+          className="rounded-[10px] border border-divider bg-content1 p-2">
+          <option value="">Seleccioná un chofer</option>
+          {choferes.map(item => <option key={item._id} value={item._id}>{item.nombre}</option>)}
+        </select>
+      </label>
+      {error && <p role="alert">{error}</p>}
+      {chofer && <ChoferProfile key={choferId} embeddedDriver={chofer} onClosed={onClosed} />}
+    </details>
+  );
+}
 
 export default function Facturacion({ notificationTab, notificationScope }) {
+  const { perfil } = useAuth();
+  const [planillasRevision, setPlanillasRevision] = useState(0);
   const [facturacion, setFacturacion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("balance");
@@ -227,6 +260,8 @@ export default function Facturacion({ notificationTab, notificationScope }) {
           </div>
         </AppTab>
       </AppTabs>
-    </div>
+      {perfil === "operador_administrativo" ? <PlanillasAdministracion onClosed={() => setPlanillasRevision(value => value + 1)} /> : null}
+      {["operador_administrativo", "operador_logistico"].includes(perfil) && <PlanillasChofer revision={planillasRevision} />}
+</div>
   );
 }

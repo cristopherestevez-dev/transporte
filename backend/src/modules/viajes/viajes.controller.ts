@@ -12,6 +12,14 @@ export class ViajesController {
         res.json({ status: 'success', data: await this.service.getFuelTrucks() });
     };
 
+    getOperators = async (_req: Request, res: Response) => {
+        res.json({ status: 'success', data: await this.service.getOperators() });
+    };
+
+    getFleet = async (_req: Request, res: Response) => {
+        res.json({ status: 'success', data: await this.service.getFleet() });
+    };
+
     addFuel = async (req: Request, res: Response) => {
         const viaje = await this.service.addFuel(req.params.id, req.body);
         res.json({ status: 'success', data: viaje });

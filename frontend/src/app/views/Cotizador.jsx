@@ -1,5 +1,6 @@
 "use client";
 
+import MesPlanilla, { mesesPlanilla } from "@/app/components/ui/MesPlanilla";
 import Button from "@/app/components/ui/Button/button";
 import React, { useState, useEffect, useRef } from "react";
 import { Card } from "@heroui/react";
@@ -154,6 +155,7 @@ export default function Cotizador() {
     toast.error("No se pudo calcular la distancia. Revisá la configuración de Maps y la ruta.");
   };
 
+  const [mesPlanilla, setMesPlanilla] = useState("");
   const handleAddTrip = async () => {
     if (!origin || !destination) return;
     setSavingTrip(true);
@@ -162,6 +164,7 @@ export default function Cotizador() {
       const calculatedTarifa = distance ? Math.round(distance.value * 2.5) : 0;
       
       const payload = {
+        mesPlanilla: mesPlanilla || mesesPlanilla()[0],
         origen: origin,
         destino: destination,
         estado: "pendiente",
@@ -365,7 +368,8 @@ export default function Cotizador() {
                         </tbody>
                     </table>
                 </div>
-                <Card.Content className="p-4 bg-gray-50">
+                <Card.Content className="space-y-3 p-4 bg-gray-50">
+                     <MesPlanilla value={mesPlanilla} onChange={setMesPlanilla} />
                      <Button 
                         className="w-full font-bold text-white bg-brand-navy shadow-lg hover:bg-brand-navy/80 hover:shadow-xl transition-all"
                         isDisabled={!distance || !selectedResource}

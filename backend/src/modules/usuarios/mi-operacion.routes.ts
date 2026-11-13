@@ -8,7 +8,8 @@ import { ViajeNacionalModel, ViajeInternacionalModel } from '../viajes/viajes.mo
 import { MantenimientoModel } from '../mantenimiento/mantenimiento.model';
 import { MantenimientoService } from '../mantenimiento/mantenimiento.service';
 import { AppError } from '../../shared/errors/AppError';
-import { paginationMiddleware, paginateQuery } from '../../shared/pagination';
+import { listContext, paginationMiddleware, paginateQuery } from '../../shared/pagination';
+import { viajesDelMes, mesActual, Planilla } from '../choferes/planillas.routes';
 import { viajesPage } from '../viajes/viajes.page';
 
 const router = Router();
@@ -40,10 +41,21 @@ async function verificarCamion(req: AuthRequest) {
 
 router.get('/viajes', requirePermission('mis-viajes'), paginationMiddleware, asyncHandler(async (req: AuthRequest, res: Response) => {
     const driver = await ownDriver(req);
-    const filter = { tipoAsignacion: 'chofer', asignadoId: driver._id.toString() };
-    const fields = 'origen destino fecha_salida fecha_llegada carga estado totalChofer pago viaticoArgentino peajeAr devolAr restoAr viaticoChileno peajeCh devolCh restoCh adelantoAr subtotal';
+    const choferId = driver._id.toString();
+    const mes = mesActual();
+    const cerrada = await Planilla.exists({ empresaId: req.user!.empresaId, choferId, mes });
+    const filter = {
+        tipoAsignacion: 'chofer', asignadoId: choferId, ...viajesDelMes(mes),
+        ...(cerrada ? { _id: null } : {}),
+    };
+    const fields = 'numeroOperativo origen destino camionPatente semirremolquePatente fecha_salida fecha_llegada carga estado totalChofer pago viaticoArgentino peajeAr devolAr restoAr viaticoChileno peajeCh devolCh restoCh adelantoAr subtotal';
     const result = await viajesPage(filter, fields);
-    res.json({ status: 'success', data: result.items, summary: result.summary });
+    const context = listContext.getStore()!;
+    const hasFilters = Object.keys(context.filters).some(key => key.startsWith('col_'));
+    const netoGeneral = hasFilters
+        ? await listContext.run({ ...context, page: 1, filters: { tipo: context.filters.tipo } }, async () => (await viajesPage(filter, fields)).summary.neto)
+        : result.summary.neto;
+    res.json({ status: 'success', data: result.items, summary: result.summary, netoGeneral });
 }));
 router.get('/camion', requirePermission('mi-camion'), paginationMiddleware, asyncHandler(async (req: AuthRequest, res: Response) => {
     const camion = await camionAsignado(req);

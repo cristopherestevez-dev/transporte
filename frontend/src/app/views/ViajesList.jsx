@@ -1,5 +1,7 @@
 "use client";
 
+import { idViaje } from "@/lib/idViaje";
+import MesPlanilla from "@/app/components/ui/MesPlanilla";
 import Button from "@/app/components/ui/Button/button";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -64,6 +66,8 @@ const ViajesList = () => {
   const [proveedoresOptions, setProveedoresOptions] = useState([]);
   const [choferesOptions, setChoferesOptions] = useState([]);
   const [fleterosOptions, setFleterosOptions] = useState([]);
+  const [operadores, setOperadores] = useState([]);
+  const [flota, setFlota] = useState({ camiones: [], semirremolques: [] });
   const [loadingProveedores, setLoadingProveedores] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -77,14 +81,18 @@ const ViajesList = () => {
   useEffect(() => {
     async function fetchProveedores() {
       try {
-        const [proveedores, choferes, fleteros] = await Promise.all([
+        const [proveedores, choferes, fleteros, flotaDisponible, operadoresDisponibles] = await Promise.all([
           api.getProveedores(),
           api.getChoferes(),
-          api.getFleteros()
+          api.getFleteros(),
+          api.get('/viajes/flota'),
+          api.get('/viajes/operadores')
         ]);
         setProveedoresOptions(proveedores || []);
         setChoferesOptions(choferes || []);
         setFleterosOptions(fleteros || []);
+        setFlota(flotaDisponible);
+        setOperadores(operadoresDisponibles);
       } catch (err) {
         console.error(err);
       } finally {
@@ -148,6 +156,7 @@ const ViajesList = () => {
 
   // Columnas de la tabla
   const columns = [
+    { label: "ID", key: "numeroOperativo" },
     { label: "Origen", key: "origen" },
     { label: "Destino", key: "destino" },
     { label: "Fecha Salida", key: "fecha_salida" },
@@ -168,6 +177,9 @@ const ViajesList = () => {
         }
     },
     { label: "Carga / Contenedor", key: "carga" },
+    { label: "Patente camión", key: "camionPatente", render: value => value || "—" },
+    { label: "Operador logístico", key: "operadorLogisticoId", render: value => value ? operadores.find(item => item.id === value)?.nombre || "Operador asignado" : "Sin asignar" },
+    { label: "Patente semi", key: "semirremolquePatente", render: value => value || "—" },
     { label: "Número de factura", key: "numero_comprobante", render: (value) => value || "-" },
     {
       label: "Tipo de factura",
@@ -197,6 +209,14 @@ const ViajesList = () => {
     { label: "Número de factura", key: "numero_comprobante" },
     { label: "Tipo de factura", key: "tipo_comprobante", type: "select", options: tiposFactura },
     { label: "Fecha Salida", key: "fecha_salida", type: "date" },
+    {
+      label: "Mes de la planilla",
+      key: "mesPlanilla",
+      render: ({ form, setForm, editingItem }) => (
+        <MesPlanilla value={form.mesPlanilla} onChange={mesPlanilla => setForm({ ...form, mesPlanilla })}
+          fechaOriginal={editingItem ? editingItem.fecha_salida || "" : undefined} />
+      ),
+    },
     { 
       label: "Fecha Llegada", 
       key: "fecha_llegada", 
@@ -300,7 +320,7 @@ const ViajesList = () => {
                     value="chofer"
                     checked={tipoAsignacion === "chofer"}
                     onChange={(e) => {
-                      setForm({ ...form, tipoAsignacion: "chofer", asignadoId: "" });
+                      setForm({ ...form, tipoAsignacion: "chofer", asignadoId: "", camionPatente: "" });
                     }}
                   />
                   Chofer
@@ -312,7 +332,7 @@ const ViajesList = () => {
                     value="fletero"
                     checked={tipoAsignacion === "fletero"}
                     onChange={(e) => {
-                      setForm({ ...form, tipoAsignacion: "fletero", asignadoId: "" });
+                      setForm({ ...form, tipoAsignacion: "fletero", asignadoId: "", camionPatente: "" });
                     }}
                   />
                   Fletero
@@ -338,6 +358,7 @@ const ViajesList = () => {
                          setForm({
                            ...form,
                            asignadoId: val,
+                           camionPatente: val === form.asignadoId ? form.camionPatente : "",
                          });
                        }}
                        placeholder={`Seleccionar ${tipoAsignacion === "chofer" ? "Chofer" : "Fletero"}...`}
@@ -350,6 +371,58 @@ const ViajesList = () => {
           </div>
         );
       }
+    },
+    {
+      label: "Operador logístico",
+      key: "operadorLogisticoId",
+      render: ({ form, setForm }) => {
+        const options = operadores.map(({ id, nombre }) => ({ value: id, label: nombre }));
+        if (form.operadorLogisticoId && !options.some(item => item.value === form.operadorLogisticoId)) {
+          options.push({ value: form.operadorLogisticoId, label: "Operador asignado" });
+        }
+        return (
+          <div className="space-y-1">
+            <span className="text-sm">Operador logístico</span>
+            <SearchableSelect
+              options={[{ value: "sin-operador", label: "Sin asignar" }, ...options]}
+              value={form.operadorLogisticoId || "sin-operador"}
+              onChange={value => setForm({ ...form, operadorLogisticoId: value === "sin-operador" ? "" : value })}
+              placeholder="Seleccionar operador"
+            />
+          </div>
+        );
+      },
+    },
+    {
+      label: "Camión asignado",
+      key: "camionId",
+      render: ({ form }) => {
+        if (form.tipoAsignacion !== "chofer" || !form.asignadoId) return null;
+        const driver = choferesOptions.find(item => item._id === form.asignadoId);
+        const truck = flota.camiones.find(item => item._id === driver?.camionId);
+        return <p className="text-sm">Camión asignado · {form.camionPatente || truck?.patente || "Sin camión asignado"}</p>;
+      },
+    },
+    {
+      label: "Semirremolque",
+      key: "semirremolqueId",
+      render: ({ form, setForm }) => {
+        const options = flota.semirremolques.map(item => ({ value: item._id, label: item.patente }));
+        if (form.semirremolqueId && !options.some(item => item.value === form.semirremolqueId)) {
+          options.push({ value: form.semirremolqueId, label: form.semirremolquePatente || "Semi guardado" });
+        }
+        return (
+          <div className="space-y-1">
+            <span className="text-sm">Semirremolque</span>
+            <SearchableSelect
+              options={[{ value: "sin-semi", label: "Sin semirremolque" }, ...options]}
+              value={form.semirremolqueId || "sin-semi"}
+              onChange={value => setForm({ ...form, semirremolqueId: value === "sin-semi" ? "" : value })}
+              placeholder="Seleccionar por patente"
+            />
+          </div>
+        );
+      },
     },
   ];
 
@@ -377,7 +450,7 @@ const ViajesList = () => {
             </div>
           ) } : field)
       : formFields;
-    const tableColumns = received
+    const visibleColumns = received
       ? columns.filter((column) => column.key !== "asignadoId").map((column) => column.key === "proveedor" ? { ...column, label: "Empresa / Fletero que factura" } : column)
       : columns;
     return (
@@ -393,12 +466,16 @@ const ViajesList = () => {
           setData={(updated) => setter((previous) => [...previous.filter((row) => !belongs(row)), ...updated])}
           apiUrl={`/api/backend/viajes/${endpoint}`}
           listFilters={{ direccion_facturacion: direccion }}
-          columnFilters={tableColumns.map(({ key, label }) => ({
+          columnFilters={visibleColumns.filter(column => column.key !== "numeroOperativo").map(({ key, label }) => ({
             key: `viaje_${key}`,
             label,
             type: key.startsWith("fecha_") ? "date" : undefined,
             options: {
               estado: estados,
+              operadorLogisticoId: [
+                { value: "sin-operador", label: "Sin asignar" },
+                ...operadores.map(({ id, nombre }) => ({ value: id, label: nombre })),
+              ],
               tipo_comprobante: tiposFactura.map((option) => ({ ...option, value: option.value || "sin_factura" })),
               asignadoId: [
                 ...choferesOptions.map(({ _id, nombre }) => ({ value: `chofer:${_id}`, label: `${nombre} (Chofer)` })),
@@ -406,7 +483,7 @@ const ViajesList = () => {
               ],
             }[key],
           }))}
-          columns={tableColumns}
+          columns={visibleColumns.map(column => column.key === "numeroOperativo" ? { ...column, render: value => idViaje(value, type) } : column)}
           formFields={fields}
           defaultValues={{ direccion_facturacion: direccion }}
           extraActions={(trip) => (

@@ -1,5 +1,5 @@
 import { ViajeNacionalModel, ViajeInternacionalModel } from './viajes.model';
-import { tenantContext } from '../../shared/tenant';
+import { tenantContext, tripOperatorScope } from '../../shared/tenant';
 import { listContext, listFilter, pageInfo } from '../../shared/pagination';
 import { AppError } from '../../shared/errors/AppError';
 
@@ -12,7 +12,7 @@ export async function viajesPage(filter: any = {}, fields?: string) {
     const model = tipo === 'internacional' ? ViajeInternacionalModel : ViajeNacionalModel;
     const projection = fields ? { ...Object.fromEntries(fields.split(' ').map(key => [key, 1])), type: 1 } : null;
     const pipeline: any[] = [{ $match: listFilter(model, filter) }, { $set: { type: tipo === 'internacional' ? 'internacional' : 'nacional' } }];
-    if (!tipo) pipeline.push({ $unionWith: { coll: ViajeInternacionalModel.collection.name, pipeline: [{ $match: { $and: [{ empresaId }, listFilter(ViajeInternacionalModel, filter)] } }, { $set: { type: 'internacional' } }] } });
+    if (!tipo) pipeline.push({ $unionWith: { coll: ViajeInternacionalModel.collection.name, pipeline: [{ $match: { $and: [{ empresaId, ...tripOperatorScope() }, listFilter(ViajeInternacionalModel, filter)] } }, { $set: { type: 'internacional' } }] } });
     pipeline.push({ $set: { netoCobrar: { $ifNull: ['$pago', { $cond: [
         { $ne: [{ $ifNull: ['$subtotal', null] }, null] }, { $subtract: ['$subtotal', { $ifNull: ['$adelantoAr', 0] }] },
         { $cond: [{ $and: [{ $ne: [{ $ifNull: ['$totalChofer', null] }, null] }, { $eq: [{ $ifNull: ['$restoCh', 0] }, 0] }] }, { $subtract: [{ $subtract: ['$totalChofer', { $ifNull: ['$restoAr', 0] }] }, { $ifNull: ['$adelantoAr', 0] }] }, null] },

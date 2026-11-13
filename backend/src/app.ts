@@ -11,6 +11,7 @@ import { proveedoresRoutes } from './modules/proveedores/proveedores.routes';
 import { fleterosRoutes } from './modules/fleteros/fleteros.routes';
 import { camionesRoutes } from './modules/camiones/camiones.routes';
 import { semirremolquesRoutes } from './modules/semirremolques/semirremolques.routes';
+import { planillasRoutes } from './modules/choferes/planillas.routes';
 import { choferesRoutes } from './modules/choferes/choferes.routes';
 import { viajesRoutes } from './modules/viajes/viajes.routes';
 import { liquidacionesRoutes } from './modules/liquidaciones/liquidaciones.routes';
@@ -33,6 +34,7 @@ app.use(morgan('dev'));
 
 // Routes
 app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/planillas-chofer', planillasRoutes);
 app.use('/api/mi-operacion', miOperacionRoutes);
 app.use('/api/proveedores', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['empresas', 'viajes', 'cotizador', 'facturacion'] : ['empresas']))(req, res, next), proveedoresRoutes);
 app.use('/api/fleteros', authMiddleware, (req, res, next) => requirePermission(...(req.method === 'GET' ? ['empresas', 'viajes', 'cotizador'] : ['empresas']))(req, res, next), fleterosRoutes);

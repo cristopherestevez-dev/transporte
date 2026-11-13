@@ -412,6 +412,14 @@ export default function ViajeDetail({ backHref = "/dashboard" }) {
               </span>
             </div>
             <div className="flex justify-between">
+              <span className="text-foreground/50">Patente camión:</span>
+              <span className="font-medium">{trip.camionPatente || "—"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-foreground/50">Patente semi:</span>
+              <span className="font-medium">{trip.semirremolquePatente || "—"}</span>
+            </div>
+            <div className="flex justify-between">
               <span className="text-foreground/50">Proveedor:</span>
               <span className="font-medium">{entities.providerName}</span>
             </div>

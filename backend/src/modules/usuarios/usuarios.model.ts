@@ -1,6 +1,8 @@
+import { numeroOperativo } from '../../shared/numeroOperativo';
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IUsuario extends Document {
+    numeroOperativo?: number;
     usuario?: string;
     email: string;
     nombre: string;
@@ -73,6 +75,7 @@ export const PERMISOS_POR_PERFIL = {
     chofer: ['mis-viajes', 'mi-camion'],
 };
 
+numeroOperativo(UsuarioSchema);
 export const Usuario = mongoose.model<IUsuario>('Usuario', UsuarioSchema);
 
 export type Perfil = string;

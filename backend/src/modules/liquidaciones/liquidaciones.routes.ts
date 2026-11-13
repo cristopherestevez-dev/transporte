@@ -104,7 +104,7 @@ async function consultarViajes(empresaId: string, filtros: Filtros, claves?: str
         ]);
         return viajes.map(viaje => ({
             clave: viaje.clave, tipoViaje, origen: viaje.origen, destino: viaje.destino,
-            fechaSalida: viaje.fecha_salida?.slice(0, 10), saldos: saldosViaje(viaje),
+            fechaSalida: viaje.fecha_salida?.slice(0, 10), camionPatente: viaje.camionPatente || "", semirremolquePatente: viaje.semirremolquePatente || "", saldos: saldosViaje(viaje),
         }));
     }));
     const viajes = lotes.flat().sort((a, b) => (b.fechaSalida ?? '').localeCompare(a.fechaSalida ?? '') || b.clave.localeCompare(a.clave));
@@ -168,15 +168,27 @@ liquidacionesRoutes.post('/', asyncHandler(async (req: Request, res: Response) =
     }
 }));
 
+async function viajesVisibles(claves: string[]) {
+    if (tenantContext.getStore()?.role !== 'operador_logistico') return true;
+    const [nacionales, internacionales] = await Promise.all(
+        ([['nacional', ViajeNacionalModel], ['internacional', ViajeInternacionalModel]] as const).map(([tipo, model]) =>
+            model.countDocuments({ _id: { $in: claves.filter(clave => clave.startsWith(tipo + ':')).map(clave => clave.split(':')[1]) } }),
+        ),
+    );
+    return nacionales + internacionales === claves.length;
+}
+
 liquidacionesRoutes.get('/', asyncHandler(async (req: Request, res: Response) => {
     const { empresaId } = identidad();
     const antes = id.optional().safeParse(req.query.antes);
     if (!antes.success) throw new AppError('Cursor inválido', 400);
     const cursor = antes.data ? { _id: { $lt: new Types.ObjectId(antes.data) } } : {};
     const comprobantes = await Liquidacion.find({ empresaId, ...cursor })
-        .select('filtros responsable saldos conversion createdAt').sort({ _id: -1 }).limit(21).lean();
-    const items = comprobantes.slice(0, 20);
-    res.json({ data: { items, siguiente: comprobantes.length > 20 ? items[19]._id : null } });
+        .select('filtros responsable saldos conversion createdAt clavesViaje').sort({ _id: -1 }).limit(21).lean();
+    const lote = comprobantes.slice(0, 20);
+    const visibility = await Promise.all(lote.map(item => viajesVisibles(item.clavesViaje)));
+    const items = lote.filter((_, index) => visibility[index]).map(({ clavesViaje, ...item }) => item);
+    res.json({ data: { items, siguiente: comprobantes.length > 20 ? lote[19]._id : null } });
 }));
 
 liquidacionesRoutes.get('/por-viaje/:tipo/:id', asyncHandler(async (req: Request, res: Response) => {
@@ -184,6 +196,7 @@ liquidacionesRoutes.get('/por-viaje/:tipo/:id', asyncHandler(async (req: Request
     const tipo = tipoViajeSchema.safeParse(req.params.tipo);
     const viajeId = id.safeParse(req.params.id);
     if (!tipo.success || !viajeId.success) throw new AppError('Viaje inválido', 400);
+    if (!await viajesVisibles([tipo.data + ':' + viajeId.data])) throw new AppError('Viaje no encontrado', 404);
     const comprobante = await Liquidacion.findOne({ empresaId, clavesViaje: tipo.data + ':' + viajeId.data })
         .select('_id').lean();
     res.json({ data: { comprobanteId: comprobante?._id ?? null } });
@@ -193,7 +206,8 @@ liquidacionesRoutes.get('/:id', asyncHandler(async (req: Request, res: Response)
     const { empresaId } = identidad();
     if (!id.safeParse(req.params.id).success) throw new AppError('Comprobante inválido', 400);
     const comprobante = await Liquidacion.findOne({ empresaId, _id: req.params.id })
-        .select('filtros responsable saldos conversion viajes createdAt').lean();
-    if (!comprobante) throw new AppError('No se encontró el comprobante', 404);
-    res.json({ data: comprobante });
+        .select('filtros responsable saldos conversion viajes createdAt clavesViaje').lean();
+    if (!comprobante || !await viajesVisibles(comprobante.clavesViaje)) throw new AppError('No se encontró el comprobante', 404);
+    const { clavesViaje, ...data } = comprobante;
+    res.json({ data });
 }));

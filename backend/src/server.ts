@@ -1,3 +1,4 @@
+import { numerarRegistrosExistentes } from './shared/numeroOperativo';
 import mongoose from 'mongoose';
 import app from './app';
 import { env } from './config/env';
@@ -6,6 +7,7 @@ import { logger } from './config/logger';
 const connectDB = async () => {
     try {
         await mongoose.connect(env.MONGO_URI);
+        await numerarRegistrosExistentes();
         logger.info('MongoDB Connected via Mongoose');
     } catch (error) {
         logger.error('MongoDB connection error:', error);

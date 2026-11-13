@@ -1,3 +1,4 @@
+import { numeroOperativo } from '../../shared/numeroOperativo';
 import mongoose, { Schema, Document } from 'mongoose';
 
 import { CargaCombustible } from './viajes.combustible';
@@ -12,14 +13,21 @@ const cargaCombustibleFields = new Schema<CargaCombustible>({
 }, { _id: false });
 
 export interface IViaje extends Document {
+    numeroOperativo?: number;
     cargasCombustible?: CargaCombustible[];
     origen: string;
     destino: string;
     fecha_salida?: string;
+    mesPlanilla?: string;
     fecha_llegada?: string;
     proveedorId?: string;
     proveedor?: string;
     asignadoId?: string;
+    operadorLogisticoId?: string;
+    camionId?: string;
+    camionPatente?: string;
+    semirremolqueId?: string;
+    semirremolquePatente?: string;
     tipoAsignacion?: 'chofer' | 'fletero';
     direccion_facturacion?: 'emitida' | 'recibida';
     numero_comprobante?: string;
@@ -60,10 +68,16 @@ const viajeFields = {
     origen: { type: String, required: true },
     destino: { type: String, required: true },
     fecha_salida: { type: String },
+    mesPlanilla: { type: String },
     fecha_llegada: { type: String },
     proveedorId: { type: String },
     proveedor: { type: String },
     asignadoId: { type: String },
+    operadorLogisticoId: { type: String },
+    camionId: { type: String },
+    camionPatente: { type: String },
+    semirremolqueId: { type: String },
+    semirremolquePatente: { type: String },
     tipoAsignacion: { type: String, enum: ['chofer', 'fletero', 'ninguno', null] },
     direccion_facturacion: { type: String, enum: ['emitida', 'recibida'], default: 'emitida' },
     numero_comprobante: { type: String, trim: true, maxlength: 100 },
@@ -98,5 +112,7 @@ const viajeFields = {
 const ViajeNacionalSchema: Schema = new Schema(viajeFields, { timestamps: true, collection: 'viajesNacionales' });
 const ViajeInternacionalSchema: Schema = new Schema(viajeFields, { timestamps: true, collection: 'viajesInternacionales' });
 
+numeroOperativo(ViajeNacionalSchema);
+numeroOperativo(ViajeInternacionalSchema);
 export const ViajeNacionalModel = mongoose.model<IViaje>('ViajeNacional', ViajeNacionalSchema);
 export const ViajeInternacionalModel = mongoose.model<IViaje>('ViajeInternacional', ViajeInternacionalSchema);

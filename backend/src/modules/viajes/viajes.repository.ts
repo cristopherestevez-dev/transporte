@@ -17,7 +17,7 @@ export class ViajesRepository {
         const filters = listContext.getStore()?.filters ?? {};
         const criteria: Record<string, unknown> = {};
 
-        for (const field of ['origen', 'destino', 'carga', 'numero_comprobante', 'proveedor']) {
+        for (const field of ['origen', 'destino', 'carga', 'numero_comprobante', 'proveedor', 'camionPatente', 'semirremolquePatente']) {
             const value = filters[`viaje_${field}`];
             if (value) criteria[field] = { $regex: value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
         }
@@ -25,6 +25,12 @@ export class ViajesRepository {
         for (const field of ['fecha_salida', 'fecha_llegada', 'estado', 'tipo_comprobante']) {
             const value = filters[`viaje_${field}`];
             if (value) criteria[field] = field === 'tipo_comprobante' && value === 'sin_factura' ? { $in: ['', null] } : value;
+        }
+
+        if (filters.viaje_operadorLogisticoId) {
+            criteria.operadorLogisticoId = filters.viaje_operadorLogisticoId === 'sin-operador'
+                ? { $in: ['', null] }
+                : filters.viaje_operadorLogisticoId;
         }
 
         if (filters.viaje_asignadoId) {
@@ -50,11 +56,11 @@ export class ViajesRepository {
         return { eventId: new mongoose.Types.ObjectId().toString(), driverId, createdAt: new Date() };
     }
 
-    async update(id: string, data: Partial<IViaje>): Promise<IViaje | null> {
+    async update(id: string, data: Partial<IViaje>, snapshot?: IViaje): Promise<IViaje | null> {
         const changesAssignment = data.tipoAsignacion !== undefined || data.asignadoId !== undefined;
-        if (!data.estado && !changesAssignment) return this.model.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+        if (!data.estado && !changesAssignment && !snapshot) return this.model.findByIdAndUpdate(id, data, { new: true, runValidators: true });
 
-        const previous = await this.model.findById(id);
+        const previous = snapshot ?? await this.model.findById(id);
         if (!previous) return null;
         const statusEvent = data.estado && previous.estado !== data.estado
             ? { eventId: new mongoose.Types.ObjectId().toString(), previous: previous.estado, current: data.estado, createdAt: new Date() }
@@ -68,6 +74,7 @@ export class ViajesRepository {
         const filter = {
             _id: id,
             ...(data.estado ? { estado: previous.estado ?? null } : {}),
+            ...(snapshot && data.semirremolqueId !== undefined ? { semirremolqueId: previous.semirremolqueId ?? null } : {}),
             ...(changesAssignment ? { tipoAsignacion: previous.tipoAsignacion ?? null, asignadoId: previous.asignadoId ?? null } : {}),
         };
         const result = await this.model.findOneAndUpdate(filter, {

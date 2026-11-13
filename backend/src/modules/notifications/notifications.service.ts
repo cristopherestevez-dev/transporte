@@ -1,3 +1,5 @@
+import { tenantContext } from '../../shared/tenant';
+import { ViajeNacionalModel, ViajeInternacionalModel } from '../viajes/viajes.model';
 import { NotificationRepository } from './notifications.repository';
 import { drainTripEvents } from './notifications.events';
 import { queueMobileDeliveries } from './notifications.delivery';
@@ -27,7 +29,17 @@ export class NotificationService {
         await this.checkExpirations();
 
         // 2. Return persistent notifications for the user
-        return await this.notificationRepo.findByUserOrRole(userId, permissions);
+        const notifications = await this.notificationRepo.findByUserOrRole(userId, permissions);
+        if (tenantContext.getStore()?.role !== 'operador_logistico') return notifications;
+        const statusAlerts = notifications.filter(item => item.type === 'VIAJE_ESTADO');
+        const [national, international] = await Promise.all(
+            ([['nacional', ViajeNacionalModel], ['internacional', ViajeInternacionalModel]] as const).map(([kind, model]) =>
+                model.find({ _id: { $in: statusAlerts.filter(item => item.link?.startsWith('/viajes/' + kind + '/'))
+                    .map(item => item.resourceId).filter(id => id && /^[a-f0-9]{24}$/i.test(id)) } }).select('_id').lean(),
+            ),
+        );
+        const links = new Set([...national.map(trip => '/viajes/nacional/' + trip._id), ...international.map(trip => '/viajes/internacional/' + trip._id)]);
+        return notifications.filter(item => item.type !== 'VIAJE_ESTADO' || links.has(item.link || ''));
     }
 
     async markAsRead(id: string, userId: string, permissions: string[]) {

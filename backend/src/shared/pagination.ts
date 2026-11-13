@@ -28,7 +28,7 @@ export function pageInfo(total: number): PageInfo {
     if (!context) throw new AppError('Paginación no configurada', 500);
     return context.pagination = { page: context.page, pageSize: context.pageSize, total, totalPages: Math.ceil(total / context.pageSize) };
 }
-const textColumns = new Set(['patente', 'marca', 'modelo', 'seguro', 'numero_chasis', 'numero_motor', 'nombre', 'dni', 'telefono', 'cuil_cuit', 'tipo', 'direccion', 'email', 'usuario', 'estado', 'permisos', 'origen', 'destino', 'carga', 'proveedor', 'numero_comprobante']);
+const textColumns = new Set(['patente', 'marca', 'modelo', 'seguro', 'numero_chasis', 'numero_motor', 'nombre', 'dni', 'telefono', 'cuil_cuit', 'tipo', 'direccion', 'email', 'usuario', 'estado', 'permisos', 'origen', 'destino', 'carga', 'proveedor', 'numero_comprobante', 'camionPatente', 'semirremolquePatente']);
 const exactColumns = new Set(['vencimiento_seguro', 'licencia', 'fecha_salida', 'fecha_llegada', 'camionId', 'empresaId']);
 
 export function listFilter(model: Model<any>, filter: any = {}) {

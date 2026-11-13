@@ -1,6 +1,8 @@
+import { numeroOperativo } from '../../shared/numeroOperativo';
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IChofer extends Document {
+    numeroOperativo?: number;
     nombre: string;
     dni: string;
     camionId?: string;
@@ -21,4 +23,5 @@ const ChoferSchema: Schema = new Schema(
     { timestamps: true, collection: 'choferes' }
 );
 
+numeroOperativo(ChoferSchema);
 export const ChoferModel = mongoose.model<IChofer>('Chofer', ChoferSchema);

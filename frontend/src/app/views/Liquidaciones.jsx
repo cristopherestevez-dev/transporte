@@ -70,7 +70,7 @@ function Detalle({ datos, seleccion, cambiarSeleccion, seleccionarTodos, ocupado
                   </label>
                 </th>
               )}
-              {["Salida", "Tipo", "Origen", "Destino", ...monedas].map(titulo => (
+              {["Salida", "Tipo", "Origen", "Destino", "Patente camión", "Patente semi", ...monedas].map(titulo => (
                 <th className="p-2" key={titulo} scope="col">{titulo}</th>
               ))}
             </tr>
@@ -88,6 +88,8 @@ function Detalle({ datos, seleccion, cambiarSeleccion, seleccionarTodos, ocupado
                 <td className="p-2">{viaje.tipoViaje}</td>
                 <td className="p-2">{viaje.origen}</td>
                 <td className="p-2">{viaje.destino}</td>
+                <td className="p-2">{viaje.camionPatente || "—"}</td>
+                <td className="p-2">{viaje.semirremolquePatente || "—"}</td>
                 {monedas.map(moneda => <td className="p-2" key={moneda}>{importe.format(viaje.saldos[moneda] / 100)}</td>)}
               </tr>
             ))}

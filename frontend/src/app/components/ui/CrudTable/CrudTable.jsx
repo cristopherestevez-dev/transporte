@@ -433,7 +433,7 @@ export default function CrudTable({
             {formFields.map((f) => (
               <div key={f.key}>
                 {f.render ? (
-                  f.render({ form, setForm, field: f })
+                  f.render({ form, setForm, field: f, editingItem })
                 ) : (
                   <>
                     {f.type !== "switch" && (

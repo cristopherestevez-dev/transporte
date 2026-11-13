@@ -1,4 +1,5 @@
 "use client";
+import { idViaje } from "@/lib/idViaje";
 import Button from "@/app/components/ui/Button/button";
 import { ChevronLeft, ChevronRight, Eye } from "lucide-react";
 
@@ -122,7 +123,7 @@ export default function Dashboard() {
     setPage((prev) => (prev - 1 + totalPages) % totalPages);
   const scrollRight = () => setPage((prev) => (prev + 1) % totalPages);
 
-  const columns = ["Origen", "Destino", "Estado", "Fecha", "Acciones"];
+  const columns = ["ID", "Origen", "Destino", "Estado", "Fecha", "Patente camión", "Patente semi", "Acciones"];
 
   return (
     <div className="p-8 bg-background min-h-screen transition-colors duration-300">
@@ -153,12 +154,15 @@ export default function Dashboard() {
                   { value: "cancelado", label: "Cancelado" },
                 ] },
                 { key: "col_fecha_salida", label: "Fecha", type: "date" },
+                { key: "col_camionPatente", label: "Patente camión" },
+                { key: "col_semirremolquePatente", label: "Patente semi" },
               ]}
               filters={tripFilters}
               onFiltersChange={values => { setTripFilters(values); setTripsPage(1); }}
               loading={tripsLoading}
             columns={columns}
             data={viajes.map((v) => [
+            idViaje(v.numeroOperativo, v.type),
             v.origen,
             v.destino,
             <span
@@ -172,7 +176,9 @@ export default function Dashboard() {
                  v.estado === "en_transito" ? "En Tránsito" : 
                  "Pendiente"}
             </span>,
-            v.fecha_salida, 
+            v.fecha_salida,
+            v.camionPatente || "—",
+            v.semirremolquePatente || "—",
             <Link href={`/viajes/${v.type}/${v._id}`}>
                <div className="flex justify-center text-default-500 hover:text-primary transition cursor-pointer">
                    <Eye size={20} />

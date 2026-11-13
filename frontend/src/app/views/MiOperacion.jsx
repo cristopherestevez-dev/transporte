@@ -1,4 +1,8 @@
 "use client";
+import { idViaje } from "@/lib/idViaje";
+import { useEffect, useState } from 'react';
+import PlanillasChofer from "@/app/components/ui/PlanillasChofer";
+import ColumnFilters from '@/app/components/ui/ColumnFilters';
 import usePage from '@/hooks/usePage';
 import Pagination, { PageSizeSelect } from '@/app/components/ui/Pagination/Pagination';
 import TabsWrapper from "@/app/components/ui/TabsWrapper/TabsWrapper";
@@ -40,7 +44,7 @@ function Table({ columns, rows, summary, offset }) {
   </table></div>;
 }
 function TripCards({ columns, rows, summary, offset }) {
-  const details = columns.filter(([key]) => !['origen', 'destino', 'netoCobrar'].includes(key));
+  const details = columns.filter(([key]) => !['numeroOperativo', 'origen', 'destino', 'netoCobrar'].includes(key));
 
   return (
     <div className="space-y-3 md:hidden">
@@ -52,7 +56,7 @@ function TripCards({ columns, rows, summary, offset }) {
         <details key={row._id} className="rounded-[10px] border border-divider bg-content1">
           <summary className="min-h-11 cursor-pointer break-words p-3 text-sm font-semibold">
             <span className="inline-flex max-w-full items-center gap-2 align-middle">
-              <TripNumber number={offset + index + 1} />
+              <TripNumber number={row.numeroOperativo ? idViaje(row.numeroOperativo, row.type) : offset + index + 1} />
               <span className="min-w-0">{row.origen || '—'} → {row.destino || '—'}</span>
             </span>
             <span className="mt-1 block font-normal">
@@ -73,19 +77,38 @@ function TripCards({ columns, rows, summary, offset }) {
   );
 }
 
-function DriverTrips({ page }) {
+function DriverTrips({ page, filters, onFiltersChange }) {
   if (page.error) return <p role="alert" className="text-danger p-4">{page.error}</p>;
   if (!page.result) return <p className="p-4">Cargando…</p>;
   const { page: currentPage, pageSize } = page.result.pagination ?? page;
   const offset = (currentPage - 1) * pageSize;
-  const tripColumns = [['origen', 'Origen'], ['destino', 'Destino'], ['fecha_salida', 'Salida'], ['fecha_llegada', 'Llegada'], ['carga', 'Carga'], ['estado', 'Estado', value => value?.replaceAll('_', ' ')], ['totalChofer', 'Total chofer (ARS)', currency], ['viaticoArgentino', 'Viático (ARS)', currency], ['peajeAr', 'Peajes (ARS)', currency], ['viaticoChileno', 'Viático (CLP)'], ['peajeCh', 'Peajes (CLP)'], ['adelantoAr', 'Adelanto (ARS)', currency], ['netoCobrar', 'Neto a cobrar (ARS)', value => value == null ? 'Pendiente de liquidar' : currency(value)]];
-  return <div><PageSizeSelect {...page} /><div className="hidden md:block"><Table rows={page.result.data} columns={tripColumns} summary={page.result.summary} offset={offset} /></div><TripCards rows={page.result.data} columns={tripColumns} summary={page.result.summary} offset={offset} />{page.result.summary.pendientes > 0 && <p className="text-sm text-default-500 mt-3">{page.result.summary.pendientes} viaje(s) sin liquidación completa. Su importe todavía no está incluido en el neto.</p>}<Pagination {...page} /><p className="text-xs text-default-500">El neto incluye los descuentos y adelantos de la liquidación. Los totales abarcan todas las páginas.</p></div>;
+  const tripColumns = [["numeroOperativo", "ID", (value, row) => idViaje(value, row.type)], ['origen', 'Origen'], ['destino', 'Destino'], ['fecha_salida', 'Salida'], ['fecha_llegada', 'Llegada'], ['carga', 'Carga'], ['camionPatente', 'Patente camión'], ['semirremolquePatente', 'Patente semi'], ['estado', 'Estado', value => value?.replaceAll('_', ' ')], ['totalChofer', 'Total chofer (ARS)', currency], ['viaticoArgentino', 'Viático (ARS)', currency], ['peajeAr', 'Peajes (ARS)', currency], ['viaticoChileno', 'Viático (CLP)'], ['peajeCh', 'Peajes (CLP)'], ['adelantoAr', 'Adelanto (ARS)', currency], ['netoCobrar', 'Neto a cobrar (ARS)', value => value == null ? 'Pendiente de liquidar' : currency(value)]];
+  return <div><div className="mb-3 flex flex-wrap items-center justify-end gap-2">
+    <PageSizeSelect {...page} className="" />
+    <ColumnFilters fields={tripColumns.slice(1, 9).map(([key, label]) => ({
+      key: 'col_' + key, label, type: key.startsWith('fecha_') ? 'date' : undefined,
+      options: key === 'estado' ? [
+        { value: 'pendiente', label: 'Pendiente' }, { value: 'en_transito', label: 'En tránsito' },
+        { value: 'finalizado', label: 'Finalizado' }, { value: 'cancelado', label: 'Cancelado' },
+      ] : undefined,
+    }))} values={filters} onChange={onFiltersChange} />
+  </div><div className="hidden md:block"><Table rows={page.result.data} columns={tripColumns} summary={page.result.summary} offset={offset} /></div><TripCards rows={page.result.data} columns={tripColumns} summary={page.result.summary} offset={offset} />{page.result.summary.pendientes > 0 && <p className="text-sm text-default-500 mt-3">{page.result.summary.pendientes} viaje(s) sin liquidación completa. Su importe todavía no está incluido en el neto.</p>}<Pagination {...page} /><p className="text-xs text-default-500">El neto incluye los descuentos y adelantos de la liquidación. Los totales abarcan todas las páginas.</p></div>;
 }
 export default function MiOperacion() {
-  const nacionales = usePage('/mi-operacion/viajes', { tipo: 'nacional' });
-  const internacionales = usePage('/mi-operacion/viajes', { tipo: 'internacional' });
-  const netoNacional = nacionales.result?.summary?.neto;
-  const netoInternacional = internacionales.result?.summary?.neto;
+  const [revision, setRevision] = useState(0);
+  useEffect(() => {
+    function actualizar() {
+      if (document.visibilityState === "visible") setRevision(value => value + 1);
+    }
+    document.addEventListener("visibilitychange", actualizar);
+    return () => document.removeEventListener("visibilitychange", actualizar);
+  }, []);
+  const [filtrosNacionales, setFiltrosNacionales] = useState({});
+  const [filtrosInternacionales, setFiltrosInternacionales] = useState({});
+  const nacionales = usePage('/mi-operacion/viajes', { tipo: 'nacional', ...filtrosNacionales }, revision);
+  const internacionales = usePage('/mi-operacion/viajes', { tipo: 'internacional', ...filtrosInternacionales }, revision);
+  const netoNacional = nacionales.result?.netoGeneral;
+  const netoInternacional = internacionales.result?.netoGeneral;
   const error = nacionales.error || internacionales.error;
 
   return (
@@ -105,9 +128,10 @@ export default function MiOperacion() {
         </div>
       </div>
       <TabsWrapper tabs={[
-        { label: 'Nacionales', content: <DriverTrips page={nacionales} /> },
-        { label: 'Internacionales', content: <DriverTrips page={internacionales} /> },
+        { label: 'Nacionales', content: <DriverTrips page={nacionales} filters={filtrosNacionales} onFiltersChange={values => { nacionales.onPageChange(1); setFiltrosNacionales(values); }} /> },
+        { label: 'Internacionales', content: <DriverTrips page={internacionales} filters={filtrosInternacionales} onFiltersChange={values => { internacionales.onPageChange(1); setFiltrosInternacionales(values); }} /> },
       ]} />
+      <PlanillasChofer resumen revision={revision} />
     </section>
   );
 }

@@ -77,6 +77,7 @@ test('driver HTTP endpoints use the logged-in driver and assigned truck, ignorin
   const express = require('express'), jwt = require('jsonwebtoken');
   const { env } = require('../src/config/env');
   env.JWT_SECRET = 'driver-verification-secret';
+  const { Planilla, mesActual } = require('../src/modules/choferes/planillas.routes');
   const { miOperacionRoutes } = require('../src/modules/usuarios/mi-operacion.routes');
   const { requirePermission } = require('../src/shared/middleware/authMiddleware');
   const { ViajeNacionalModel, ViajeInternacionalModel } = require('../src/modules/viajes/viajes.model');
@@ -91,13 +92,22 @@ test('driver HTTP endpoints use the logged-in driver and assigned truck, ignorin
     mock(Usuario, 'findOne', async () => user); mock(Usuario, 'findById', async () => user);
     mock(EmpresaOperadora, 'exists', async () => true);
     mock(ChoferModel, 'findById', async id => { assert.equal(id, 'driver-a'); return { _id: 'driver-a', camionId: 'truck-a' }; });
+    let cerrada = false;
+    mock(Planilla, 'exists', async filter => {
+      assert.deepEqual(filter, { empresaId: 'company-a', choferId: 'driver-a', mes: mesActual() });
+      return cerrada ? { _id: 'closed-sheet' } : null;
+    });
     for (const model of [ViajeNacionalModel, ViajeInternacionalModel]) mock(model, 'aggregate', async pipeline => {
-      assert.deepEqual(pipeline[0].$match, { tipoAsignacion: 'chofer', asignadoId: 'driver-a' });
+      const { mesActual, viajesDelMes } = require('../src/modules/choferes/planillas.routes');
+      assert.deepEqual(pipeline[0].$match, {
+        tipoAsignacion: 'chofer', asignadoId: 'driver-a', ...viajesDelMes(mesActual()), ...(cerrada ? { _id: null } : {}),
+      });
       assert.equal(tenantContext.getStore().empresaId, 'company-a');
       const facet = pipeline.at(-1).$facet;
       assert.equal(facet.items.at(-1).$project.tarifaTotal, undefined);
       assert.equal(facet.items[2].$limit, 5);
       assert.deepEqual(pipeline.find(stage => stage.$unionWith).$unionWith.pipeline[0].$match.$and[0], { empresaId: 'company-a' });
+      if (cerrada) return [{ items: [], count: [], summary: [] }];
       return [{ items: [{ _id: 'trip-a' }, { _id: 'trip-b' }], count: [{ total: 2 }], summary: [{ totalChofer: 100, adelantos: 10, neto: 90, pendientes: 0 }] }];
     });
     mock(CamionModel, 'findById', async id => { assert.equal(id, 'truck-a'); return { _id: 'truck-a', patente: 'AA123AA' }; });
@@ -119,6 +129,13 @@ test('driver HTTP endpoints use the logged-in driver and assigned truck, ignorin
     assert.equal(tripsBody.data.length, 2);
     assert.equal(tripsBody.pagination.pageSize, 5);
     assert.equal(tripsBody.summary.neto, 90);
+    cerrada = true;
+    const closed = await fetch(base + '/viajes', { headers });
+    assert.equal(closed.status, 200);
+    const closedBody = await closed.json();
+    assert.deepEqual(closedBody.data, []);
+    assert.equal(closedBody.summary.neto, 0);
+    assert.equal(closedBody.netoGeneral, 0);
     assert.equal((await fetch(base + '/viajes?pageSize=100', { headers })).status, 400);
     const truck = await fetch(base + '/camion?camionId=foreign-truck', { headers });
     assert.equal(truck.status, 200); assert.equal((await truck.json()).data.camion._id, 'truck-a');
@@ -148,4 +165,29 @@ test('driver HTTP endpoints use the logged-in driver and assigned truck, ignorin
     let denied; requirePermission('viajes', 'camiones', 'configuracion')({ user: { permisos: ['mis-viajes', 'mi-camion'] } }, {}, error => { denied = error; });
     assert.equal(denied.statusCode, 403);
   } finally { for (const reset of restore.reverse()) reset(); if (server) await new Promise(resolve => server.close(resolve)); }
+});
+
+test('trip queries only expose trips assigned to the current logistics operator or unassigned', async () => {
+  const { ViajeNacionalModel, ViajeInternacionalModel } = require('../src/modules/viajes/viajes.model');
+  for (const model of [ViajeNacionalModel, ViajeInternacionalModel]) {
+    const runHook = (operation, target) => new Promise((resolve, reject) =>
+      model.schema.s.hooks.execPre(operation, target, [], error => error ? reject(error) : resolve()),
+    );
+    await tenantContext.run({ empresaId: 'company-a', role: 'operador_logistico', userId: 'operator-a' }, async () => {
+      const scope = { empresaId: 'company-a', operadorLogisticoId: { $in: ['operator-a', '', null] } };
+      for (const operation of ['find', 'findOne', 'countDocuments', 'findOneAndUpdate', 'findOneAndDelete']) {
+        const query = model[operation]({ operadorLogisticoId: 'operator-b' });
+        await runHook(operation, query);
+        assert.deepEqual(query.getFilter(), { $and: [{ operadorLogisticoId: 'operator-b' }, scope] });
+      }
+      const aggregate = model.aggregate([]);
+      await runHook('aggregate', aggregate);
+      assert.deepEqual(aggregate.pipeline()[0], { $match: scope });
+    });
+    await tenantContext.run({ empresaId: 'company-a', role: 'chofer', userId: 'driver-a' }, async () => {
+      const query = model.find({ asignadoId: 'driver-a' });
+      await runHook('find', query);
+      assert.deepEqual(query.getFilter(), { $and: [{ asignadoId: 'driver-a' }, { empresaId: 'company-a' }] });
+    });
+  }
 });

@@ -1,11 +1,14 @@
 "use client";
+import { idViaje } from "@/lib/idViaje";
 import Button from "@/app/components/ui/Button/button";
+import ColumnFilters from '../ColumnFilters';
 import React, { useState, useEffect } from "react";
 import { useToast } from "../Toast/Toast";
 
 
 const InputCell = ({ row, field, bg = "bg-content1", onChange }) => (
   <input
+    readOnly={row.soloLectura}
     type="number"
     className={`w-full min-h-8 h-full text-foreground text-right px-2 focus:outline-none focus:ring-2 focus:ring-focus ${bg}`}
     value={row[field] === 0 ? "" : row[field]}
@@ -17,6 +20,20 @@ export default function DriverTripTable({ trips = [] }) {
   // Estado local para los valores editables (tarifas, gastos extras, etc.)
   // Inicializamos con los datos de los viajes si existen, o valores vacíos
   const [data, setData] = useState([]);
+  const [filters, setFilters] = useState({});
+  const filterFields = [
+    { key: 'fecha', label: 'Salida', type: 'date' },
+    { key: 'viaje', label: 'Origen o destino' },
+    { key: 'contenedor', label: 'Carga o contenedor' },
+    { key: 'camionPatente', label: 'Patente camión' },
+    { key: 'semirremolquePatente', label: 'Patente semi' },
+    { key: 'tipoViaje', label: 'Tipo de viaje', options: [
+      { value: 'nacional', label: 'Nacional' }, { value: 'internacional', label: 'Internacional' },
+    ] },
+  ];
+  const filteredRows = data.filter(row => Object.entries(filters).every(([key, value]) =>
+    !value.trim() || (key === 'tipoViaje' ? row[key] === value : String(row[key] ?? '').toLowerCase().includes(value.trim().toLowerCase())),
+  ));
 
   useEffect(() => {
     // Obtener cotizaciones frescas
@@ -38,7 +55,7 @@ export default function DriverTripTable({ trips = [] }) {
       (b.createdAt || "").localeCompare(a.createdAt || "") ||
       String(b._id || "").localeCompare(String(a._id || "")),
     );
-    const initialData = orderedTrips.map((t, index) => {
+    const initialData = orderedTrips.map(t => {
       const tripId = t._id || t.id;
       // Intentar encontrar si hay datos guardados localmente para este viaje
       const localTrip = localTrips.find((lt) => lt.id === tripId || lt._id === tripId);
@@ -109,11 +126,14 @@ export default function DriverTripTable({ trips = [] }) {
 
       return {
         id: tripId,
+        soloLectura: Boolean(t.soloLectura),
         tipoViaje: t.tipoViaje || "nacional",
-        n: index + 1,
+        numeroOperativo: t.numeroOperativo,
         fecha: t.fecha_salida || "",
         viaje: `${t.origen} - ${t.destino}`,
         contenedor: t.carga || "",
+        camionPatente: t.camionPatente,
+        semirremolquePatente: t.semirremolquePatente,
         tarifaTotalAr,
         tarifaChoferPorcentaje,
         tarifaChoferAr,
@@ -278,7 +298,7 @@ export default function DriverTripTable({ trips = [] }) {
     setSavingPlanilla(true);
     try {
       await Promise.all(
-        data.map(async (row) => {
+        data.filter(row => !row.soloLectura).map(async (row) => {
           const endpoint = row.tipoViaje === "nacional" ? "nacionales" : "internacionales";
           const url = `/api/backend/viajes/${endpoint}/${row.id}`;
           
@@ -328,13 +348,16 @@ export default function DriverTripTable({ trips = [] }) {
     <div className="space-y-4">
 
 
+      <div className="mb-2 flex justify-end">
+        <ColumnFilters fields={filterFields} values={filters} onChange={setFilters} />
+      </div>
       <div className="table-frame bg-content1 text-foreground">
       <table className="min-w-full text-xs border-collapse [&_th]:border-divider [&_td]:border-divider dark:[color-scheme:dark]">
         <thead>
           {/* Fila 1 */}
           <tr className="bg-content2 text-center font-bold border-b border-divider text-[10px] md:text-xs">
             <th className="border p-1 bg-cyan-300 text-slate-900 dark:bg-cyan-950 dark:text-cyan-100" rowSpan={3}>
-              N°
+              ID
             </th>
             <th className="border p-1 bg-cyan-300 text-slate-900 dark:bg-cyan-950 dark:text-cyan-100" rowSpan={3}>
               FECHA
@@ -345,6 +368,8 @@ export default function DriverTripTable({ trips = [] }) {
             <th className="border p-1 bg-cyan-300 text-slate-900 dark:bg-cyan-950 dark:text-cyan-100" rowSpan={3}>
               CONTENEDOR N° O CARGA
             </th>
+            <th className="border p-1" rowSpan={3}>PATENTE CAMIÓN</th>
+            <th className="border p-1" rowSpan={3}>PATENTE SEMI</th>
             <th className="border p-1 bg-orange-400 text-slate-900 dark:bg-orange-950 dark:text-orange-100" colSpan={9}>
               TARIFA
             </th>
@@ -416,9 +441,9 @@ export default function DriverTripTable({ trips = [] }) {
           </tr>
         </thead>
         <tbody>
-          {data.map((row) => (
+          {filteredRows.map((row) => (
             <tr key={row.id} className="hover:bg-content2/50">
-              <td className="border px-2 py-1 text-center">{row.n}</td>
+              <td className="border px-2 py-1 text-center">{idViaje(row.numeroOperativo, row.tipoViaje)}</td>
               <td className="border px-2 py-1 text-center whitespace-nowrap">
                 {row.fecha}
               </td>
@@ -426,6 +451,8 @@ export default function DriverTripTable({ trips = [] }) {
                 {row.viaje}
               </td>
               <td className="border px-2 py-1 text-left">{row.contenedor}</td>
+              <td className="border px-2 py-1">{row.camionPatente || "—"}</td>
+              <td className="border px-2 py-1">{row.semirremolquePatente || "—"}</td>
 
               {/* TARIFA */}
               <td className="border p-0">
@@ -488,6 +515,7 @@ export default function DriverTripTable({ trips = [] }) {
               <td className="border p-0 min-w-[130px]">
                 <div className="flex items-center h-full bg-content1">
                   <input
+                    readOnly={row.soloLectura}
                     type="number"
                     className="w-full h-full text-right px-1 focus:outline-none bg-transparent text-foreground"
                     value={row.adelantoMonto === 0 ? "" : row.adelantoMonto}
@@ -495,6 +523,7 @@ export default function DriverTripTable({ trips = [] }) {
                     placeholder="0"
                   />
                   <select
+                    disabled={row.soloLectura}
                     className="bg-content2 text-[10px] text-foreground border-l border-divider px-1 h-full outline-none cursor-pointer font-bold"
                     value={row.adelantoMoneda || "ARS"}
                     onChange={(e) => handleChange(row.id, "adelantoMoneda", e.target.value)}
@@ -519,7 +548,7 @@ export default function DriverTripTable({ trips = [] }) {
           ))}
           {/* TOTALES GENERALES */}
           <tr className="font-bold bg-content2 text-[10px] md:text-xs">
-            <td colSpan={4} className="border p-2 text-right">
+            <td colSpan={6} className="border p-2 text-right">
               TOTALES
             </td>
             {/* % */}
@@ -621,7 +650,7 @@ export default function DriverTripTable({ trips = [] }) {
        <div className="flex justify-end m-4">
         <Button native
           onClick={handleSaveAll}
-          disabled={savingPlanilla}
+          disabled={savingPlanilla || data.every(row => row.soloLectura)}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition disabled:opacity-50 text-sm shadow flex items-center gap-2"
         >
           {savingPlanilla ? "Guardando..." : "Guardar Planilla"}

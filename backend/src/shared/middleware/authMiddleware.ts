@@ -65,7 +65,7 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
         if (!identityRequest && perfil === 'superadmin' && !superAdmin) throw new AppError('Superadmin está reservado al dueño de la plataforma', 403);
         if (empresaId && !identityRequest && !await EmpresaOperadora.exists({ _id: empresaId, activo: true })) throw new AppError('Servicio suspendido. Contactá al administrador de tu empresa para regularizar el servicio', 403, 'SERVICE_SUSPENDED');
         req.user = { ...payload, userId: user._id.toString(), empresaId, role: perfil, permisos };
-        tenantContext.run({ empresaId, userId: user._id.toString(), superAdmin }, () => next());
+        tenantContext.run({ empresaId, userId: user._id.toString(), superAdmin, role: perfil }, () => next());
     } catch (error) { next(error); }
 };
 

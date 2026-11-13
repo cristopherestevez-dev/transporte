@@ -3,11 +3,15 @@ import { z } from 'zod';
 // Estados válidos para viajes
 const estadoValues = ['pendiente', 'en_transito', 'finalizado', 'cancelado'] as const;
 
+const mesPlanilla = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Elegí un mes válido');
+const mesPlanillaOpcional = z.preprocess(value => value === '' ? undefined : value, mesPlanilla.optional());
+
 // Schema para crear viaje
 export const CreateViajeSchema = z.object({
     origen: z.string().min(1, 'El origen es requerido'),
     destino: z.string().min(1, 'El destino es requerido'),
     fecha_salida: z.string().optional(),
+    mesPlanilla: mesPlanillaOpcional,
     fecha_llegada: z.string().optional(),
     estado: z.enum(estadoValues).default('pendiente'),
     direccion_facturacion: z.enum(['emitida', 'recibida']).optional(),
@@ -19,6 +23,8 @@ export const CreateViajeSchema = z.object({
     proveedorId: z.string().optional(),
     tipoAsignacion: z.enum(['chofer', 'fletero', 'ninguno']).optional(),
     asignadoId: z.string().optional(),
+    operadorLogisticoId: z.union([z.literal(''), z.string().regex(/^[a-f0-9]{24}$/i)]).optional(),
+    semirremolqueId: z.union([z.literal(''), z.string().regex(/^[a-f0-9]{24}$/i)]).optional(),
     tarifaTotalAr: z.number().optional(),
     tarifaChoferPorcentaje: z.number().optional(),
     tarifaChoferAr: z.number().optional(),
@@ -48,6 +54,7 @@ export const UpdateViajeSchema = z.object({
     origen: z.string().min(1).optional(),
     destino: z.string().min(1).optional(),
     fecha_salida: z.string().optional(),
+    mesPlanilla: mesPlanillaOpcional,
     fecha_llegada: z.string().optional(),
     estado: z.enum(estadoValues).optional(),
     direccion_facturacion: z.enum(['emitida', 'recibida']).optional(),
@@ -59,6 +66,8 @@ export const UpdateViajeSchema = z.object({
     proveedorId: z.string().optional(),
     tipoAsignacion: z.enum(['chofer', 'fletero', 'ninguno']).optional(),
     asignadoId: z.string().optional(),
+    operadorLogisticoId: z.union([z.literal(''), z.string().regex(/^[a-f0-9]{24}$/i)]).optional(),
+    semirremolqueId: z.union([z.literal(''), z.string().regex(/^[a-f0-9]{24}$/i)]).optional(),
     tarifaTotalAr: z.number().optional(),
     tarifaChoferPorcentaje: z.number().optional(),
     tarifaChoferAr: z.number().optional(),

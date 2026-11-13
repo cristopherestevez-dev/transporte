@@ -2,8 +2,8 @@
 import Button from "@/app/components/ui/Button/button";
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import AppSelect from '../AppSelect/AppSelect';
-export function PageSizeSelect({ pageSize, onPageSizeChange }) {
-  return <div className="flex justify-end mb-3"><AppSelect ariaLabel="Mostrar resultados" value={String(pageSize)} options={[5, 15, 25].map(value => ({ value: String(value), label: `Mostrar ${value}` }))} onChange={value => onPageSizeChange(Number(value))} compact className="w-36" /></div>;
+export function PageSizeSelect({ pageSize, onPageSizeChange, className = "mb-3" }) {
+  return <div className={"flex justify-end " + className}><AppSelect ariaLabel="Mostrar resultados" value={String(pageSize)} options={[5, 15, 25].map(value => ({ value: String(value), label: `Mostrar ${value}` }))} onChange={value => onPageSizeChange(Number(value))} compact className="w-36" /></div>;
 }
 export default function Pagination({ page, pageSize, total = 0, totalPages = 0, onPageChange, onPageSizeChange, loading }) {
   const pages = Math.max(1, totalPages);
