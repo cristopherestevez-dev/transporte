@@ -329,53 +329,14 @@ select,
 }
 
 .trip-table-frame {
-  container-type: inline-size;
+  overflow-x: auto;
+}
+
+.trip-table-frame table {
+  min-width: max-content;
 }
 
 .trip-table-frame :is(th, td) {
-  padding-inline: clamp(0.375rem, 0.7cqi, 1.5rem);
-  overflow-wrap: anywhere;
+  white-space: nowrap;
 }
 
-@container (max-width: 72rem) {
-  .trip-table-frame table,
-  .trip-table-frame tbody {
-    display: block;
-  }
-
-  .trip-table-frame thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
-
-  .trip-table-frame tbody tr {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
-    padding: 0.5rem;
-  }
-
-  .trip-table-frame td {
-    min-width: 0;
-    padding: 0.5rem;
-  }
-
-  .trip-table-frame td[colspan] {
-    grid-column: 1 / -1;
-  }
-
-  .trip-table-frame td[data-label]::before {
-    display: block;
-    margin-bottom: 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    content: attr(data-label);
-  }
-
-  .trip-table-frame td:last-child > div {
-    justify-content: flex-start;
-    flex-wrap: wrap;
-  }
-}
