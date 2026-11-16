@@ -10,7 +10,7 @@ import { requirePermission } from '../../shared/middleware/authMiddleware';
 
 const router = Router();
 
-router.get('/operadores', requirePermission('viajes'), asyncHandler(viajesNacionalesController.getOperators));
+router.get('/operadores', requirePermission('asignar-viajes'), asyncHandler(viajesNacionalesController.getOperators));
 router.get('/flota', requirePermission('viajes'), asyncHandler(viajesNacionalesController.getFleet));
 router.get('/combustible/camiones', requirePermission('viajes'), asyncHandler(viajesNacionalesController.getFuelTrucks));
 router.post('/nacionales/:id/combustible', requirePermission('viajes'), validateBody(cargaCombustibleSchema), asyncHandler(viajesNacionalesController.addFuel));

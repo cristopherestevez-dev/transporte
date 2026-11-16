@@ -28,6 +28,9 @@ export class ViajesService {
     }
 
     private async validateOperator(id?: string) {
+        if (!tenantContext.getStore()?.permisos?.includes('asignar-viajes')) {
+            throw new AppError('Necesitás el permiso de operador logístico maestro para asignar viajes', 403);
+        }
         if (id && !(await this.getOperators()).some(user => user.id === id)) {
             throw new AppError('Seleccioná un operador logístico activo de tu empresa', 400);
         }
@@ -121,7 +124,7 @@ export class ViajesService {
     }
 
     async create(data: Partial<IViaje>): Promise<IViaje> {
-        await this.validateOperator(data.operadorLogisticoId);
+        if (data.operadorLogisticoId) await this.validateOperator(data.operadorLogisticoId);
         const mesPlanilla = data.mesPlanilla ?? mesActual();
         await this.verificarPlanillaAbierta(data.tipoAsignacion, data.asignadoId, mesPlanilla);
         const viaje = await this.repository.create({ ...data, mesPlanilla, ...await this.vehicleAssignment(data) });
@@ -132,7 +135,7 @@ export class ViajesService {
     async update(id: string, data: Partial<IViaje>): Promise<IViaje> {
         if (data.operadorLogisticoId !== undefined) {
             const trip = await this.getById(id);
-            if (trip.operadorLogisticoId !== data.operadorLogisticoId) await this.validateOperator(data.operadorLogisticoId);
+            if ((trip.operadorLogisticoId || '') !== data.operadorLogisticoId) await this.validateOperator(data.operadorLogisticoId);
         }
         const changesVehicles = data.tipoAsignacion !== undefined || data.asignadoId !== undefined || data.semirremolqueId !== undefined;
         const previous = changesVehicles || data.mesPlanilla !== undefined || data.fecha_salida !== undefined ? await this.getById(id) : undefined;

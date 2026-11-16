@@ -63,6 +63,7 @@ const validateDates = (form) => {
 
 const ViajesList = () => {
   const { tienePermiso } = useAuth();
+  const puedeAsignarViajes = tienePermiso("asignar-viajes");
   const [proveedoresOptions, setProveedoresOptions] = useState([]);
   const [choferesOptions, setChoferesOptions] = useState([]);
   const [fleterosOptions, setFleterosOptions] = useState([]);
@@ -86,7 +87,7 @@ const ViajesList = () => {
           api.getChoferes(),
           api.getFleteros(),
           api.get('/viajes/flota'),
-          api.get('/viajes/operadores')
+          puedeAsignarViajes ? api.get('/viajes/operadores') : Promise.resolve([])
         ]);
         setProveedoresOptions(proveedores || []);
         setChoferesOptions(choferes || []);
@@ -118,7 +119,7 @@ const ViajesList = () => {
 
     fetchProveedores();
     fetchViajes();
-  }, []);
+  }, [puedeAsignarViajes]);
 
   const openProveedorModal = (row) => {
     setCurrentRowEditing(row);
@@ -429,8 +430,9 @@ const ViajesList = () => {
   const renderTripTabs = (direccion) => {
     const received = direccion === "recibida";
     const belongs = (row) => (row.direccion_facturacion || "emitida") === direccion;
+    const assignmentFields = puedeAsignarViajes ? formFields : formFields.filter(field => field.key !== "operadorLogisticoId");
     const fields = received
-      ? formFields.filter((field) => field.key !== "asignacion").map((field) =>
+      ? assignmentFields.filter((field) => field.key !== "asignacion").map((field) =>
           field.key === "proveedor" ? { ...field, label: "Empresa / Fletero que factura", render: ({ form, setForm }) => (
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Empresa / Fletero que factura</label>
@@ -449,7 +451,7 @@ const ViajesList = () => {
               />
             </div>
           ) } : field)
-      : formFields;
+      : assignmentFields;
     const visibleColumns = received
       ? columns.filter((column) => column.key !== "asignadoId").map((column) => column.key === "proveedor" ? { ...column, label: "Empresa / Fletero que factura" } : column)
       : columns;

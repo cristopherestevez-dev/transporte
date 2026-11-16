@@ -14,6 +14,7 @@ const permisosLabels = {
   dashboard: "Dashboard",
   camiones: "Camiones",
   viajes: "Viajes",
+  "asignar-viajes": "Operador logístico maestro (ver y asignar todos los viajes)",
   choferes: "Choferes",
   cotizador: "Cotizador",
   empresas: "Empresas",

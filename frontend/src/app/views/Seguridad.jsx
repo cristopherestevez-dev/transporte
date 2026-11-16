@@ -9,7 +9,7 @@ import { useToast } from '@/app/components/ui/Toast/Toast';
 import api from '@/services/api';
 import CompanyProfile from '@/app/components/CompanyProfile';
 import NotificationRules from '@/app/components/NotificationRules';
-const labels = { dashboard: 'Dashboard', camiones: 'Camiones', viajes: 'Viajes', choferes: 'Choferes', cotizador: 'Cotizador', empresas: 'Proveedores y fleteros', facturacion: 'Facturación y balance', configuracion: 'Seguridad', 'mis-viajes': 'Mis viajes', 'mi-camion': 'Mi camión y servicios' };
+const labels = { dashboard: 'Dashboard', camiones: 'Camiones', viajes: 'Viajes', 'asignar-viajes': 'Operador logístico maestro (ver y asignar todos los viajes)', choferes: 'Choferes', cotizador: 'Cotizador', empresas: 'Proveedores y fleteros', facturacion: 'Facturación y balance', configuracion: 'Seguridad', 'mis-viajes': 'Mis viajes', 'mi-camion': 'Mi camión y servicios' };
 const input = 'w-full px-3 py-2 rounded-[10px] bg-content2 text-foreground border border-divider outline-none focus:ring-2 focus:ring-primary/40';
 const button = 'px-3 py-2 rounded-[10px] bg-primary text-primary-foreground text-sm disabled:opacity-50';
 function DriverField({ form, setForm }) {
@@ -60,7 +60,49 @@ export default function Seguridad() {
     { key: 'estado', render: ({ form, setForm }) => <AppSelect label="Aprobación" value={form.estado} onChange={value => setForm({ ...form, estado: value })} options={[{ value: 'pendiente', label: 'Pendiente' }, { value: 'aprobado', label: 'Aprobado' }, { value: 'rechazado', label: 'Rechazado' }]} /> },
     { key: 'activo', label: 'Cuenta activa', type: 'switch' },
   ];
-  const permissions = (p, change) => <div className="grid sm:grid-cols-2 gap-2">{available.filter(v => p.perfil !== 'chofer' || ['mis-viajes', 'mi-camion'].includes(v)).map(v => <label key={v} className="text-sm flex items-center gap-2"><input type="checkbox" disabled={busy || (p.perfil === 'operador_seguridad' && v === 'configuracion')} checked={p.permisos.includes(v)} onChange={e => change({ ...p, permisos: e.target.checked ? [...p.permisos, v] : p.permisos.filter(i => i !== v) })} />{labels[v]}</label>)}</div>;
+  const permissions = (profile, change) => {
+    const visible = available.filter(permission =>
+      profile.perfil !== 'chofer' || ['mis-viajes', 'mi-camion'].includes(permission),
+    );
+    const required = profile.perfil === 'operador_seguridad' ? 'configuracion' : null;
+    const selectable = visible.filter(permission => permission !== required);
+    const allSelected = selectable.length > 0 && selectable.every(permission => profile.permisos.includes(permission));
+    const partlySelected = !allSelected && selectable.some(permission => profile.permisos.includes(permission));
+
+    return (
+      <div className="grid gap-2 sm:grid-cols-2">
+        <label className="flex items-center gap-2 text-sm font-semibold sm:col-span-2">
+          <input
+            type="checkbox"
+            checked={allSelected}
+            disabled={busy || !selectable.length}
+            ref={input => { if (input) input.indeterminate = partlySelected; }}
+            onChange={event => change({
+              ...profile,
+              permisos: event.target.checked ? visible : visible.filter(permission => permission === required),
+            })}
+          />
+          Seleccionar todos
+        </label>
+        {visible.map(permission => (
+          <label key={permission} className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              disabled={busy || permission === required}
+              checked={profile.permisos.includes(permission)}
+              onChange={event => change({
+                ...profile,
+                permisos: event.target.checked
+                  ? [...profile.permisos, permission]
+                  : profile.permisos.filter(value => value !== permission),
+              })}
+            />
+            {labels[permission] ?? permission}
+          </label>
+        ))}
+      </div>
+    );
+  };
   if (!['operador_seguridad', 'superadmin'].includes(perfil)) return <p className="p-6">Seleccioná el perfil de Seguridad para administrar usuarios y perfiles.</p>;
   if (loading) return <p className="p-6">Cargando Seguridad…</p>;
   return <div className="space-y-5"><h1 className="text-xl font-semibold">{globalAdmin ? 'Administración de la plataforma' : 'Seguridad de empresa'}</h1>{error && <p role="alert" className="text-danger">{error} <Button native onClick={load} className="underline">Reintentar</Button></p>}{!globalAdmin && <CompanyProfile />}<TabsWrapper tabs={[
