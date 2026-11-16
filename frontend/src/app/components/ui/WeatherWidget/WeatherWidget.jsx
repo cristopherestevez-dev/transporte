@@ -124,7 +124,7 @@ export default function WeatherWidget({ mode = "card", className = "" }) {
 
   const passStatus = passStatuses[passReport?.status] ?? passStatuses.unknown;
   const reportDate = passReport?.reportedAt && new Date(passReport.reportedAt)
-    .toLocaleDateString("es-AR", { timeZone: "UTC" });
+    .toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", dateStyle: "short", timeStyle: "short" });
 
   if (mode === "navbar") {
 
@@ -202,7 +202,7 @@ export default function WeatherWidget({ mode = "card", className = "" }) {
           )}
           {reportDate && (
             <p className="text-xs text-center text-white/80">
-              Vialidad de Chile · Informe del {reportDate}
+              {passReport.source} · {passReport.status === "unknown" ? "Último informe" : "Informe"} del {reportDate}
             </p>
           )}
           <a

@@ -2,13 +2,14 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import mongoose, { Schema } from 'mongoose';
 import { AppError } from './errors/AppError';
 
-export const tenantContext = new AsyncLocalStorage<{ empresaId?: string; userId?: string; superAdmin?: boolean; role?: string }>();
+export const tenantContext = new AsyncLocalStorage<{ empresaId?: string; userId?: string; superAdmin?: boolean; role?: string; permisos?: string[] }>();
 const collections = new Set(['proveedores', 'fleteros', 'camiones', 'semirremolques', 'choferes', 'viajesNacionales', 'viajesInternacionales', 'cobranzasNacionales', 'cobranzasInternacionales', 'pagosNacionales', 'pagosInternacionales', 'mantenimientos', 'notifications']);
 
 export function tripOperatorScope() {
     const context = tenantContext.getStore();
-    if (context?.role !== 'operador_logistico') return {};
-    return { operadorLogisticoId: { $in: [context.userId, '', null] } };
+    const consultaOperativa = context?.role === 'operador_logistico' || context?.permisos?.includes('viajes');
+    if (!consultaOperativa || context?.permisos?.includes('asignar-viajes')) return {};
+    return { operadorLogisticoId: { $in: [context?.userId, '', null] } };
 }
 
 function empresaActual() {

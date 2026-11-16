@@ -3,7 +3,7 @@ import { PERMISOS_POR_PERFIL, Perfil, Usuario } from './usuarios.model';
 import { AppError } from '../../shared/errors/AppError';
 import { tenantContext } from '../../shared/tenant';
 
-export const PERMISOS_DISPONIBLES = ['dashboard', 'camiones', 'viajes', 'choferes', 'cotizador', 'empresas', 'facturacion', 'configuracion', 'mis-viajes', 'mi-camion'] as const;
+export const PERMISOS_DISPONIBLES = ['dashboard', 'camiones', 'viajes', 'choferes', 'cotizador', 'empresas', 'facturacion', 'configuracion', 'mis-viajes', 'mi-camion', 'asignar-viajes'] as const;
 const labels: Record<string, string> = { superadmin: 'Superadmin', operador_logistico: 'Operador Logístico', operador_administrativo: 'Operador Administrativo', operador_seguridad: 'Seguridad de empresa', chofer: 'Chofer' };
 const profileSchema = new Schema({
     perfil: { type: String, required: true, unique: true },
@@ -41,8 +41,9 @@ export async function permisosPorPerfil(empresaId?: string): Promise<Record<Perf
 function validate(perfil: string, permisos: unknown) {
     if (perfil === 'superadmin') throw new AppError('Superadmin está reservado al dueño de la plataforma', 403);
     if (!/^[a-z][a-z0-9_]{1,63}$/.test(perfil)) throw new AppError('Código de perfil inválido', 400);
-    if (!Array.isArray(permisos) || permisos.length > 10 || permisos.some(value => typeof value !== 'string' || !PERMISOS_DISPONIBLES.includes(value as any))) throw new AppError('Permisos inválidos', 400);
+    if (!Array.isArray(permisos) || permisos.length > PERMISOS_DISPONIBLES.length || permisos.some(value => typeof value !== 'string' || !PERMISOS_DISPONIBLES.includes(value as any))) throw new AppError('Permisos inválidos', 400);
     if (perfil === 'operador_seguridad' && !permisos.includes('configuracion')) throw new AppError('Seguridad debe conservar Configuración', 400);
+    if (permisos.includes('asignar-viajes') && !permisos.includes('viajes')) throw new AppError('El permiso de operador logístico maestro requiere acceso a Viajes', 400);
     if (perfil === 'chofer' && permisos.some(value => !['mis-viajes', 'mi-camion'].includes(value))) throw new AppError('Chofer solo puede acceder a sus viajes y su camión', 400);
     return [...new Set(permisos)] as string[];
 }
