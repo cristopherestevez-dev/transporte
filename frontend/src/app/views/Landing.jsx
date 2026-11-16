@@ -12,6 +12,13 @@ import { Logo } from "@/app/components/ui/Logo";
 import { Copyright } from "@/app/components/ui/AppFooter";
 import "../globals.css";
 
+const tripSteps = [
+  { label: "Cotizá", icon: Calculator },
+  { label: "Asigná", icon: Truck },
+  { label: "Seguí", icon: Globe },
+  { label: "Facturá", icon: FileText },
+];
+
 const supportEmail = "soporte@atlasops.com.ar";
 
 const fadeInUp = {
@@ -59,13 +66,6 @@ const features = [
     title: "Gestión de Equipo",
     description: "Choferes, fleteros y proveedores en un solo lugar",
   },
-];
-
-const stats = [
-  { value: "500+", label: "Empresas activas" },
-  { value: "10K+", label: "Viajes gestionados" },
-  { value: "99.9%", label: "Uptime garantizado" },
-  { value: "24/7", label: "Soporte técnico" },
 ];
 
 export default function LandingView() {
@@ -116,12 +116,7 @@ export default function LandingView() {
           >
             Funcionalidades
           </a>
-          <a
-            href="#stats"
-            className="text-gray-300 hover:text-white transition"
-          >
-            Estadísticas
-          </a>
+          <a href="#nosotros" className="text-gray-300 transition hover:text-white">Nosotros</a>
           <Link
             href="/login"
             className="px-5 py-2 bg-white/10 hover:bg-white/20 rounded-lg font-medium transition"
@@ -144,7 +139,7 @@ export default function LandingView() {
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-full text-blue-300 text-sm mb-8"
           >
             <Zap className="w-4 h-4" />
-            Plataforma líder en gestión logística
+            Plataforma de gestión logística
           </motion.div>
 
           <motion.h1
@@ -185,91 +180,26 @@ export default function LandingView() {
           </motion.div>
         </motion.div>
 
-        {/* Dashboard Preview */}
         <motion.div
-          initial={{ opacity: 0, y: 100 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="relative max-w-5xl mx-auto mt-20"
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mx-auto mt-12 max-w-5xl md:mt-16"
         >
-          <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-black/50">
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent z-10" />
-            <div className="aspect-video bg-slate-800 flex overflow-hidden">
-              {/* Fake Sidebar */}
-              <div className="w-16 md:w-64 border-r border-white/10 flex flex-col p-4 gap-4 bg-slate-900/50">
-                <div className="h-8 w-8 md:w-32 bg-white/10 rounded-lg animate-pulse" />
-                <div className="flex-1 space-y-3 mt-4">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="h-8 w-full bg-white/5 rounded-lg" />
-                  ))}
-                </div>
-              </div>
-
-              {/* Fake Main Content */}
-              <div className="flex-1 flex flex-col bg-slate-900/20">
-                {/* Header */}
-                <div className="h-16 border-b border-white/10 flex items-center px-8 gap-4">
-                  <div className="h-8 w-64 bg-white/5 rounded-lg" />
-                  <div className="ml-auto h-8 w-8 bg-white/10 rounded-full" />
-                </div>
-
-                {/* Stats Grid */}
-                <div className="p-8 grid grid-cols-3 gap-6">
-                  {/* Card 1: Chart */}
-                  <div className="col-span-2 h-64 bg-slate-800/50 rounded-xl border border-white/5 p-4 flex flex-col gap-4 relative overflow-hidden">
-                    <div className="h-6 w-32 bg-white/10 rounded" />
-                    <div className="flex-1 flex items-end justify-between gap-2 px-2 pb-2">
-                      {[40, 70, 50, 90, 60, 80, 50].map((h, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ height: 0 }}
-                          animate={{ height: `${h}%` }}
-                          transition={{ duration: 1, delay: 0.5 + i * 0.1 }}
-                          className="w-full bg-gradient-to-t from-blue-600 to-cyan-500 rounded-t-sm opacity-60"
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Card 2: Stats */}
-                  <div className="col-span-1 space-y-6">
-                    {[1, 2].map((i) => (
-                      <div
-                        key={i}
-                        className="h-28 bg-slate-800/50 rounded-xl border border-white/5 p-4"
-                      >
-                        <div className="h-5 w-20 bg-white/10 rounded mb-4" />
-                        <div className="h-10 w-24 bg-blue-500/20 rounded-lg" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="relative isolate overflow-hidden rounded-2xl border border-blue-300/20 bg-slate-950/60 px-6 py-7 shadow-2xl shadow-black/40 sm:px-8 sm:py-10">
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-blue-500/15 via-transparent to-cyan-400/10" />
+            <ol aria-label="Recorrido de un viaje" className="relative mx-auto grid max-w-sm grid-cols-1 gap-5 sm:max-w-none sm:grid-cols-4 sm:gap-0">
+              <li aria-hidden="true" className="pointer-events-none absolute bottom-7 left-7 top-7 w-px -translate-x-1/2 border-l-2 border-dashed border-cyan-300/45 sm:inset-x-[12.5%] sm:bottom-auto sm:top-8 sm:h-px sm:w-auto sm:translate-x-0 sm:border-l-0 sm:border-t-2" />
+              {tripSteps.map(({ label, icon: Icon }) => (
+                <li key={label} className="relative flex items-center gap-4 sm:flex-col sm:gap-3">
+                  <span className="grid size-14 shrink-0 place-items-center rounded-2xl border border-cyan-300/35 bg-slate-900 text-cyan-200 shadow-lg shadow-blue-950/60 sm:size-16">
+                    <Icon className="size-6 sm:size-7" aria-hidden="true" />
+                  </span>
+                  <span className="text-base font-semibold text-slate-100">{label}</span>
+                </li>
+              ))}
+            </ol>
           </div>
-        </motion.div>
-      </section>
-
-      {/* Stats Section */}
-      <section
-        id="stats"
-        className="relative z-10 py-20 border-y border-white/10 bg-white/5"
-      >
-        <motion.div
-          initial="initial"
-          whileInView="animate"
-          viewport={{ once: true }}
-          variants={staggerContainer}
-          className="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8"
-        >
-          {stats.map((stat, i) => (
-            <motion.div key={i} variants={fadeInUp} className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
-                {stat.value}
-              </div>
-              <div className="text-gray-400 mt-2">{stat.label}</div>
-            </motion.div>
-          ))}
         </motion.div>
       </section>
 
@@ -314,6 +244,30 @@ export default function LandingView() {
         </motion.div>
       </section>
 
+      <section id="nosotros" aria-labelledby="nosotros-title" className="relative z-10 mx-auto max-w-6xl scroll-mt-24 px-6 py-16 md:py-24">
+        <div className="max-w-3xl">
+          <p className="mb-3 text-sm font-semibold text-cyan-300">Nosotros</p>
+          <h2 id="nosotros-title" className="text-3xl font-bold tracking-tight md:text-5xl">Cada viaje, en una sola operación</h2>
+          <p className="mt-5 text-lg leading-relaxed text-slate-300">
+            Nuestro objetivo es que las empresas de transporte puedan seguir cada viaje desde la cotización hasta la facturación. Con Atlas Ops, tu equipo puede consultar qué está en ruta, qué unidad está asignada y qué falta por cerrar desde el mismo lugar.
+          </p>
+        </div>
+        <dl className="mt-10 grid gap-5 md:grid-cols-3">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+            <dt className="text-xl font-semibold text-white">Misión</dt>
+            <dd className="mt-3 leading-relaxed text-slate-300">Simplificar el trabajo diario de choferes, operadores y administración con herramientas que conecten la ruta con la oficina.</dd>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+            <dt className="text-xl font-semibold text-white">Visión</dt>
+            <dd className="mt-3 leading-relaxed text-slate-300">Ser una plataforma de referencia para las empresas de transporte de Argentina y la región que quieren crecer con una operación ordenada.</dd>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+            <dt className="text-xl font-semibold text-white">Valores</dt>
+            <dd className="mt-3 leading-relaxed text-slate-300">Claridad para tomar decisiones, responsabilidad con los datos y cercanía con quienes hacen el trabajo todos los días.</dd>
+          </div>
+        </dl>
+      </section>
+
       {/* CTA Section */}
       <section className="relative z-10 py-24 px-6">
         <motion.div
@@ -328,8 +282,7 @@ export default function LandingView() {
             Comenzá a optimizar tu operación hoy
           </h2>
           <p className="text-gray-400 mb-8 max-w-xl mx-auto">
-            Unite a cientos de empresas que ya confían en Atlas Transporte para
-            gestionar su logística.
+            Gestioná tus viajes, tu flota y tu facturación desde Atlas Ops.
           </p>
           <Link
             href="/login"
@@ -353,12 +306,9 @@ export default function LandingView() {
             />
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6 text-gray-400 text-sm">
-            <a href="#" className="hover:text-white transition">
-              Términos
-            </a>
-            <a href="#" className="hover:text-white transition">
-              Privacidad
-            </a>
+            <Link href="/terminos" className="hover:text-white transition">Términos</Link>
+            <Link href="/privacidad" className="hover:text-white transition">Privacidad</Link>
+            <a href="#nosotros" className="hover:text-white transition">Nosotros</a>
             <div className="flex flex-col items-center gap-1 text-center">
               <span>Atención al cliente</span>
               <a href={`mailto:${supportEmail}`} className="transition hover:text-white">
